@@ -1,0 +1,236 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Header } from '@/components/layout/Header';
+import { useApp } from '@/contexts/AppContext';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { 
+  Search, 
+  Globe, 
+  Palette, 
+  Layout, 
+  Cloud, 
+  Database, 
+  Bell, 
+  Activity,
+  ChevronRight,
+  Download,
+  RefreshCw
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+
+interface SettingItemProps {
+  icon: React.ElementType;
+  title: string;
+  description?: string;
+  onClick?: () => void;
+  rightElement?: React.ReactNode;
+  showChevron?: boolean;
+}
+
+function SettingItem({ 
+  icon: Icon, 
+  title, 
+  description, 
+  onClick, 
+  rightElement,
+  showChevron = true 
+}: SettingItemProps) {
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 p-4 transition-colors',
+        onClick && 'cursor-pointer hover:bg-muted/50'
+      )}
+      onClick={onClick}
+    >
+      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium">{title}</p>
+        {description && (
+          <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+        )}
+      </div>
+      {rightElement}
+      {showChevron && onClick && (
+        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+      )}
+    </div>
+  );
+}
+
+export default function Settings() {
+  const navigate = useNavigate();
+  const { notifications, setNotifications } = useApp();
+  const [search, setSearch] = useState('');
+
+  const settingsItems = [
+    {
+      icon: Globe,
+      title: 'Language & Localization',
+      description: 'Currency format, date format',
+      path: '/settings/language',
+    },
+    {
+      icon: Palette,
+      title: 'Theme & Appearance',
+      description: 'Dark mode, AMOLED black',
+      path: '/settings/theme',
+    },
+    {
+      icon: Layout,
+      title: 'Navigation Layout',
+      description: 'Bottom navigation preferences',
+      path: '/settings/navigation',
+    },
+  ];
+
+  const syncItems = [
+    {
+      icon: Cloud,
+      title: 'Google Drive Auto-Sync',
+      description: 'Real-time backup in Excel, Sheets & JSON',
+      path: '/settings/sync',
+    },
+    {
+      icon: Database,
+      title: 'Backup & Restore',
+      description: 'Advanced backup and export operations',
+      path: '/settings/backup',
+    },
+  ];
+
+  const filteredSettings = search
+    ? settingsItems.filter(item => 
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.description?.toLowerCase().includes(search.toLowerCase())
+      )
+    : settingsItems;
+
+  const filteredSync = search
+    ? syncItems.filter(item => 
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.description?.toLowerCase().includes(search.toLowerCase())
+      )
+    : syncItems;
+
+  return (
+    <AppLayout>
+      <Header title="Settings" />
+
+      <div className="p-4 space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search settings..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 bg-card"
+          />
+        </div>
+
+        {/* General Settings */}
+        {filteredSettings.length > 0 && (
+          <Card className="bg-card overflow-hidden">
+            <CardContent className="p-0 divide-y divide-border">
+              {filteredSettings.map((item) => (
+                <SettingItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  description={item.description}
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Sync & Backup */}
+        {filteredSync.length > 0 && (
+          <Card className="bg-card overflow-hidden">
+            <CardContent className="p-0 divide-y divide-border">
+              {filteredSync.map((item) => (
+                <SettingItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  description={item.description}
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Notifications Toggle */}
+        <Card className="bg-card overflow-hidden">
+          <CardContent className="p-0">
+            <SettingItem
+              icon={Bell}
+              title="Notifications"
+              showChevron={false}
+              rightElement={
+                <Switch
+                  checked={notifications}
+                  onCheckedChange={setNotifications}
+                />
+              }
+            />
+          </CardContent>
+        </Card>
+
+        {/* Activity Log */}
+        <Card className="bg-card overflow-hidden">
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">Activity Log</p>
+                  <p className="text-sm text-muted-foreground">View all app activities</p>
+                </div>
+                <ChevronRight 
+                  className="h-5 w-5 text-muted-foreground cursor-pointer"
+                  onClick={() => navigate('/activity-log')}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate('/settings/backup')}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Backup
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate('/settings/sync')}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Sync
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* App Info */}
+        <div className="text-center pt-4 pb-8 text-muted-foreground">
+          <p className="text-sm font-medium">Ameer Autos</p>
+          <p className="text-xs">Inventory & Sales Manager v1.0.0</p>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}
