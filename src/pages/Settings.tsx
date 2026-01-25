@@ -105,6 +105,10 @@ export default function Settings() {
     },
   ];
 
+  const handleNotificationsClick = () => {
+    navigate('/settings/notifications');
+  };
+
   const filteredSettings = search
     ? settingsItems.filter(item => 
         item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -169,17 +173,21 @@ export default function Settings() {
           </Card>
         )}
 
-        {/* Notifications Toggle */}
+        {/* Notifications */}
         <Card className="bg-card overflow-hidden">
           <CardContent className="p-0">
             <SettingItem
               icon={Bell}
               title="Notifications"
-              showChevron={false}
+              description="Low stock and sync alerts"
+              onClick={handleNotificationsClick}
               rightElement={
                 <Switch
                   checked={notifications}
-                  onCheckedChange={setNotifications}
+                  onCheckedChange={(checked) => {
+                    setNotifications(checked);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
                 />
               }
             />
@@ -190,7 +198,10 @@ export default function Settings() {
         <Card className="bg-card overflow-hidden">
           <CardContent className="p-0">
             <div className="p-4">
-              <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="flex items-center gap-3 mb-4 cursor-pointer"
+                onClick={() => navigate('/settings/activity-log')}
+              >
                 <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                   <Activity className="h-5 w-5 text-primary" />
                 </div>
@@ -198,10 +209,7 @@ export default function Settings() {
                   <p className="font-medium">Activity Log</p>
                   <p className="text-sm text-muted-foreground">View all app activities</p>
                 </div>
-                <ChevronRight 
-                  className="h-5 w-5 text-muted-foreground cursor-pointer"
-                  onClick={() => navigate('/activity-log')}
-                />
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="flex gap-2">
                 <Button 
