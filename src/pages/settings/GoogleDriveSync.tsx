@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getSetting, updateSetting } from '@/db/database';
+import { encrypt, decrypt } from '@/utils/encryption';
 import { toast } from 'sonner';
 import { 
   Cloud, 
@@ -33,12 +34,12 @@ export default function GoogleDriveSync() {
     const loadSettings = async () => {
       try {
         const savedSyncEnabled = await getSetting<boolean>('syncEnabled');
-        const savedApiKey = await getSetting<string>('syncApiKey');
+        const savedEncryptedApiKey = await getSetting<string>('syncApiKey');
         const savedFolderId = await getSetting<string>('syncFolderId');
         const savedLastSync = await getSetting<string>('lastSyncTime');
         
         if (savedSyncEnabled !== undefined) setSyncEnabled(savedSyncEnabled);
-        if (savedApiKey) setApiKey(savedApiKey);
+        if (savedEncryptedApiKey) setApiKey(decrypt(savedEncryptedApiKey));
         if (savedFolderId) setFolderId(savedFolderId);
         if (savedLastSync) setLastSyncTime(new Date(savedLastSync));
       } catch (error) {
@@ -56,7 +57,7 @@ export default function GoogleDriveSync() {
     try {
       await Promise.all([
         updateSetting('syncEnabled', syncEnabled),
-        updateSetting('syncApiKey', apiKey), // In production, encrypt this
+        updateSetting('syncApiKey', encrypt(apiKey)),
         updateSetting('syncFolderId', folderId),
       ]);
       toast.success('Sync settings saved');
