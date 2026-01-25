@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useForm } from 'react-hook-form';
@@ -29,16 +29,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, Plus, Camera, X, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Camera, X } from 'lucide-react';
 import type { UnitType } from '@/types';
+
+// Predefined categories
+const PREDEFINED_CATEGORIES = [
+  'Engine',
+  'Hydraulic',
+  'Electric',
+  'Transmission',
+  'Brake',
+  'Cooling',
+];
+
+// Predefined brands
+const PREDEFINED_BRANDS = [
+  'ITR',
+  'CAT',
+  'FP Diesel',
+  'Highgasket',
+  'ASP',
+  'DSG',
+  'World Gasket',
+  'DISA',
+  'HDP',
+  'CGR',
+  'Bull Dog',
+  'METARIS',
+];
 
 const partSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters').max(100),
@@ -64,10 +83,14 @@ export default function AddEditPart() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]);
-  const [showAddBrand, setShowAddBrand] = useState(false);
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [newBrandName, setNewBrandName] = useState('');
-  const [newCategoryName, setNewCategoryName] = useState('');
+  
+  // Custom brand/category states
+  const [brandSelection, setBrandSelection] = useState<string>('');
+  const [categorySelection, setCategorySelection] = useState<string>('');
+  const [customBrandName, setCustomBrandName] = useState('');
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const [brandError, setBrandError] = useState('');
+  const [categoryError, setCategoryError] = useState('');
 
   // Load existing part if editing
   const existingPart = useLiveQuery(
@@ -75,9 +98,20 @@ export default function AddEditPart() {
     [id]
   );
 
-  // Load brands and categories
-  const brands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
-  const categories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
+  // Load saved brands and categories from database
+  const savedBrands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
+  const savedCategories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
+
+  // Combine predefined with user-added (avoiding duplicates)
+  const allBrands = [
+    ...PREDEFINED_BRANDS.map(name => ({ id: `predefined-${name}`, name, isPredefined: true })),
+    ...savedBrands.filter(b => !PREDEFINED_BRANDS.includes(b.name)).map(b => ({ ...b, isPredefined: false })),
+  ];
+  
+  const allCategories = [
+    ...PREDEFINED_CATEGORIES.map(name => ({ id: `predefined-${name}`, name, isPredefined: true })),
+    ...savedCategories.filter(c => !PREDEFINED_CATEGORIES.includes(c.name)).map(c => ({ ...c, isPredefined: false })),
+  ];
 
   const form = useForm<PartFormValues>({
     resolver: zodResolver(partSchema),
@@ -98,7 +132,7 @@ export default function AddEditPart() {
   });
 
   // Update form when existing part loads
-  useLiveQuery(() => {
+  useEffect(() => {
     if (existingPart) {
       form.reset({
         name: existingPart.name,
@@ -115,14 +149,155 @@ export default function AddEditPart() {
         notes: existingPart.notes || '',
       });
       setImages(existingPart.images || []);
+      
+      // Set selections based on existing part
+      const existingBrand = allBrands.find(b => b.id === existingPart.brandId || b.name === existingPart.brandId);
+      const existingCategory = allCategories.find(c => c.id === existingPart.categoryId || c.name === existingPart.categoryId);
+      
+      if (existingBrand) {
+        setBrandSelection(existingBrand.id);
+      }
+      if (existingCategory) {
+        setCategorySelection(existingCategory.id);
+      }
     }
-  }, [existingPart]);
+  }, [existingPart, savedBrands, savedCategories]);
+
+  // Handle brand selection change
+  const handleBrandChange = async (value: string) => {
+    setBrandSelection(value);
+    setBrandError('');
+    setCustomBrandName('');
+    
+    if (value === 'custom') {
+      form.setValue('brandId', '');
+    } else if (value.startsWith('predefined-')) {
+      // For predefined brands, check if it exists in DB or create it
+      const brandName = value.replace('predefined-', '');
+      const existingBrand = savedBrands.find(b => b.name === brandName);
+      if (existingBrand) {
+        form.setValue('brandId', existingBrand.id);
+      } else {
+        // Create the predefined brand in DB
+        const brand = await createBrand(brandName);
+        form.setValue('brandId', brand.id);
+      }
+    } else {
+      form.setValue('brandId', value);
+    }
+  };
+
+  // Handle category selection change
+  const handleCategoryChange = async (value: string) => {
+    setCategorySelection(value);
+    setCategoryError('');
+    setCustomCategoryName('');
+    
+    if (value === 'custom') {
+      form.setValue('categoryId', '');
+    } else if (value.startsWith('predefined-')) {
+      // For predefined categories, check if it exists in DB or create it
+      const categoryName = value.replace('predefined-', '');
+      const existingCategory = savedCategories.find(c => c.name === categoryName);
+      if (existingCategory) {
+        form.setValue('categoryId', existingCategory.id);
+      } else {
+        // Create the predefined category in DB
+        const category = await createCategory(categoryName);
+        form.setValue('categoryId', category.id);
+      }
+    } else {
+      form.setValue('categoryId', value);
+    }
+  };
+
+  // Save custom brand
+  const saveCustomBrand = async () => {
+    if (!customBrandName.trim()) {
+      setBrandError('Please enter a brand name');
+      return false;
+    }
+    
+    // Check if brand already exists
+    const existingBrand = savedBrands.find(
+      b => b.name.toLowerCase() === customBrandName.trim().toLowerCase()
+    );
+    
+    if (existingBrand) {
+      form.setValue('brandId', existingBrand.id);
+      toast.info('Brand already exists, selected it');
+      return true;
+    }
+    
+    try {
+      const brand = await createBrand(customBrandName.trim());
+      form.setValue('brandId', brand.id);
+      toast.success('Custom brand saved');
+      return true;
+    } catch (error) {
+      toast.error('Failed to save brand');
+      return false;
+    }
+  };
+
+  // Save custom category
+  const saveCustomCategory = async () => {
+    if (!customCategoryName.trim()) {
+      setCategoryError('Please enter a category name');
+      return false;
+    }
+    
+    // Check if category already exists
+    const existingCategory = savedCategories.find(
+      c => c.name.toLowerCase() === customCategoryName.trim().toLowerCase()
+    );
+    
+    if (existingCategory) {
+      form.setValue('categoryId', existingCategory.id);
+      toast.info('Category already exists, selected it');
+      return true;
+    }
+    
+    try {
+      const category = await createCategory(customCategoryName.trim());
+      form.setValue('categoryId', category.id);
+      toast.success('Custom category saved');
+      return true;
+    } catch (error) {
+      toast.error('Failed to save category');
+      return false;
+    }
+  };
 
   const onSubmit = async (data: PartFormValues) => {
+    // Validate custom fields before submit
+    if (brandSelection === 'custom' && !form.getValues('brandId')) {
+      const saved = await saveCustomBrand();
+      if (!saved) return;
+    }
+    
+    if (categorySelection === 'custom' && !form.getValues('categoryId')) {
+      const saved = await saveCustomCategory();
+      if (!saved) return;
+    }
+    
+    // Re-get form values after potential custom saves
+    const currentData = form.getValues();
+    
+    if (!currentData.brandId) {
+      setBrandError('Please select or enter a brand');
+      return;
+    }
+    
+    if (!currentData.categoryId) {
+      setCategoryError('Please select or enter a category');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Check SKU uniqueness
-      const skuUnique = await isSkuUnique(data.sku, id);
+      const skuUnique = await isSkuUnique(currentData.sku, id);
       if (!skuUnique) {
         form.setError('sku', { message: 'This SKU already exists' });
         setIsSubmitting(false);
@@ -130,18 +305,18 @@ export default function AddEditPart() {
       }
 
       const partData = {
-        name: data.name,
-        sku: data.sku,
-        brandId: data.brandId,
-        categoryId: data.categoryId,
-        unitType: data.unitType,
-        customUnit: data.customUnit,
-        quantity: data.quantity,
-        minStockLevel: data.minStockLevel,
-        buyingPrice: data.buyingPrice,
-        sellingPrice: data.sellingPrice,
-        location: data.location || '',
-        notes: data.notes || '',
+        name: currentData.name,
+        sku: currentData.sku,
+        brandId: currentData.brandId,
+        categoryId: currentData.categoryId,
+        unitType: currentData.unitType,
+        customUnit: currentData.customUnit,
+        quantity: currentData.quantity,
+        minStockLevel: currentData.minStockLevel,
+        buyingPrice: currentData.buyingPrice,
+        sellingPrice: currentData.sellingPrice,
+        location: currentData.location || '',
+        notes: currentData.notes || '',
         images,
       };
 
@@ -159,32 +334,6 @@ export default function AddEditPart() {
       toast.error('Failed to save part');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleAddBrand = async () => {
-    if (!newBrandName.trim()) return;
-    try {
-      const brand = await createBrand(newBrandName);
-      form.setValue('brandId', brand.id);
-      setNewBrandName('');
-      setShowAddBrand(false);
-      toast.success('Brand added');
-    } catch (error) {
-      toast.error('Failed to add brand');
-    }
-  };
-
-  const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    try {
-      const category = await createCategory(newCategoryName);
-      form.setValue('categoryId', category.id);
-      setNewCategoryName('');
-      setShowAddCategory(false);
-      toast.success('Category added');
-    } catch (error) {
-      toast.error('Failed to add category');
     }
   };
 
@@ -293,76 +442,96 @@ export default function AddEditPart() {
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="brandId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Brand *</FormLabel>
-                        <div className="flex gap-2">
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {brands.map(brand => (
-                                <SelectItem key={brand.id} value={brand.id}>
-                                  {brand.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => setShowAddBrand(true)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Category Selection */}
+                <div className="space-y-2">
+                  <FormLabel>Select Category *</FormLabel>
+                  <Select 
+                    value={categorySelection} 
+                    onValueChange={handleCategoryChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border border-border">
+                      <SelectItem value="custom" className="text-primary font-medium">
+                        + Custom
+                      </SelectItem>
+                      {allCategories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Custom Category Input */}
+                  {categorySelection === 'custom' && (
+                    <div className="space-y-2 animate-fade-in">
+                      <Input
+                        placeholder="Enter custom category name"
+                        value={customCategoryName}
+                        onChange={(e) => {
+                          setCustomCategoryName(e.target.value);
+                          setCategoryError('');
+                        }}
+                        onBlur={async () => {
+                          if (customCategoryName.trim()) {
+                            await saveCustomCategory();
+                          }
+                        }}
+                        className="mt-2"
+                      />
+                      {categoryError && (
+                        <p className="text-sm text-destructive">{categoryError}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-                  <FormField
-                    control={form.control}
-                    name="categoryId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category *</FormLabel>
-                        <div className="flex gap-2">
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.map(cat => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                  {cat.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => setShowAddCategory(true)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Brand Selection */}
+                <div className="space-y-2">
+                  <FormLabel>Select Brand *</FormLabel>
+                  <Select 
+                    value={brandSelection} 
+                    onValueChange={handleBrandChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select brand" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border border-border max-h-60">
+                      <SelectItem value="custom" className="text-primary font-medium">
+                        + Custom
+                      </SelectItem>
+                      {allBrands.map(brand => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Custom Brand Input */}
+                  {brandSelection === 'custom' && (
+                    <div className="space-y-2 animate-fade-in">
+                      <Input
+                        placeholder="Enter brand name"
+                        value={customBrandName}
+                        onChange={(e) => {
+                          setCustomBrandName(e.target.value);
+                          setBrandError('');
+                        }}
+                        onBlur={async () => {
+                          if (customBrandName.trim()) {
+                            await saveCustomBrand();
+                          }
+                        }}
+                        className="mt-2"
+                      />
+                      {brandError && (
+                        <p className="text-sm text-destructive">{brandError}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -383,7 +552,7 @@ export default function AddEditPart() {
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-popover border border-border">
                             <SelectItem value="piece">Piece</SelectItem>
                             <SelectItem value="set">Set</SelectItem>
                             <SelectItem value="pair">Pair</SelectItem>
@@ -526,46 +695,6 @@ export default function AddEditPart() {
           </form>
         </Form>
       </div>
-
-      {/* Add Brand Dialog */}
-      <Dialog open={showAddBrand} onOpenChange={setShowAddBrand}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Brand</DialogTitle>
-          </DialogHeader>
-          <Input
-            placeholder="Brand name"
-            value={newBrandName}
-            onChange={(e) => setNewBrandName(e.target.value)}
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddBrand(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddBrand}>Add Brand</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Category Dialog */}
-      <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Category</DialogTitle>
-          </DialogHeader>
-          <Input
-            placeholder="Category name"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddCategory(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddCategory}>Add Category</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }
