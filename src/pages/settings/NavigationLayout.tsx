@@ -4,41 +4,35 @@ import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { getSetting, updateSetting } from '@/db/database';
+import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
 import { Layout, Tag, Eye, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function NavigationLayout() {
-  const [showLabels, setShowLabels] = useState(true);
-  const [compactMode, setCompactMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    navShowLabels,
+    setNavShowLabels,
+    navCompactMode,
+    setNavCompactMode,
+    isInitialized
+  } = useApp();
+
+  const [localShowLabels, setLocalShowLabels] = useState(navShowLabels);
+  const [localCompactMode, setLocalCompactMode] = useState(navCompactMode);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const savedShowLabels = await getSetting<boolean>('navShowLabels');
-        const savedCompactMode = await getSetting<boolean>('navCompactMode');
-        
-        if (savedShowLabels !== undefined) setShowLabels(savedShowLabels);
-        if (savedCompactMode !== undefined) setCompactMode(savedCompactMode);
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadSettings();
-  }, []);
+    setLocalShowLabels(navShowLabels);
+    setLocalCompactMode(navCompactMode);
+  }, [navShowLabels, navCompactMode]);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
       await Promise.all([
-        updateSetting('navShowLabels', showLabels),
-        updateSetting('navCompactMode', compactMode),
+        setNavShowLabels(localShowLabels),
+        setNavCompactMode(localCompactMode),
       ]);
       toast.success('Navigation settings saved');
     } catch (error) {
@@ -49,7 +43,7 @@ export default function NavigationLayout() {
     }
   };
 
-  if (isLoading) {
+  if (!isInitialized) {
     return (
       <AppLayout>
         <Header title="Navigation Layout" showBack />
@@ -91,8 +85,8 @@ export default function NavigationLayout() {
                 </div>
               </div>
               <Switch
-                checked={showLabels}
-                onCheckedChange={setShowLabels}
+                checked={localShowLabels}
+                onCheckedChange={setLocalShowLabels}
               />
             </div>
 
@@ -110,8 +104,8 @@ export default function NavigationLayout() {
                 </div>
               </div>
               <Switch
-                checked={compactMode}
-                onCheckedChange={setCompactMode}
+                checked={localCompactMode}
+                onCheckedChange={setLocalCompactMode}
               />
             </div>
           </CardContent>
@@ -123,11 +117,14 @@ export default function NavigationLayout() {
             <CardTitle className="text-base">Preview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`bg-background border border-border rounded-lg p-2 flex justify-around ${compactMode ? 'py-1' : 'py-2'}`}>
+            <div className={cn(
+              "bg-background border border-border rounded-lg p-2 flex justify-around",
+              localCompactMode ? "py-1" : "py-2"
+            )}>
               {['Dashboard', 'Inventory', 'Reports', 'Settings'].map((label) => (
                 <div key={label} className="flex flex-col items-center gap-1">
                   <div className="h-6 w-6 rounded bg-muted" />
-                  {showLabels && (
+                  {localShowLabels && (
                     <span className="text-xs text-muted-foreground">{label}</span>
                   )}
                 </div>

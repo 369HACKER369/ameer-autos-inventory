@@ -29,6 +29,12 @@ interface AppContextType {
   setTheme: (theme: 'dark' | 'light' | 'system') => Promise<void>;
   notifications: boolean;
   setNotifications: (enabled: boolean) => Promise<void>;
+
+  // Navigation settings
+  navShowLabels: boolean;
+  setNavShowLabels: (show: boolean) => Promise<void>;
+  navCompactMode: boolean;
+  setNavCompactMode: (compact: boolean) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,6 +52,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
   const [theme, setThemeState] = useState<'dark' | 'light' | 'system'>('dark');
   const [notifications, setNotificationsState] = useState(true);
+  const [navShowLabels, setNavShowLabelsState] = useState(true);
+  const [navCompactMode, setNavCompactModeState] = useState(false);
 
   // Initialize database
   useEffect(() => {
@@ -56,9 +64,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         // Load settings
         const savedTheme = await getSetting<'dark' | 'light' | 'system'>('theme');
         const savedNotifications = await getSetting<boolean>('notifications');
+        const savedShowLabels = await getSetting<boolean>('navShowLabels');
+        const savedCompactMode = await getSetting<boolean>('navCompactMode');
         
         if (savedTheme) setThemeState(savedTheme);
         if (savedNotifications !== undefined) setNotificationsState(savedNotifications);
+        if (savedShowLabels !== undefined) setNavShowLabelsState(savedShowLabels);
+        if (savedCompactMode !== undefined) setNavCompactModeState(savedCompactMode);
         
         setIsInitialized(true);
       } catch (error) {
@@ -161,6 +173,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await updateSetting('notifications', enabled);
   };
 
+  // Nav settings setters
+  const setNavShowLabels = async (show: boolean) => {
+    setNavShowLabelsState(show);
+    await updateSetting('navShowLabels', show);
+  };
+
+  const setNavCompactMode = async (compact: boolean) => {
+    setNavCompactModeState(compact);
+    await updateSetting('navCompactMode', compact);
+  };
+
   const value: AppContextType = {
     isInitialized,
     stats,
@@ -175,6 +198,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTheme,
     notifications,
     setNotifications,
+    navShowLabels,
+    setNavShowLabels,
+    navCompactMode,
+    setNavCompactMode,
   };
 
   return (
