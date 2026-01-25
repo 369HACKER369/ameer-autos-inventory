@@ -14,6 +14,15 @@ import Settings from "./pages/Settings";
 import ActivityLog from "./pages/ActivityLog";
 import NotFound from "./pages/NotFound";
 
+// Settings sub-pages
+import LanguageLocalization from "./pages/settings/LanguageLocalization";
+import ThemeAppearance from "./pages/settings/ThemeAppearance";
+import NavigationLayout from "./pages/settings/NavigationLayout";
+import GoogleDriveSync from "./pages/settings/GoogleDriveSync";
+import BackupRestore from "./pages/settings/BackupRestore";
+import Notifications from "./pages/settings/Notifications";
+import ActivityLogSettings from "./pages/settings/ActivityLogSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -32,6 +41,13 @@ const App = () => (
             <Route path="/sale" element={<RecordSale />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/language" element={<LanguageLocalization />} />
+            <Route path="/settings/theme" element={<ThemeAppearance />} />
+            <Route path="/settings/navigation" element={<NavigationLayout />} />
+            <Route path="/settings/sync" element={<GoogleDriveSync />} />
+            <Route path="/settings/backup" element={<BackupRestore />} />
+            <Route path="/settings/notifications" element={<Notifications />} />
+            <Route path="/settings/activity-log" element={<ActivityLogSettings />} />
             <Route path="/activity-log" element={<ActivityLog />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
