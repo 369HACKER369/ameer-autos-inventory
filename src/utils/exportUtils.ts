@@ -62,7 +62,7 @@ export async function exportReportToPDF(
         ['Sales Count', summary.salesCount.toString()],
       ],
       theme: 'striped',
-      headStyles: { fillStyle: 'F', fillColor: [22, 101, 52] },
+      headStyles: { fillColor: [22, 101, 52] },
     });
   }
 
@@ -90,7 +90,7 @@ export async function exportReportToPDF(
         ];
       }),
       theme: 'striped',
-      headStyles: { fillStyle: 'F', fillColor: [22, 101, 52] },
+      headStyles: { fillColor: [22, 101, 52] },
     });
   }
 
@@ -112,7 +112,7 @@ export async function exportReportToPDF(
           formatCurrency(d.profit),
         ]),
         theme: 'striped',
-        headStyles: { fillStyle: 'F', fillColor: [22, 101, 52] },
+        headStyles: { fillColor: [22, 101, 52] },
       });
     } else {
       doc.setFontSize(14);
@@ -126,7 +126,7 @@ export async function exportReportToPDF(
           formatCurrency(d.profit),
         ]),
         theme: 'striped',
-        headStyles: { fillStyle: 'F', fillColor: [22, 101, 52] },
+        headStyles: { fillColor: [22, 101, 52] },
       });
     }
   }

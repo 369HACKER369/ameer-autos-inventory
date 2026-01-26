@@ -8,6 +8,7 @@ import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
 import { Layout, Tag, Eye, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function NavigationLayout() {
   const {
