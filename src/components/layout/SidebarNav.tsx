@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Package, BarChart3, Settings, X, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -21,9 +21,13 @@ export function SidebarNav({ isOpen, onClose }: SidebarNavProps) {
   const location = useLocation();
   const { customLogo, navShowLabels } = useApp();
 
-  // Close sidebar on route change
+  // Close sidebar on route change only
+  const previousPathRef = useRef(location.pathname);
   useEffect(() => {
-    onClose();
+    if (previousPathRef.current !== location.pathname) {
+      previousPathRef.current = location.pathname;
+      onClose();
+    }
   }, [location.pathname, onClose]);
 
   // Handle back button to close sidebar first
