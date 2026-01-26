@@ -4,6 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category } from '@/types';
 import { startOfDay, endOfDay, startOfMonth } from 'date-fns';
 
+type NavigationLayout = 'bottom' | 'sidebar';
+
 interface AppContextType {
   // Database initialization
   isInitialized: boolean;
@@ -35,6 +37,14 @@ interface AppContextType {
   setNavShowLabels: (show: boolean) => Promise<void>;
   navCompactMode: boolean;
   setNavCompactMode: (compact: boolean) => Promise<void>;
+  
+  // Navigation layout
+  navigationLayout: NavigationLayout;
+  setNavigationLayout: (layout: NavigationLayout) => Promise<void>;
+  
+  // Custom logo
+  customLogo: string | null;
+  setCustomLogo: (logo: string | null) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -54,6 +64,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotificationsState] = useState(true);
   const [navShowLabels, setNavShowLabelsState] = useState(true);
   const [navCompactMode, setNavCompactModeState] = useState(false);
+  const [navigationLayout, setNavigationLayoutState] = useState<NavigationLayout>('bottom');
+  const [customLogo, setCustomLogoState] = useState<string | null>(null);
 
   // Initialize database
   useEffect(() => {
@@ -66,11 +78,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const savedNotifications = await getSetting<boolean>('notifications');
         const savedShowLabels = await getSetting<boolean>('navShowLabels');
         const savedCompactMode = await getSetting<boolean>('navCompactMode');
+        const savedNavigationLayout = await getSetting<NavigationLayout>('navigationLayout');
+        const savedCustomLogo = await getSetting<string | null>('customLogo');
         
         if (savedTheme) setThemeState(savedTheme);
         if (savedNotifications !== undefined) setNotificationsState(savedNotifications);
         if (savedShowLabels !== undefined) setNavShowLabelsState(savedShowLabels);
         if (savedCompactMode !== undefined) setNavCompactModeState(savedCompactMode);
+        if (savedNavigationLayout) setNavigationLayoutState(savedNavigationLayout);
+        if (savedCustomLogo !== undefined) setCustomLogoState(savedCustomLogo);
         
         setIsInitialized(true);
       } catch (error) {
@@ -184,6 +200,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await updateSetting('navCompactMode', compact);
   };
 
+  // Navigation layout setter
+  const setNavigationLayout = async (layout: NavigationLayout) => {
+    setNavigationLayoutState(layout);
+    await updateSetting('navigationLayout', layout);
+  };
+
+  // Custom logo setter
+  const setCustomLogo = async (logo: string | null) => {
+    setCustomLogoState(logo);
+    await updateSetting('customLogo', logo);
+  };
+
   const value: AppContextType = {
     isInitialized,
     stats,
@@ -202,6 +230,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNavShowLabels,
     navCompactMode,
     setNavCompactMode,
+    navigationLayout,
+    setNavigationLayout,
+    customLogo,
+    setCustomLogo,
   };
 
   return (

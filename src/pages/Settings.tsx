@@ -17,7 +17,8 @@ import {
   Activity,
   ChevronRight,
   Download,
-  RefreshCw
+  RefreshCw,
+  ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -85,8 +86,14 @@ export default function Settings() {
     {
       icon: Layout,
       title: 'Navigation Layout',
-      description: 'Bottom navigation preferences',
+      description: 'Bottom nav or sidebar drawer',
       path: '/settings/navigation',
+    },
+    {
+      icon: ImageIcon,
+      title: 'App Logo',
+      description: 'Upload your custom logo',
+      path: '/settings/logo',
     },
   ];
 
