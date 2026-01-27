@@ -3,6 +3,7 @@ import { db, initializeDatabase, getSetting, updateSetting } from '@/db/database
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category } from '@/types';
 import { startOfDay, endOfDay, startOfMonth } from 'date-fns';
+import { toSafeNumber, toSafeQuantity, safeAdd } from '@/utils/safeNumber';
 
 type NavigationLayout = 'bottom' | 'sidebar';
 
@@ -124,7 +125,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Calculate low stock parts
   const lowStockParts = parts.filter(p => p.quantity <= p.minStockLevel);
 
-  // Calculate dashboard stats
+  // Calculate dashboard stats with defensive NaN checks
   const refreshStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
@@ -136,8 +137,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Get all parts for inventory value
       const allParts = await db.parts.toArray();
       const totalParts = allParts.length;
-      const inventoryValue = allParts.reduce((sum, p) => sum + (p.quantity * p.buyingPrice), 0);
-      const lowStockCount = allParts.filter(p => p.quantity <= p.minStockLevel).length;
+      
+      // Calculate inventory value with safe number handling
+      const inventoryValue = allParts.reduce((sum, p) => {
+        const qty = toSafeQuantity(p.quantity, 0);
+        const price = toSafeNumber(p.buyingPrice, 0);
+        return safeAdd(sum, qty * price);
+      }, 0);
+      
+      // Calculate low stock count with safe comparison
+      const lowStockCount = allParts.filter(p => {
+        const qty = toSafeQuantity(p.quantity, 0);
+        const minStock = toSafeQuantity(p.minStockLevel, 0);
+        return qty <= minStock;
+      }).length;
 
       // Get today's sales
       const allSales = await db.sales.toArray();
@@ -145,15 +158,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const saleDate = new Date(s.createdAt);
         return saleDate >= todayStart && saleDate <= todayEnd;
       });
-      const todaySales = todaySalesData.reduce((sum, s) => sum + s.totalAmount, 0);
-      const todayProfit = todaySalesData.reduce((sum, s) => sum + s.profit, 0);
+      
+      // Calculate today's totals with safe number handling
+      const todaySales = todaySalesData.reduce((sum, s) => {
+        return safeAdd(sum, toSafeNumber(s.totalAmount, 0));
+      }, 0);
+      
+      const todayProfit = todaySalesData.reduce((sum, s) => {
+        return safeAdd(sum, toSafeNumber(s.profit, 0));
+      }, 0);
 
       // Get monthly profit
       const monthlySalesData = allSales.filter(s => {
         const saleDate = new Date(s.createdAt);
         return saleDate >= monthStart && saleDate <= todayEnd;
       });
-      const monthlyProfit = monthlySalesData.reduce((sum, s) => sum + s.profit, 0);
+      
+      const monthlyProfit = monthlySalesData.reduce((sum, s) => {
+        return safeAdd(sum, toSafeNumber(s.profit, 0));
+      }, 0);
 
       setStats({
         totalParts,
@@ -165,6 +188,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error('Failed to refresh stats:', error);
+      // Set safe defaults on error
+      setStats({
+        totalParts: 0,
+        inventoryValue: 0,
+        todaySales: 0,
+        todayProfit: 0,
+        monthlyProfit: 0,
+        lowStockCount: 0,
+      });
     } finally {
       setIsLoadingStats(false);
     }

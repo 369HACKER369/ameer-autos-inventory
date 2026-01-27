@@ -3,6 +3,7 @@ import type { Sale, SaleFormData, Part, DateRange } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { logActivity } from './activityLogService';
 import { updateStock } from './inventoryService';
+import { toSafeNumber, toSafeQuantity, safeAdd, calculateProfitSafe, calculateTotalSafe } from '@/utils/safeNumber';
 
 /**
  * Record a new sale
@@ -14,14 +15,25 @@ export async function recordSale(data: SaleFormData): Promise<Sale | { error: st
     return { error: 'Part not found' };
   }
   
-  // Check stock availability
-  if (part.quantity < data.quantity) {
-    return { error: `Insufficient stock. Available: ${part.quantity}` };
+  // Safely convert quantities
+  const requestedQuantity = toSafeQuantity(data.quantity, 0);
+  const availableQuantity = toSafeQuantity(part.quantity, 0);
+  const unitPrice = toSafeNumber(data.unitPrice, 0);
+  const buyingPrice = toSafeNumber(part.buyingPrice, 0);
+  
+  // Validate quantity
+  if (requestedQuantity <= 0) {
+    return { error: 'Quantity must be at least 1' };
   }
   
-  // Calculate amounts
-  const totalAmount = data.quantity * data.unitPrice;
-  const profit = (data.unitPrice - part.buyingPrice) * data.quantity;
+  // Check stock availability
+  if (availableQuantity < requestedQuantity) {
+    return { error: `Insufficient stock. Available: ${availableQuantity}` };
+  }
+  
+  // Calculate amounts with safe operations
+  const totalAmount = calculateTotalSafe(requestedQuantity, unitPrice);
+  const profit = calculateProfitSafe(buyingPrice, unitPrice, requestedQuantity);
   
   // Create sale record
   const sale: Sale = {
@@ -29,11 +41,11 @@ export async function recordSale(data: SaleFormData): Promise<Sale | { error: st
     partId: data.partId,
     partName: part.name,
     partSku: part.sku,
-    quantity: data.quantity,
-    unitPrice: data.unitPrice,
-    totalAmount,
-    buyingPrice: part.buyingPrice,
-    profit,
+    quantity: requestedQuantity,
+    unitPrice: unitPrice,
+    totalAmount: totalAmount,
+    buyingPrice: buyingPrice,
+    profit: profit,
     customerName: data.customerName,
     customerPhone: data.customerPhone,
     notes: data.notes,
@@ -45,22 +57,22 @@ export async function recordSale(data: SaleFormData): Promise<Sale | { error: st
     // Add sale record
     await db.sales.add(sale);
     
-    // Deduct stock
-    await updateStock(part.id, -data.quantity, 'Sale');
+    // Deduct stock (negative change)
+    await updateStock(part.id, -requestedQuantity, 'Sale');
   });
   
   await logActivity({
     action: 'sale',
     entityType: 'sale',
     entityId: sale.id,
-    description: `Sold ${data.quantity}x ${part.name} (SKU: ${part.sku}) for Rs ${totalAmount.toLocaleString()}`,
+    description: `Sold ${requestedQuantity}x ${part.name} (SKU: ${part.sku}) for Rs ${totalAmount.toLocaleString()}`,
     metadata: {
       partId: part.id,
-      quantity: data.quantity,
+      quantity: requestedQuantity,
       amount: totalAmount,
       profit,
-      previousStock: part.quantity,
-      newStock: part.quantity - data.quantity,
+      previousStock: availableQuantity,
+      newStock: availableQuantity - requestedQuantity,
     },
   });
   
@@ -125,10 +137,11 @@ export async function getSalesSummary(dateRange: DateRange): Promise<{
 }> {
   const sales = await getAllSales(dateRange);
   
-  const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
-  const totalProfit = sales.reduce((sum, s) => sum + s.profit, 0);
+  // Calculate with safe number operations
+  const totalSales = sales.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.totalAmount, 0)), 0);
+  const totalProfit = sales.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.profit, 0)), 0);
   const salesCount = sales.length;
-  const itemsSold = sales.reduce((sum, s) => sum + s.quantity, 0);
+  const itemsSold = sales.reduce((sum, s) => safeAdd(sum, toSafeQuantity(s.quantity, 0)), 0);
   const averageSaleValue = salesCount > 0 ? totalSales / salesCount : 0;
   const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
   
@@ -137,8 +150,8 @@ export async function getSalesSummary(dateRange: DateRange): Promise<{
     totalProfit,
     salesCount,
     itemsSold,
-    averageSaleValue,
-    profitMargin,
+    averageSaleValue: isNaN(averageSaleValue) ? 0 : averageSaleValue,
+    profitMargin: isNaN(profitMargin) ? 0 : profitMargin,
   };
 }
 

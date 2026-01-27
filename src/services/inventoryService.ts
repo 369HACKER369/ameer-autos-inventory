@@ -2,7 +2,7 @@ import { db } from '@/db/database';
 import type { Part, PartFormData, StockStatus } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { logActivity } from './activityLogService';
-
+import { toSafeNumber, toSafeQuantity, sanitizePartData, safeMultiply } from '@/utils/safeNumber';
 /**
  * Get all parts with optional filtering
  */
@@ -146,7 +146,9 @@ export async function updateStock(id: string, quantityChange: number, reason?: s
   const part = await db.parts.get(id);
   if (!part) return undefined;
   
-  const newQuantity = Math.max(0, part.quantity + quantityChange);
+  const currentQuantity = toSafeQuantity(part.quantity, 0);
+  const change = toSafeNumber(quantityChange, 0);
+  const newQuantity = Math.max(0, currentQuantity + change);
   
   await db.parts.update(id, { 
     quantity: newQuantity, 
@@ -157,8 +159,8 @@ export async function updateStock(id: string, quantityChange: number, reason?: s
     action: 'update',
     entityType: 'part',
     entityId: id,
-    description: `Stock ${quantityChange >= 0 ? 'increased' : 'decreased'} for ${part.name}: ${part.quantity} → ${newQuantity}`,
-    metadata: { previousQuantity: part.quantity, newQuantity, change: quantityChange, reason },
+    description: `Stock ${change >= 0 ? 'increased' : 'decreased'} for ${part.name}: ${currentQuantity} → ${newQuantity}`,
+    metadata: { previousQuantity: currentQuantity, newQuantity, change, reason },
   });
   
   return { ...part, quantity: newQuantity, updatedAt: new Date() };
@@ -186,8 +188,8 @@ export async function getOutOfStockParts(): Promise<Part[]> {
 export async function getInventoryValue(): Promise<{ cost: number; retail: number }> {
   const parts = await db.parts.toArray();
   return {
-    cost: parts.reduce((sum, p) => sum + (p.quantity * p.buyingPrice), 0),
-    retail: parts.reduce((sum, p) => sum + (p.quantity * p.sellingPrice), 0),
+    cost: parts.reduce((sum, p) => sum + safeMultiply(toSafeQuantity(p.quantity, 0), toSafeNumber(p.buyingPrice, 0)), 0),
+    retail: parts.reduce((sum, p) => sum + safeMultiply(toSafeQuantity(p.quantity, 0), toSafeNumber(p.sellingPrice, 0)), 0),
   };
 }
 

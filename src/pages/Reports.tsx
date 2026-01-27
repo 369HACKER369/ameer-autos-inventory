@@ -6,6 +6,7 @@ import { db } from '@/db/database';
 import { getSalesSummary, getTopSellingParts } from '@/services/salesService';
 import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
 import { getDateRanges, formatDateRange } from '@/utils/dateUtils';
+import { toSafeNumber, toSafeQuantity, safeAdd } from '@/utils/safeNumber';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -98,7 +99,7 @@ export default function Reports() {
     fetchData();
   }, [selectedRange]);
 
-  // Sales and Profit by date for chart
+  // Sales and Profit by date for chart - with safe number operations
   const salesByDate = useMemo(() => {
     const filtered = sales.filter(s => {
       const saleDate = new Date(s.createdAt);
@@ -114,9 +115,9 @@ export default function Reports() {
       });
       const existing = grouped.get(dateKey) || { sales: 0, profit: 0, quantity: 0 };
       grouped.set(dateKey, {
-        sales: existing.sales + sale.totalAmount,
-        profit: existing.profit + sale.profit,
-        quantity: existing.quantity + sale.quantity,
+        sales: safeAdd(existing.sales, toSafeNumber(sale.totalAmount, 0)),
+        profit: safeAdd(existing.profit, toSafeNumber(sale.profit, 0)),
+        quantity: safeAdd(existing.quantity, toSafeQuantity(sale.quantity, 0)),
       });
     }
 
@@ -136,7 +137,7 @@ export default function Reports() {
     });
   }, [sales, selectedRange]);
 
-  // Sales by category for pie chart
+  // Sales by category for pie chart - with safe number operations
   const salesByCategory = useMemo(() => {
     const categoryMap = new Map<string, number>();
     
@@ -145,7 +146,8 @@ export default function Reports() {
       if (part) {
         const category = categories.find(c => c.id === part.categoryId);
         const catName = category?.name || 'Uncategorized';
-        categoryMap.set(catName, (categoryMap.get(catName) || 0) + sale.totalAmount);
+        const currentValue = toSafeNumber(categoryMap.get(catName), 0);
+        categoryMap.set(catName, safeAdd(currentValue, toSafeNumber(sale.totalAmount, 0)));
       }
     }
 
@@ -155,7 +157,7 @@ export default function Reports() {
       .slice(0, 5);
   }, [filteredSales, parts, categories]);
 
-  // Brand performance for bar chart
+  // Brand performance for bar chart - with safe number operations
   const brandPerformance = useMemo(() => {
     const brandMap = new Map<string, number>();
 
@@ -164,7 +166,8 @@ export default function Reports() {
       if (part) {
         const brand = brands.find(b => b.id === part.brandId);
         const bName = brand?.name || 'Unknown';
-        brandMap.set(bName, (brandMap.get(bName) || 0) + sale.totalAmount);
+        const currentValue = toSafeNumber(brandMap.get(bName), 0);
+        brandMap.set(bName, safeAdd(currentValue, toSafeNumber(sale.totalAmount, 0)));
       }
     }
 
