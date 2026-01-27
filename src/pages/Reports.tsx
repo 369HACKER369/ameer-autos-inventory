@@ -1,49 +1,34 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { db } from '@/db/database';
 import { getSalesSummary, getTopSellingParts } from '@/services/salesService';
+import { getInventoryValue } from '@/services/inventoryService';
 import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
 import { getDateRanges, formatDateRange } from '@/utils/dateUtils';
-import { toSafeNumber, toSafeQuantity, safeAdd } from '@/utils/safeNumber';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toSafeNumber, toSafeQuantity, safeAdd, safeDivide } from '@/utils/safeNumber';
 import { Button } from '@/components/ui/button';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  Legend
-} from 'recharts';
-import { 
-  TrendingUp, 
-  ShoppingCart, 
+import {
+  KPICard,
+  SalesTrendChart,
+  InventoryDistributionChart,
+  LowStockChart,
+  ProductPerformanceChart,
+  SalesHeatmap,
+  TimeRangeSelector,
+  TopSellingParts,
+} from '@/components/reports';
+import {
+  ShoppingCart,
+  TrendingUp,
   Package,
-  Coins,
-  FileDown,
-  FileSpreadsheet,
+  AlertTriangle,
+  Activity,
   FileText,
+  FileSpreadsheet,
+  FileDown,
   Loader2,
-  BarChart3,
-  Activity
 } from 'lucide-react';
 import type { DateRange, ReportSummary } from '@/types';
 import { useEffect, useState as useReactState } from 'react';
@@ -53,12 +38,13 @@ import {
   exportReportToCSV
 } from '@/utils/exportUtils';
 import { toast } from 'sonner';
-
-const CHART_COLORS = ['hsl(142, 76%, 36%)', 'hsl(0, 0%, 65%)', 'hsl(38, 92%, 50%)', 'hsl(0, 84%, 60%)', 'hsl(200, 80%, 50%)'];
+import { startOfDay, endOfDay } from 'date-fns';
 
 export default function Reports() {
   const dateRanges = getDateRanges();
   const [selectedRangeIndex, setSelectedRangeIndex] = useState(4); // This Month
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
   const [summary, setSummary] = useReactState<ReportSummary | null>(null);
   const [topParts, setTopParts] = useReactState<{
     partId: string;
@@ -68,10 +54,21 @@ export default function Reports() {
     totalRevenue: number;
     totalProfit: number;
   }[]>([]);
+  const [inventoryValue, setInventoryValue] = useState<{ cost: number; retail: number }>({ cost: 0, retail: 0 });
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
-  const selectedRange = dateRanges[selectedRangeIndex];
+  // Determine active date range (custom or preset)
+  const selectedRange = useMemo((): DateRange => {
+    if (customStartDate && customEndDate) {
+      return {
+        label: 'Custom Range',
+        startDate: startOfDay(customStartDate),
+        endDate: endOfDay(customEndDate),
+      };
+    }
+    return dateRanges[selectedRangeIndex];
+  }, [dateRanges, selectedRangeIndex, customStartDate, customEndDate]);
 
   // Live queries
   const sales = useLiveQuery(() => db.sales.toArray(), []) ?? [];
@@ -84,12 +81,14 @@ export default function Reports() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [summaryData, topPartsData] = await Promise.all([
+        const [summaryData, topPartsData, invValue] = await Promise.all([
           getSalesSummary(selectedRange),
           getTopSellingParts(selectedRange, 5),
+          getInventoryValue(),
         ]);
         setSummary(summaryData);
         setTopParts(topPartsData);
+        setInventoryValue(invValue);
       } catch (error) {
         console.error('Failed to fetch report data:', error);
       } finally {
@@ -99,16 +98,19 @@ export default function Reports() {
     fetchData();
   }, [selectedRange]);
 
-  // Sales and Profit by date for chart - with safe number operations
-  const salesByDate = useMemo(() => {
-    const filtered = sales.filter(s => {
+  // Filtered sales for current range
+  const filteredSales = useMemo(() => {
+    return sales.filter(s => {
       const saleDate = new Date(s.createdAt);
       return saleDate >= selectedRange.startDate && saleDate <= selectedRange.endDate;
     });
+  }, [sales, selectedRange]);
 
+  // Sales and Profit by date for chart
+  const salesByDate = useMemo(() => {
     const grouped = new Map<string, { sales: number; profit: number; quantity: number }>();
     
-    for (const sale of filtered) {
+    for (const sale of filteredSales) {
       const dateKey = new Date(sale.createdAt).toLocaleDateString('en-GB', { 
         day: '2-digit', 
         month: 'short' 
@@ -127,55 +129,196 @@ export default function Reports() {
       profit: data.profit,
       quantity: data.quantity,
     }));
-  }, [sales, selectedRange]);
+  }, [filteredSales]);
 
-  // Filtered sales for current range
-  const filteredSales = useMemo(() => {
-    return sales.filter(s => {
-      const saleDate = new Date(s.createdAt);
-      return saleDate >= selectedRange.startDate && saleDate <= selectedRange.endDate;
-    });
-  }, [sales, selectedRange]);
+  // Sparkline data for KPIs
+  const salesSparkline = useMemo(() => {
+    return salesByDate.map(d => ({ value: d.sales }));
+  }, [salesByDate]);
 
-  // Sales by category for pie chart - with safe number operations
-  const salesByCategory = useMemo(() => {
+  const profitSparkline = useMemo(() => {
+    return salesByDate.map(d => ({ value: d.profit }));
+  }, [salesByDate]);
+
+  // Calculate average daily sales
+  const avgDailySales = useMemo(() => {
+    if (salesByDate.length === 0) return 0;
+    const totalSales = salesByDate.reduce((sum, d) => safeAdd(sum, d.sales), 0);
+    return safeDivide(totalSales, salesByDate.length, 0);
+  }, [salesByDate]);
+
+  // Low stock count
+  const lowStockCount = useMemo(() => {
+    return parts.filter(p => toSafeQuantity(p.quantity, 0) <= toSafeQuantity(p.minStockLevel, 0)).length;
+  }, [parts]);
+
+  // Low stock items for chart
+  const lowStockItems = useMemo(() => {
+    return parts
+      .filter(p => toSafeQuantity(p.quantity, 0) <= toSafeQuantity(p.minStockLevel, 0))
+      .map(p => {
+        const quantity = toSafeQuantity(p.quantity, 0);
+        const minStock = toSafeQuantity(p.minStockLevel, 1);
+        let urgency: 'critical' | 'warning' | 'near' = 'near';
+        
+        if (quantity === 0) {
+          urgency = 'critical';
+        } else if (quantity < minStock * 0.5) {
+          urgency = 'warning';
+        }
+        
+        return {
+          name: p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name,
+          quantity,
+          minStock,
+          urgency,
+        };
+      })
+      .slice(0, 10);
+  }, [parts]);
+
+  // Inventory value by category
+  const inventoryByCategory = useMemo(() => {
     const categoryMap = new Map<string, number>();
     
-    for (const sale of filteredSales) {
-      const part = parts.find(p => p.id === sale.partId);
-      if (part) {
-        const category = categories.find(c => c.id === part.categoryId);
-        const catName = category?.name || 'Uncategorized';
-        const currentValue = toSafeNumber(categoryMap.get(catName), 0);
-        categoryMap.set(catName, safeAdd(currentValue, toSafeNumber(sale.totalAmount, 0)));
-      }
+    for (const part of parts) {
+      const category = categories.find(c => c.id === part.categoryId);
+      const catName = category?.name || 'Uncategorized';
+      const value = toSafeNumber(part.quantity, 0) * toSafeNumber(part.buyingPrice, 0);
+      const currentValue = toSafeNumber(categoryMap.get(catName), 0);
+      categoryMap.set(catName, safeAdd(currentValue, value));
     }
 
     return Array.from(categoryMap.entries())
       .map(([name, value]) => ({ name, value }))
+      .filter(d => d.value > 0)
       .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [filteredSales, parts, categories]);
+      .slice(0, 6);
+  }, [parts, categories]);
 
-  // Brand performance for bar chart - with safe number operations
-  const brandPerformance = useMemo(() => {
+  // Inventory value by brand
+  const inventoryByBrand = useMemo(() => {
     const brandMap = new Map<string, number>();
 
-    for (const sale of filteredSales) {
-      const part = parts.find(p => p.id === sale.partId);
-      if (part) {
-        const brand = brands.find(b => b.id === part.brandId);
-        const bName = brand?.name || 'Unknown';
-        const currentValue = toSafeNumber(brandMap.get(bName), 0);
-        brandMap.set(bName, safeAdd(currentValue, toSafeNumber(sale.totalAmount, 0)));
-      }
+    for (const part of parts) {
+      const brand = brands.find(b => b.id === part.brandId);
+      const bName = brand?.name || 'Unknown';
+      const value = toSafeNumber(part.quantity, 0) * toSafeNumber(part.buyingPrice, 0);
+      const currentValue = toSafeNumber(brandMap.get(bName), 0);
+      brandMap.set(bName, safeAdd(currentValue, value));
     }
 
     return Array.from(brandMap.entries())
       .map(([name, value]) => ({ name, value }))
+      .filter(d => d.value > 0)
       .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [filteredSales, parts, brands]);
+      .slice(0, 6);
+  }, [parts, brands]);
+
+  // Product performance matrix data
+  const productPerformance = useMemo(() => {
+    const partSalesMap = new Map<string, {
+      name: string;
+      unitsSold: number;
+      revenue: number;
+      profit: number;
+      category: string;
+    }>();
+
+    for (const sale of filteredSales) {
+      const part = parts.find(p => p.id === sale.partId);
+      const category = part ? categories.find(c => c.id === part.categoryId)?.name || 'Other' : 'Other';
+      
+      const existing = partSalesMap.get(sale.partId);
+      if (existing) {
+        existing.unitsSold += toSafeQuantity(sale.quantity, 0);
+        existing.revenue += toSafeNumber(sale.totalAmount, 0);
+        existing.profit += toSafeNumber(sale.profit, 0);
+      } else {
+        partSalesMap.set(sale.partId, {
+          name: sale.partName,
+          unitsSold: toSafeQuantity(sale.quantity, 0),
+          revenue: toSafeNumber(sale.totalAmount, 0),
+          profit: toSafeNumber(sale.profit, 0),
+          category,
+        });
+      }
+    }
+
+    return Array.from(partSalesMap.values())
+      .filter(d => d.unitsSold > 0)
+      .slice(0, 20);
+  }, [filteredSales, parts, categories]);
+
+  // Sales heatmap data
+  const salesHeatmapData = useMemo(() => {
+    const dailyMap = new Map<string, number>();
+    
+    for (const sale of filteredSales) {
+      const dateStr = new Date(sale.createdAt).toISOString().split('T')[0];
+      const currentValue = toSafeNumber(dailyMap.get(dateStr), 0);
+      dailyMap.set(dateStr, safeAdd(currentValue, toSafeNumber(sale.totalAmount, 0)));
+    }
+
+    return Array.from(dailyMap.entries())
+      .map(([date, value]) => ({ date, value }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [filteredSales]);
+
+  // Handle custom date change
+  const handleCustomStartChange = useCallback((date: Date | undefined) => {
+    setCustomStartDate(date);
+    if (date && customEndDate && date > customEndDate) {
+      setCustomEndDate(undefined);
+    }
+  }, [customEndDate]);
+
+  const handleCustomEndChange = useCallback((date: Date | undefined) => {
+    setCustomEndDate(date);
+  }, []);
+
+  const handleRangeChange = useCallback((index: number) => {
+    setSelectedRangeIndex(index);
+    setCustomStartDate(undefined);
+    setCustomEndDate(undefined);
+  }, []);
+
+  // Export handlers
+  const handleExportPDF = async () => {
+    setIsExporting('pdf');
+    try {
+      await exportReportToPDF(selectedRange, summary, topParts, salesByDate, parts);
+      toast.success('PDF report exported');
+    } catch (error) {
+      toast.error('Failed to export PDF');
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setIsExporting('excel');
+    try {
+      await exportReportToExcel(selectedRange, filteredSales, parts);
+      toast.success('Excel report exported');
+    } catch (error) {
+      toast.error('Failed to export Excel');
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleExportCSV = async () => {
+    setIsExporting('csv');
+    try {
+      await exportReportToCSV(selectedRange, filteredSales, parts);
+      toast.success('CSV report exported');
+    } catch (error) {
+      toast.error('Failed to export CSV');
+    } finally {
+      setIsExporting(null);
+    }
+  };
 
   return (
     <AppLayout>
@@ -184,307 +327,93 @@ export default function Reports() {
         subtitle={formatDateRange(selectedRange)}
       />
 
-      <div className="p-4 space-y-4 pb-24">
-        {/* Date Range Selector */}
-        <Select 
-          value={selectedRangeIndex.toString()} 
-          onValueChange={(v) => setSelectedRangeIndex(parseInt(v))}
-        >
-          <SelectTrigger className="bg-card">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            {dateRanges.map((range, index) => (
-              <SelectItem key={index} value={index.toString()}>
-                {range.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="p-4 space-y-5 pb-24">
+        {/* Time Range Selector */}
+        <TimeRangeSelector
+          dateRanges={dateRanges}
+          selectedRangeIndex={selectedRangeIndex}
+          onRangeChange={handleRangeChange}
+          customStartDate={customStartDate}
+          customEndDate={customEndDate}
+          onCustomStartChange={handleCustomStartChange}
+          onCustomEndChange={handleCustomEndChange}
+        />
 
-        {/* Summary Cards */}
+        {/* Executive Summary - KPI Cards */}
         <div className="grid grid-cols-2 gap-3">
-          <Card className="bg-card">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <ShoppingCart className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Total Sales</span>
-              </div>
-              <p className="text-lg font-bold">
-                {loading ? '...' : formatCurrencyShort(summary?.totalSales || 0)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Total Profit</span>
-              </div>
-              <p className="text-lg font-bold text-primary">
-                {loading ? '...' : formatCurrencyShort(summary?.totalProfit || 0)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Package className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Items Sold</span>
-              </div>
-              <p className="text-lg font-bold">
-                {loading ? '...' : summary?.itemsSold || 0}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Coins className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Profit Margin</span>
-              </div>
-              <p className="text-lg font-bold">
-                {loading ? '...' : `${(summary?.profitMargin || 0).toFixed(1)}%`}
-              </p>
-            </CardContent>
-          </Card>
+          <KPICard
+            title="Total Sales"
+            value={summary?.totalSales || 0}
+            icon={<ShoppingCart className="h-4 w-4 text-primary" />}
+            sparklineData={salesSparkline}
+            isCurrency
+          />
+          <KPICard
+            title="Total Profit"
+            value={summary?.totalProfit || 0}
+            icon={<TrendingUp className="h-4 w-4 text-primary" />}
+            sparklineData={profitSparkline}
+            isCurrency
+          />
+          <KPICard
+            title="Inventory Value"
+            value={inventoryValue.cost}
+            icon={<Package className="h-4 w-4 text-primary" />}
+            isCurrency
+          />
+          <KPICard
+            title="Low Stock Items"
+            value={lowStockCount}
+            icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
+          />
+          <KPICard
+            title="Avg Daily Sales"
+            value={avgDailySales}
+            icon={<Activity className="h-4 w-4 text-primary" />}
+            isCurrency
+            className="col-span-2"
+          />
         </div>
 
-        {/* Sales & Profit Chart */}
+        {/* Sales & Profit Trend */}
         {salesByDate.length > 0 && (
-          <Card className="bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Revenue & Profit
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={salesByDate}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 15%)" />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
-                      tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(0, 0%, 4%)', 
-                        border: '1px solid hsl(0, 0%, 15%)',
-                        borderRadius: '8px',
-                        fontSize: '12px'
-                      }}
-                      formatter={(value: number) => [formatCurrency(value), '']}
-                    />
-                    <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                    <Line 
-                      name="Revenue"
-                      type="monotone" 
-                      dataKey="sales" 
-                      stroke="hsl(142, 76%, 36%)" 
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      name="Profit"
-                      type="monotone"
-                      dataKey="profit"
-                      stroke="hsl(38, 92%, 50%)"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <SalesTrendChart data={salesByDate} />
         )}
 
-        {/* Brand Performance */}
-        {brandPerformance.length > 0 && (
-          <Card className="bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-primary" />
-                Brand Performance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={brandPerformance} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(0, 0%, 15%)" />
-                    <XAxis
-                      type="number"
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
-                      tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}
-                    />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
-                      width={80}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(0, 0%, 4%)',
-                        border: '1px solid hsl(0, 0%, 15%)',
-                        borderRadius: '8px',
-                        fontSize: '12px'
-                      }}
-                      formatter={(value: number) => [formatCurrency(value), 'Sales']}
-                    />
-                    <Bar dataKey="value" fill="hsl(142, 76%, 36%)" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Inventory Distribution */}
+        {(inventoryByCategory.length > 0 || inventoryByBrand.length > 0) && (
+          <InventoryDistributionChart
+            categoryData={inventoryByCategory}
+            brandData={inventoryByBrand}
+          />
         )}
 
-        {/* Category Pie Chart */}
-        {salesByCategory.length > 0 && (
-          <Card className="bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Sales by Category</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={salesByCategory}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
-                    >
-                      {salesByCategory.map((_, index) => (
-                        <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(0, 0%, 4%)', 
-                        border: '1px solid hsl(0, 0%, 15%)',
-                        borderRadius: '8px',
-                        fontSize: '12px'
-                      }}
-                      formatter={(value: number) => [formatCurrency(value), '']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Low Stock Risk Analysis */}
+        {lowStockItems.length > 0 && (
+          <LowStockChart data={lowStockItems} />
         )}
 
-        {/* Stock Movement Area Chart */}
-        {salesByDate.length > 0 && (
-          <Card className="bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                Stock Movement (Items Sold)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={salesByDate}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 15%)" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(0, 0%, 4%)',
-                        border: '1px solid hsl(0, 0%, 15%)',
-                        borderRadius: '8px',
-                        fontSize: '12px'
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="quantity"
-                      name="Items Sold"
-                      stroke="hsl(200, 80%, 50%)"
-                      fill="hsl(200, 80%, 50%, 0.2)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Product Performance Matrix */}
+        {productPerformance.length > 0 && (
+          <ProductPerformanceChart data={productPerformance} />
+        )}
+
+        {/* Sales Heatmap */}
+        {salesHeatmapData.length > 0 && (
+          <SalesHeatmap data={salesHeatmapData} />
         )}
 
         {/* Top Selling Parts */}
         {topParts.length > 0 && (
-          <Card className="bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Top Selling Parts</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {topParts.map((part, index) => (
-                  <div key={part.partId} className="flex items-center justify-between p-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-muted-foreground w-5">
-                        #{index + 1}
-                      </span>
-                      <div>
-                        <p className="font-medium text-sm">{part.partName}</p>
-                        <p className="text-xs text-muted-foreground">{part.quantitySold} sold</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-sm">{formatCurrency(part.totalRevenue)}</p>
-                      <p className="text-xs text-primary">+{formatCurrency(part.totalProfit)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <TopSellingParts data={topParts} />
         )}
 
         {/* Export Buttons */}
         <div className="grid grid-cols-3 gap-3">
           <Button
             variant="outline"
-            className="flex-col h-auto py-3"
-            onClick={async () => {
-              setIsExporting('pdf');
-              try {
-                await exportReportToPDF(selectedRange, summary, topParts, salesByDate, parts);
-                toast.success('PDF report exported');
-              } catch (error) {
-                toast.error('Failed to export PDF');
-              } finally {
-                setIsExporting(null);
-              }
-            }}
+            className="flex-col h-auto py-3 border-border/50 hover:border-primary/50"
+            onClick={handleExportPDF}
             disabled={isExporting !== null || loading}
           >
             {isExporting === 'pdf' ? (
@@ -497,18 +426,8 @@ export default function Reports() {
 
           <Button
             variant="outline"
-            className="flex-col h-auto py-3"
-            onClick={async () => {
-              setIsExporting('excel');
-              try {
-                await exportReportToExcel(selectedRange, filteredSales, parts);
-                toast.success('Excel report exported');
-              } catch (error) {
-                toast.error('Failed to export Excel');
-              } finally {
-                setIsExporting(null);
-              }
-            }}
+            className="flex-col h-auto py-3 border-border/50 hover:border-primary/50"
+            onClick={handleExportExcel}
             disabled={isExporting !== null || loading}
           >
             {isExporting === 'excel' ? (
@@ -521,18 +440,8 @@ export default function Reports() {
 
           <Button
             variant="outline"
-            className="flex-col h-auto py-3"
-            onClick={async () => {
-              setIsExporting('csv');
-              try {
-                await exportReportToCSV(selectedRange, filteredSales, parts);
-                toast.success('CSV report exported');
-              } catch (error) {
-                toast.error('Failed to export CSV');
-              } finally {
-                setIsExporting(null);
-              }
-            }}
+            className="flex-col h-auto py-3 border-border/50 hover:border-primary/50"
+            onClick={handleExportCSV}
             disabled={isExporting !== null || loading}
           >
             {isExporting === 'csv' ? (
