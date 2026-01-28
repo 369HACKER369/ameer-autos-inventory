@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { formatCurrency } from './currency';
 import { formatDateRange } from './dateUtils';
+import { toSafeNumber, toSafeQuantity } from './safeNumber';
 import type { DateRange, ReportSummary, Part, Sale, Brand, Category } from '@/types';
 
 // Extend jsPDF with autotable
@@ -16,131 +17,261 @@ declare module 'jspdf' {
 }
 
 /**
- * Export report to PDF
+ * Safely get numeric value, defaulting to 0
+ */
+function safeNum(value: unknown): number {
+  return toSafeNumber(value, 0);
+}
+
+/**
+ * Safely get quantity value, defaulting to 0
+ */
+function safeQty(value: unknown): number {
+  return toSafeQuantity(value, 0);
+}
+
+/**
+ * Export report to PDF - Professional formatted document
  */
 export async function exportReportToPDF(
   range: DateRange,
   summary: ReportSummary | null,
-  topParts: any[],
-  salesByDate: any[],
-  parts: Part[]
-) {
+  topParts: { partId: string; partName: string; sku: string; quantitySold: number; totalRevenue: number; totalProfit: number }[],
+  salesByDate: { date: string; sales: number; profit: number }[],
+  parts: Part[],
+  lowStockItems?: { name: string; quantity: number; minStock: number }[],
+  inventoryByCategory?: { name: string; value: number }[],
+  inventoryByBrand?: { name: string; value: number }[]
+): Promise<void> {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Header
-  doc.setFontSize(20);
-  doc.setTextColor(22, 101, 52); // Green-800
-  doc.text('Ameer Autos', 14, 22);
+  // Header with branding
+  doc.setFillColor(22, 101, 52); // Green-800
+  doc.rect(0, 0, pageWidth, 35, 'F');
+  
+  doc.setFontSize(22);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Ameer Autos', 14, 18);
 
-  doc.setFontSize(12);
-  doc.setTextColor(100);
-  doc.text('Inventory & Sales Manager', 14, 28);
+  doc.setFontSize(11);
+  doc.text('Inventory & Sales Manager', 14, 26);
 
+  // Report title section
   doc.setFontSize(16);
-  doc.setTextColor(0);
-  doc.text('Sales Report', 14, 45);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Sales & Inventory Report', 14, 50);
 
   doc.setFontSize(10);
-  doc.text(`Period: ${formatDateRange(range)}`, 14, 52);
-  doc.text(`Exported on: ${new Date().toLocaleString()}`, 14, 57);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Period: ${formatDateRange(range)}`, 14, 58);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 64);
 
   // Summary section
   if (summary) {
     doc.setFontSize(14);
-    doc.text('Summary Statistics', 14, 75);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Executive Summary', 14, 78);
+
+    const summaryData = [
+      ['Total Sales', formatCurrency(safeNum(summary.totalSales))],
+      ['Total Profit', formatCurrency(safeNum(summary.totalProfit))],
+      ['Profit Margin', `${safeNum(summary.profitMargin).toFixed(2)}%`],
+      ['Items Sold', safeQty(summary.itemsSold).toString()],
+      ['Average Sale Value', formatCurrency(safeNum(summary.averageSaleValue))],
+      ['Number of Sales', safeQty(summary.salesCount).toString()],
+    ];
 
     autoTable(doc, {
-      startY: 80,
+      startY: 82,
       head: [['Metric', 'Value']],
-      body: [
-        ['Total Sales', formatCurrency(summary.totalSales)],
-        ['Total Profit', formatCurrency(summary.totalProfit)],
-        ['Profit Margin', `${summary.profitMargin.toFixed(2)}%`],
-        ['Items Sold', summary.itemsSold.toString()],
-        ['Avg Sale Value', formatCurrency(summary.averageSaleValue)],
-        ['Sales Count', summary.salesCount.toString()],
-      ],
-      theme: 'striped',
-      headStyles: { fillColor: [22, 101, 52] },
+      body: summaryData,
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [22, 101, 52],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      styles: { 
+        fontSize: 10,
+        cellPadding: 4
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        1: { halign: 'right' }
+      }
     });
   }
 
   // Top Selling Parts
   if (topParts.length > 0) {
-    const finalY = (doc as any).lastAutoTable.finalY || 130;
-    doc.setFontSize(14);
-    doc.text('Top Selling Parts', 14, finalY + 15);
+    const finalY = (doc as any).lastAutoTable?.finalY || 130;
+    
+    if (finalY > pageHeight - 80) {
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Top Selling Parts', 14, 22);
+    } else {
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Top Selling Parts', 14, finalY + 15);
+    }
+
+    const topPartsData = topParts.map((p, i) => [
+      (i + 1).toString(),
+      p.partName || 'Unknown',
+      p.sku || 'N/A',
+      safeQty(p.quantitySold).toString(),
+      formatCurrency(safeNum(p.totalRevenue)),
+      formatCurrency(safeNum(p.totalProfit)),
+    ]);
 
     autoTable(doc, {
-      startY: finalY + 20,
-      head: [['Rank', 'Part Name', 'SKU', 'Qty Sold', 'Revenue', 'Profit']],
-      body: topParts.map((p, i) => {
-        const part = parts.find(item => item.id === p.partId);
-        const name = p.partName || part?.name || 'Unknown';
-        const sku = p.sku || part?.sku || 'N/A';
-
-        return [
-          (i + 1).toString(),
-          name,
-          sku,
-          p.quantitySold.toString(),
-          formatCurrency(p.totalRevenue),
-          formatCurrency(p.totalProfit),
-        ];
-      }),
+      startY: finalY > pageHeight - 80 ? 28 : finalY + 20,
+      head: [['#', 'Part Name', 'SKU', 'Qty Sold', 'Revenue', 'Profit']],
+      body: topPartsData,
       theme: 'striped',
-      headStyles: { fillColor: [22, 101, 52] },
+      headStyles: { 
+        fillColor: [22, 101, 52],
+        textColor: 255
+      },
+      styles: { fontSize: 9 },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 15 },
+        4: { halign: 'right' },
+        5: { halign: 'right' }
+      }
     });
   }
 
   // Sales by Date
   if (salesByDate.length > 0) {
-    const finalY = (doc as any).lastAutoTable.finalY || 200;
+    const finalY = (doc as any).lastAutoTable?.finalY || 200;
 
-    // Check if we need a new page
-    if (finalY > 220) {
+    if (finalY > pageHeight - 60) {
       doc.addPage();
-      doc.setFontSize(14);
-      doc.text('Daily Sales Summary', 14, 22);
-      autoTable(doc, {
-        startY: 30,
-        head: [['Date', 'Sales', 'Profit']],
-        body: salesByDate.map(d => [
-          d.date,
-          formatCurrency(d.sales),
-          formatCurrency(d.profit),
-        ]),
-        theme: 'striped',
-        headStyles: { fillColor: [22, 101, 52] },
-      });
-    } else {
-      doc.setFontSize(14);
-      doc.text('Daily Sales Summary', 14, finalY + 15);
-      autoTable(doc, {
-        startY: finalY + 20,
-        head: [['Date', 'Sales', 'Profit']],
-        body: salesByDate.map(d => [
-          d.date,
-          formatCurrency(d.sales),
-          formatCurrency(d.profit),
-        ]),
-        theme: 'striped',
-        headStyles: { fillColor: [22, 101, 52] },
-      });
     }
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Daily Sales Summary', 14, finalY > pageHeight - 60 ? 22 : finalY + 15);
+
+    const salesData = salesByDate.map(d => [
+      d.date,
+      formatCurrency(safeNum(d.sales)),
+      formatCurrency(safeNum(d.profit)),
+    ]);
+
+    autoTable(doc, {
+      startY: finalY > pageHeight - 60 ? 28 : finalY + 20,
+      head: [['Date', 'Sales', 'Profit']],
+      body: salesData,
+      theme: 'striped',
+      headStyles: { 
+        fillColor: [22, 101, 52],
+        textColor: 255
+      },
+      styles: { fontSize: 9 },
+      columnStyles: {
+        1: { halign: 'right' },
+        2: { halign: 'right' }
+      }
+    });
   }
 
-  // Footer
-  const pageCount = (doc as any).internal.getNumberOfPages();
+  // Low Stock Items (if provided)
+  if (lowStockItems && lowStockItems.length > 0) {
+    const finalY = (doc as any).lastAutoTable?.finalY || 200;
+
+    if (finalY > pageHeight - 60) {
+      doc.addPage();
+    }
+
+    doc.setFontSize(14);
+    doc.setTextColor(220, 38, 38); // Red for warning
+    doc.text('⚠ Low Stock Alert', 14, finalY > pageHeight - 60 ? 22 : finalY + 15);
+
+    const lowStockData = lowStockItems.map(item => [
+      item.name,
+      safeQty(item.quantity).toString(),
+      safeQty(item.minStock).toString(),
+      safeQty(item.quantity) === 0 ? 'CRITICAL' : 'LOW',
+    ]);
+
+    autoTable(doc, {
+      startY: finalY > pageHeight - 60 ? 28 : finalY + 20,
+      head: [['Part Name', 'Current Stock', 'Min Stock', 'Status']],
+      body: lowStockData,
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [220, 38, 38],
+        textColor: 255
+      },
+      styles: { fontSize: 9 }
+    });
+  }
+
+  // Inventory Snapshot
+  {
+    const finalY = (doc as any).lastAutoTable?.finalY || 200;
+
+    if (finalY > pageHeight - 80) {
+      doc.addPage();
+    }
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Current Inventory Snapshot', 14, finalY > pageHeight - 80 ? 22 : finalY + 15);
+
+    // Calculate inventory totals
+    let totalValue = 0;
+    let totalRetail = 0;
+    let totalItems = 0;
+
+    parts.forEach(p => {
+      const qty = safeQty(p.quantity);
+      totalItems += qty;
+      totalValue += qty * safeNum(p.buyingPrice);
+      totalRetail += qty * safeNum(p.sellingPrice);
+    });
+
+    const inventoryStats = [
+      ['Total SKUs', parts.length.toString()],
+      ['Total Items in Stock', totalItems.toString()],
+      ['Inventory Value (Cost)', formatCurrency(totalValue)],
+      ['Inventory Value (Retail)', formatCurrency(totalRetail)],
+      ['Potential Profit', formatCurrency(totalRetail - totalValue)],
+    ];
+
+    autoTable(doc, {
+      startY: finalY > pageHeight - 80 ? 28 : finalY + 20,
+      head: [['Metric', 'Value']],
+      body: inventoryStats,
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [59, 130, 246],
+        textColor: 255
+      },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        1: { halign: 'right' }
+      }
+    });
+  }
+
+  // Footer on all pages
+  const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(150);
+    doc.setTextColor(150, 150, 150);
     doc.text(
-      `Page ${i} of ${pageCount} - Ameer Autos Inventory & Sales Manager`,
+      `Page ${i} of ${pageCount} • Ameer Autos Inventory & Sales Manager`,
       pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 10,
+      pageHeight - 10,
       { align: 'center' }
     );
   }
@@ -150,65 +281,166 @@ export async function exportReportToPDF(
 }
 
 /**
- * Export report to Excel
+ * Export report to Excel - Multi-sheet workbook
  */
 export async function exportReportToExcel(
   range: DateRange,
   sales: Sale[],
-  parts: Part[]
-) {
+  parts: Part[],
+  categories?: { id: string; name: string }[],
+  brands?: { id: string; name: string }[]
+): Promise<void> {
   const workbook = XLSX.utils.book_new();
 
-  // Summary Page
+  // Sheet 1: Summary KPIs
+  const totalSales = sales.reduce((sum, s) => sum + safeNum(s.totalAmount), 0);
+  const totalProfit = sales.reduce((sum, s) => sum + safeNum(s.profit), 0);
+  const itemsSold = sales.reduce((sum, s) => sum + safeQty(s.quantity), 0);
+  const inventoryValue = parts.reduce((sum, p) => sum + safeQty(p.quantity) * safeNum(p.buyingPrice), 0);
+  const inventoryRetail = parts.reduce((sum, p) => sum + safeQty(p.quantity) * safeNum(p.sellingPrice), 0);
+  const lowStockCount = parts.filter(p => safeQty(p.quantity) <= safeQty(p.minStockLevel)).length;
+
   const summaryData = [
-    ['Ameer Autos - Sales Report'],
-    ['Period:', range.label],
-    ['Date Range:', formatDateRange(range)],
-    ['Exported on:', new Date().toLocaleString()],
-    [],
-    ['Sale ID', 'Date', 'Part Name', 'SKU', 'Quantity', 'Unit Price', 'Total Amount', 'Buying Price', 'Profit', 'Customer']
+    ['Ameer Autos - Report Summary'],
+    [''],
+    ['Report Period', range.label],
+    ['Date Range', formatDateRange(range)],
+    ['Generated On', new Date().toLocaleString()],
+    [''],
+    ['KEY PERFORMANCE INDICATORS'],
+    ['Total Sales (Rs)', totalSales],
+    ['Total Profit (Rs)', totalProfit],
+    ['Profit Margin (%)', totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(2) : 0],
+    ['Items Sold', itemsSold],
+    ['Number of Transactions', sales.length],
+    ['Average Sale Value (Rs)', sales.length > 0 ? (totalSales / sales.length).toFixed(2) : 0],
+    [''],
+    ['INVENTORY STATUS'],
+    ['Total SKUs', parts.length],
+    ['Inventory Value - Cost (Rs)', inventoryValue],
+    ['Inventory Value - Retail (Rs)', inventoryRetail],
+    ['Potential Profit (Rs)', inventoryRetail - inventoryValue],
+    ['Low Stock Items', lowStockCount],
   ];
-
-  sales.forEach(s => {
-    // Join with parts data if denormalized fields are missing
-    const part = parts.find(p => p.id === s.partId);
-    const name = s.partName || part?.name || 'Unknown Part';
-    const sku = s.partSku || part?.sku || 'N/A';
-
-    summaryData.push([
-      s.id,
-      new Date(s.createdAt).toLocaleString(),
-      name,
-      sku,
-      s.quantity.toString(),
-      s.unitPrice.toString(),
-      s.totalAmount.toString(),
-      s.buyingPrice.toString(),
-      s.profit.toString(),
-      s.customerName || ''
-    ]);
-  });
 
   const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Sales Report');
+  summarySheet['!cols'] = [{ wch: 30 }, { wch: 20 }];
+  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
 
-  // Also add a Parts list sheet for reference
-  const partsData = [
-    ['Part Name', 'SKU', 'Current Stock', 'Buying Price', 'Selling Price', 'Location']
+  // Sheet 2: Sales Data
+  const salesHeaders = ['Sale ID', 'Date', 'Time', 'Part Name', 'SKU', 'Quantity', 'Unit Price (Rs)', 'Total Amount (Rs)', 'Buying Price (Rs)', 'Profit (Rs)', 'Customer Name'];
+  const salesRows = sales.map(s => [
+    s.id,
+    new Date(s.createdAt).toLocaleDateString(),
+    new Date(s.createdAt).toLocaleTimeString(),
+    s.partName || 'Unknown',
+    s.partSku || 'N/A',
+    safeQty(s.quantity),
+    safeNum(s.unitPrice),
+    safeNum(s.totalAmount),
+    safeNum(s.buyingPrice),
+    safeNum(s.profit),
+    s.customerName || '',
+  ]);
+  
+  const salesSheet = XLSX.utils.aoa_to_sheet([salesHeaders, ...salesRows]);
+  salesSheet['!cols'] = [
+    { wch: 36 }, { wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 15 },
+    { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 20 }
   ];
-  parts.forEach(p => {
-    partsData.push([
+  XLSX.utils.book_append_sheet(workbook, salesSheet, 'Sales Data');
+
+  // Sheet 3: Profit Analysis
+  const profitByPart = new Map<string, { name: string; revenue: number; profit: number; qty: number }>();
+  sales.forEach(s => {
+    const existing = profitByPart.get(s.partId) || { name: s.partName, revenue: 0, profit: 0, qty: 0 };
+    existing.revenue += safeNum(s.totalAmount);
+    existing.profit += safeNum(s.profit);
+    existing.qty += safeQty(s.quantity);
+    profitByPart.set(s.partId, existing);
+  });
+
+  const profitHeaders = ['Part Name', 'Quantity Sold', 'Revenue (Rs)', 'Profit (Rs)', 'Profit Margin (%)'];
+  const profitRows = Array.from(profitByPart.values())
+    .sort((a, b) => b.profit - a.profit)
+    .map(p => [
+      p.name,
+      p.qty,
+      p.revenue,
+      p.profit,
+      p.revenue > 0 ? ((p.profit / p.revenue) * 100).toFixed(2) : 0,
+    ]);
+
+  const profitSheet = XLSX.utils.aoa_to_sheet([profitHeaders, ...profitRows]);
+  profitSheet['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+  XLSX.utils.book_append_sheet(workbook, profitSheet, 'Profit Analysis');
+
+  // Sheet 4: Inventory Snapshot
+  const getBrandName = (brandId: string) => brands?.find(b => b.id === brandId)?.name || 'Unknown';
+  const getCategoryName = (categoryId: string) => categories?.find(c => c.id === categoryId)?.name || 'Unknown';
+
+  const inventoryHeaders = ['Part Name', 'SKU', 'Brand', 'Category', 'Current Stock', 'Min Stock', 'Status', 'Buying Price (Rs)', 'Selling Price (Rs)', 'Stock Value (Rs)', 'Location'];
+  const inventoryRows = parts.map(p => {
+    const qty = safeQty(p.quantity);
+    const minStock = safeQty(p.minStockLevel);
+    let status = 'In Stock';
+    if (qty === 0) status = 'Out of Stock';
+    else if (qty <= minStock) status = 'Low Stock';
+
+    return [
       p.name,
       p.sku,
-      p.quantity.toString(),
-      p.buyingPrice.toString(),
-      p.sellingPrice.toString(),
-      p.location || ''
-    ]);
+      getBrandName(p.brandId),
+      getCategoryName(p.categoryId),
+      qty,
+      minStock,
+      status,
+      safeNum(p.buyingPrice),
+      safeNum(p.sellingPrice),
+      qty * safeNum(p.buyingPrice),
+      p.location || '',
+    ];
   });
-  const partsSheet = XLSX.utils.aoa_to_sheet(partsData);
-  XLSX.utils.book_append_sheet(workbook, partsSheet, 'Current Inventory');
 
+  const inventorySheet = XLSX.utils.aoa_to_sheet([inventoryHeaders, ...inventoryRows]);
+  inventorySheet['!cols'] = [
+    { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 },
+    { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }
+  ];
+  XLSX.utils.book_append_sheet(workbook, inventorySheet, 'Inventory');
+
+  // Sheet 5: Low Stock Items
+  const lowStockParts = parts.filter(p => safeQty(p.quantity) <= safeQty(p.minStockLevel));
+  const lowStockHeaders = ['Part Name', 'SKU', 'Current Stock', 'Min Stock', 'Shortage', 'Status', 'Buying Price (Rs)', 'Restock Cost (Rs)'];
+  const lowStockRows = lowStockParts
+    .sort((a, b) => safeQty(a.quantity) - safeQty(b.quantity))
+    .map(p => {
+      const qty = safeQty(p.quantity);
+      const minStock = safeQty(p.minStockLevel);
+      const shortage = Math.max(0, minStock - qty);
+      const status = qty === 0 ? 'CRITICAL' : 'LOW';
+      const restockCost = shortage * safeNum(p.buyingPrice);
+
+      return [
+        p.name,
+        p.sku,
+        qty,
+        minStock,
+        shortage,
+        status,
+        safeNum(p.buyingPrice),
+        restockCost,
+      ];
+    });
+
+  const lowStockSheet = XLSX.utils.aoa_to_sheet([lowStockHeaders, ...lowStockRows]);
+  lowStockSheet['!cols'] = [
+    { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 10 }, { wch: 10 },
+    { wch: 10 }, { wch: 15 }, { wch: 15 }
+  ];
+  XLSX.utils.book_append_sheet(workbook, lowStockSheet, 'Low Stock');
+
+  // Generate and save
   const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
@@ -217,40 +449,90 @@ export async function exportReportToExcel(
 }
 
 /**
- * Export report to CSV
+ * Export report to CSV - Separate files zipped or single comprehensive file
  */
 export async function exportReportToCSV(
   range: DateRange,
   sales: Sale[],
   parts: Part[]
-) {
-  const headers = ['Sale ID', 'Date', 'Part Name', 'SKU', 'Quantity', 'Unit Price', 'Total Amount', 'Buying Price', 'Profit', 'Customer'];
+): Promise<void> {
+  // Create comprehensive CSV with all data
 
-  const rows = sales.map(s => {
-    const part = parts.find(p => p.id === s.partId);
-    const name = s.partName || part?.name || 'Unknown';
-    const sku = s.partSku || part?.sku || 'N/A';
+  // Sales section
+  const salesHeaders = ['Sale ID', 'Date', 'Part Name', 'SKU', 'Quantity', 'Unit Price', 'Total Amount', 'Buying Price', 'Profit', 'Customer'];
+  const salesRows = sales.map(s => [
+    s.id,
+    new Date(s.createdAt).toISOString(),
+    s.partName || 'Unknown',
+    s.partSku || 'N/A',
+    safeQty(s.quantity),
+    safeNum(s.unitPrice),
+    safeNum(s.totalAmount),
+    safeNum(s.buyingPrice),
+    safeNum(s.profit),
+    s.customerName || '',
+  ]);
 
+  const salesCSV = [
+    '# AMEER AUTOS - SALES REPORT',
+    `# Period: ${range.label}`,
+    `# Date Range: ${formatDateRange(range)}`,
+    `# Generated: ${new Date().toISOString()}`,
+    '',
+    salesHeaders.join(','),
+    ...salesRows.map(r => r.map(cell => `"${cell}"`).join(',')),
+  ].join('\n');
+
+  // Inventory section
+  const inventoryHeaders = ['Part Name', 'SKU', 'Quantity', 'Min Stock', 'Buying Price', 'Selling Price', 'Stock Value', 'Location'];
+  const inventoryRows = parts.map(p => {
+    const qty = safeQty(p.quantity);
     return [
-      s.id,
-      new Date(s.createdAt).toISOString(),
-      name,
-      sku,
-      s.quantity,
-      s.unitPrice,
-      s.totalAmount,
-      s.buyingPrice,
-      s.profit,
-      s.customerName || ''
+      p.name,
+      p.sku,
+      qty,
+      safeQty(p.minStockLevel),
+      safeNum(p.buyingPrice),
+      safeNum(p.sellingPrice),
+      qty * safeNum(p.buyingPrice),
+      p.location || '',
     ];
   });
 
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(r => r.map(cell => `"${cell}"`).join(','))
+  const inventoryCSV = [
+    '',
+    '',
+    '# INVENTORY SNAPSHOT',
+    inventoryHeaders.join(','),
+    ...inventoryRows.map(r => r.map(cell => `"${cell}"`).join(',')),
   ].join('\n');
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Low stock section
+  const lowStockParts = parts.filter(p => safeQty(p.quantity) <= safeQty(p.minStockLevel));
+  const lowStockHeaders = ['Part Name', 'SKU', 'Current Stock', 'Min Stock', 'Status'];
+  const lowStockRows = lowStockParts.map(p => {
+    const qty = safeQty(p.quantity);
+    return [
+      p.name,
+      p.sku,
+      qty,
+      safeQty(p.minStockLevel),
+      qty === 0 ? 'CRITICAL' : 'LOW',
+    ];
+  });
+
+  const lowStockCSV = [
+    '',
+    '',
+    '# LOW STOCK ITEMS',
+    lowStockHeaders.join(','),
+    ...lowStockRows.map(r => r.map(cell => `"${cell}"`).join(',')),
+  ].join('\n');
+
+  // Combine all sections
+  const fullCSV = salesCSV + inventoryCSV + lowStockCSV;
+
+  const blob = new Blob([fullCSV], { type: 'text/csv;charset=utf-8;' });
   const filename = `ameer-autos-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
   saveAs(blob, filename);
 }

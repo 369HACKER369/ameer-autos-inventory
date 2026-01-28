@@ -287,9 +287,26 @@ export default function Reports() {
   const handleExportPDF = async () => {
     setIsExporting('pdf');
     try {
-      await exportReportToPDF(selectedRange, summary, topParts, salesByDate, parts);
-      toast.success('PDF report exported');
+      // Prepare low stock items for export
+      const lowStockForExport = lowStockItems.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        minStock: item.minStock,
+      }));
+      
+      await exportReportToPDF(
+        selectedRange, 
+        summary, 
+        topParts, 
+        salesByDate, 
+        parts,
+        lowStockForExport,
+        inventoryByCategory,
+        inventoryByBrand
+      );
+      toast.success('PDF report exported successfully');
     } catch (error) {
+      console.error('PDF export failed:', error);
       toast.error('Failed to export PDF');
     } finally {
       setIsExporting(null);
@@ -299,9 +316,10 @@ export default function Reports() {
   const handleExportExcel = async () => {
     setIsExporting('excel');
     try {
-      await exportReportToExcel(selectedRange, filteredSales, parts);
-      toast.success('Excel report exported');
+      await exportReportToExcel(selectedRange, filteredSales, parts, categories, brands);
+      toast.success('Excel report exported successfully');
     } catch (error) {
+      console.error('Excel export failed:', error);
       toast.error('Failed to export Excel');
     } finally {
       setIsExporting(null);
@@ -312,8 +330,9 @@ export default function Reports() {
     setIsExporting('csv');
     try {
       await exportReportToCSV(selectedRange, filteredSales, parts);
-      toast.success('CSV report exported');
+      toast.success('CSV report exported successfully');
     } catch (error) {
+      console.error('CSV export failed:', error);
       toast.error('Failed to export CSV');
     } finally {
       setIsExporting(null);

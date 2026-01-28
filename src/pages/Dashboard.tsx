@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
 import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
 import { getRelativeDate, formatTime } from '@/utils/dateUtils';
+import { toSafeQuantity } from '@/utils/safeNumber';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,6 +19,7 @@ import {
   Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -116,26 +118,36 @@ export default function Dashboard() {
             </div>
             <Card className="bg-card">
               <CardContent className="p-0 divide-y divide-border">
-                {lowStockParts.slice(0, 5).map((part) => (
-                  <div 
-                    key={part.id}
-                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigate(`/inventory/${part.id}`)}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{part.name}</p>
-                      <p className="text-xs text-muted-foreground">SKU: {part.sku}</p>
+                {lowStockParts.slice(0, 5).map((part) => {
+                  const qty = toSafeQuantity(part.quantity, 0);
+                  const minStock = toSafeQuantity(part.minStockLevel, 0);
+                  
+                  return (
+                    <div 
+                      key={part.id}
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/inventory/${part.id}`)}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm truncate">{part.name}</p>
+                          {isLowStock(qty, minStock) && (
+                            <EmergencyIndicator size="sm" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">SKU: {part.sku}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={cn(
+                          'text-sm font-semibold',
+                          qty === 0 ? 'text-destructive' : 'text-warning'
+                        )}>
+                          {qty} left
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={cn(
-                        'text-sm font-semibold',
-                        part.quantity === 0 ? 'text-destructive' : 'text-warning'
-                      )}>
-                        {part.quantity} left
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
           </div>

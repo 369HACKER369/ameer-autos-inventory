@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { db } from '@/db/database';
 import { formatCurrency } from '@/utils/currency';
+import { toSafeQuantity } from '@/utils/safeNumber';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
 import type { StockStatus, ViewMode, Part } from '@/types';
 
 export default function Inventory() {
@@ -107,10 +109,13 @@ export default function Inventory() {
   };
 
   const getStockBadge = (part: Part) => {
-    if (part.quantity === 0) {
+    const qty = toSafeQuantity(part.quantity, 0);
+    const minStock = toSafeQuantity(part.minStockLevel, 0);
+    
+    if (qty === 0) {
       return <Badge variant="destructive" className="text-[10px]">Out of Stock</Badge>;
     }
-    if (part.quantity <= part.minStockLevel) {
+    if (qty <= minStock) {
       return <Badge className="bg-warning text-warning-foreground text-[10px]">Low Stock</Badge>;
     }
     return null;
@@ -266,7 +271,12 @@ export default function Inventory() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium truncate">{part.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium truncate">{part.name}</p>
+                            {isLowStock(toSafeQuantity(part.quantity, 0), toSafeQuantity(part.minStockLevel, 0)) && (
+                              <EmergencyIndicator size="sm" />
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">SKU: {part.sku}</p>
                         </div>
                         {getStockBadge(part)}
@@ -276,7 +286,7 @@ export default function Inventory() {
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <span>{getBrandName(part.brandId)}</span>
                           <span>•</span>
-                          <span>Qty: {part.quantity}</span>
+                          <span>Qty: {toSafeQuantity(part.quantity, 0)}</span>
                         </div>
                         <p className="font-semibold text-primary">
                           {formatCurrency(part.sellingPrice)}
@@ -311,15 +321,20 @@ export default function Inventory() {
                   </div>
                   
                   <div className="space-y-1">
-                    <p className="font-medium text-sm truncate">{part.name}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium text-sm truncate flex-1">{part.name}</p>
+                      {isLowStock(toSafeQuantity(part.quantity, 0), toSafeQuantity(part.minStockLevel, 0)) && (
+                        <EmergencyIndicator size="sm" />
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">SKU: {part.sku}</p>
                     <div className="flex items-center justify-between">
                       <span className={cn(
                         'text-xs',
-                        part.quantity === 0 && 'text-destructive',
-                        part.quantity > 0 && part.quantity <= part.minStockLevel && 'text-warning'
+                        toSafeQuantity(part.quantity, 0) === 0 && 'text-destructive',
+                        toSafeQuantity(part.quantity, 0) > 0 && toSafeQuantity(part.quantity, 0) <= toSafeQuantity(part.minStockLevel, 0) && 'text-warning'
                       )}>
-                        Qty: {part.quantity}
+                        Qty: {toSafeQuantity(part.quantity, 0)}
                       </span>
                       <span className="font-semibold text-sm text-primary">
                         {formatCurrency(part.sellingPrice)}
