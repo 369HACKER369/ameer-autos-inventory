@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { SidebarNav } from './SidebarNav';
+import { AlertBell } from './AlertBell';
 
 interface HeaderProps {
   title: string;
@@ -92,11 +93,10 @@ export function Header({
               )}
             </div>
           </div>
-          {rightAction && (
-            <div className="flex items-center gap-2 shrink-0 ml-2">
-              {rightAction}
-            </div>
-          )}
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            <AlertBell />
+            {rightAction}
+          </div>
         </div>
       </header>
     </>

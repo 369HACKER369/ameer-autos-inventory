@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
+import { EmergencyIndicator } from '@/components/ui/emergency-indicator';
 import {
   ResponsiveContainer,
   BarChart,
@@ -62,7 +63,7 @@ export function LowStockChart({ data, title = "Low Stock Risk Analysis" }: LowSt
     <Card className="bg-card border-border/50 animate-fade-in">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <EmergencyIndicator size="md" />
           {title}
         </CardTitle>
       </CardHeader>
