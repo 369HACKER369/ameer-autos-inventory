@@ -2,103 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ameer Autos - AMOLED Dark Theme Design System
+/* Ameer Autos - Professional Color System
+   Designed for readability, accessibility, and visual comfort
+   Optimized for users aged 50+ with WCAG-compliant contrast
    All colors in HSL format for consistency
 */
 
 @layer base {
   :root {
-    /* Light mode - rarely used, keeping for compatibility */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 4%;
+    /* ===== LIGHT MODE ===== */
+    /* Soft off-white background - easy on eyes */
+    --background: 220 20% 97%;
+    --foreground: 220 25% 20%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 4%;
+    /* Cards with subtle elevation */
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
+    --popover-foreground: 220 25% 20%;
 
-    --primary: 142 76% 36%;
+    /* Professional calm green - not neon */
+    --primary: 152 45% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    /* Neutral secondary */
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 25% 25%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    /* Muted elements */
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 142 76% 36%;
+    /* Accent matches primary */
+    --accent: 152 45% 38%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    /* Critical alerts - red */
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    /* Warnings - amber/orange */
+    --warning: 35 85% 52%;
+    --warning-foreground: 35 90% 15%;
 
-    --success: 142 76% 36%;
+    /* Success - matches primary green */
+    --success: 152 45% 38%;
     --success-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 142 76% 36%;
+    /* Info - calm blue */
+    --info: 210 65% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* Borders - subtle gray */
+    --border: 220 14% 88%;
+    --input: 220 14% 88%;
+    --ring: 152 45% 38%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 25%;
-    --sidebar-primary: 0 0% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 91%;
-    --sidebar-ring: 142 76% 36%;
+    /* Sidebar */
+    --sidebar-background: 220 20% 97%;
+    --sidebar-foreground: 220 25% 30%;
+    --sidebar-primary: 152 45% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 94%;
+    --sidebar-accent-foreground: 220 25% 25%;
+    --sidebar-border: 220 14% 88%;
+    --sidebar-ring: 152 45% 38%;
+
+    /* Chart colors - consistent semantic meaning */
+    --chart-sales: 152 45% 42%;
+    --chart-profit: 210 65% 50%;
+    --chart-inventory: 175 50% 42%;
+    --chart-alert: 0 65% 55%;
+    --chart-neutral: 220 10% 60%;
   }
 
   .dark {
-    /* AMOLED Dark Theme - True blacks for power saving */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
+    /* ===== DARK MODE ===== */
+    /* Deep charcoal - not pure black, easier on eyes */
+    --background: 220 18% 8%;
+    --foreground: 220 15% 88%;
 
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 98%;
+    /* Cards slightly elevated from background */
+    --card: 220 16% 12%;
+    --card-foreground: 220 15% 90%;
 
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 16% 12%;
+    --popover-foreground: 220 15% 90%;
 
-    --primary: 142 76% 36%;
-    --primary-foreground: 0 0% 100%;
+    /* Professional green - softer brightness for dark mode */
+    --primary: 152 42% 45%;
+    --primary-foreground: 220 18% 8%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 98%;
+    /* Neutral secondary */
+    --secondary: 220 14% 18%;
+    --secondary-foreground: 220 15% 85%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    /* Muted elements */
+    --muted: 220 12% 20%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 142 76% 36%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent matches primary */
+    --accent: 152 42% 45%;
+    --accent-foreground: 220 18% 8%;
 
-    --destructive: 0 84% 60%;
+    /* Critical alerts - slightly muted red */
+    --destructive: 0 60% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    /* Warnings - softer amber */
+    --warning: 35 75% 50%;
+    --warning-foreground: 35 90% 10%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    /* Success - matches primary green */
+    --success: 152 42% 45%;
+    --success-foreground: 220 18% 8%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 10%;
-    --ring: 142 76% 36%;
+    /* Info - calm blue */
+    --info: 210 60% 55%;
+    --info-foreground: 0 0% 100%;
 
-    --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 142 76% 36%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 142 76% 36%;
+    /* Borders - very subtle */
+    --border: 220 12% 22%;
+    --input: 220 12% 18%;
+    --ring: 152 42% 45%;
+
+    /* Sidebar */
+    --sidebar-background: 220 16% 10%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 152 42% 45%;
+    --sidebar-primary-foreground: 220 18% 8%;
+    --sidebar-accent: 220 12% 18%;
+    --sidebar-accent-foreground: 220 15% 85%;
+    --sidebar-border: 220 12% 22%;
+    --sidebar-ring: 152 42% 45%;
+
+    /* Chart colors - consistent semantic meaning, no glow */
+    --chart-sales: 152 40% 48%;
+    --chart-profit: 210 55% 55%;
+    --chart-inventory: 175 45% 48%;
+    --chart-alert: 0 55% 58%;
+    --chart-neutral: 220 8% 50%;
   }
 }
 
@@ -110,7 +156,7 @@
   html {
     @apply antialiased;
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.6;
   }
 
   body {
@@ -137,9 +183,13 @@
     @apply min-h-[44px] min-w-[44px];
   }
 
-  /* AMOLED-optimized gradients */
+  /* Professional gradient - subtle, not harsh */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 28%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(152 45% 32%) 100%);
+  }
+
+  .dark .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(152 40% 38%) 100%);
   }
 
   /* Low stock warning badge */
@@ -152,6 +202,11 @@
     @apply bg-success text-success-foreground;
   }
 
+  /* Info badge */
+  .badge-info {
+    @apply bg-info text-info-foreground;
+  }
+
   /* Hide scrollbar but allow scrolling */
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -160,5 +215,26 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Card shadow utilities - subtle elevation */
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .dark .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.15);
+  }
+
+  /* Smooth focus states */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+  }
+}
+
+/* Smooth transitions for theme switching */
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }

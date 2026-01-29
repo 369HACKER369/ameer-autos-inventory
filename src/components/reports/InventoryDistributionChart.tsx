@@ -26,15 +26,27 @@ interface InventoryDistributionChartProps {
   title?: string;
 }
 
+// Muted, professional color palette - works well in both light and dark modes
 const COLORS = [
-  'hsl(142, 76%, 36%)', // Primary green
-  'hsl(38, 92%, 50%)',  // Amber
-  'hsl(200, 80%, 50%)', // Blue
-  'hsl(280, 70%, 50%)', // Purple
-  'hsl(0, 84%, 60%)',   // Red
-  'hsl(160, 60%, 45%)', // Teal
-  'hsl(320, 70%, 50%)', // Pink
-  'hsl(45, 90%, 55%)',  // Yellow
+  'hsl(152, 45%, 42%)',  // Primary green (sales)
+  'hsl(210, 60%, 50%)',  // Blue (profit)
+  'hsl(175, 45%, 45%)',  // Teal (inventory)
+  'hsl(35, 70%, 52%)',   // Amber
+  'hsl(280, 45%, 55%)',  // Purple
+  'hsl(350, 55%, 55%)',  // Rose
+  'hsl(45, 65%, 52%)',   // Gold
+  'hsl(195, 55%, 48%)',  // Cyan
+];
+
+const COLORS_DARK = [
+  'hsl(152, 40%, 48%)',  // Primary green (softer)
+  'hsl(210, 55%, 55%)',  // Blue (softer)
+  'hsl(175, 40%, 50%)',  // Teal (softer)
+  'hsl(35, 60%, 55%)',   // Amber (softer)
+  'hsl(280, 40%, 58%)',  // Purple (softer)
+  'hsl(350, 48%, 58%)',  // Rose (softer)
+  'hsl(45, 55%, 55%)',   // Gold (softer)
+  'hsl(195, 48%, 52%)',  // Cyan (softer)
 ];
 
 export function InventoryDistributionChart({ 
@@ -44,7 +56,15 @@ export function InventoryDistributionChart({
 }: InventoryDistributionChartProps) {
   if (categoryData.length === 0 && brandData.length === 0) return null;
 
-  const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
+  const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const colors = isDark ? COLORS_DARK : COLORS;
+  const gridColor = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 88%)';
+  const textColor = isDark ? 'hsl(220, 10%, 55%)' : 'hsl(220, 10%, 46%)';
+  const tooltipBg = isDark ? 'hsl(220, 16%, 12%)' : 'hsl(0, 0%, 100%)';
+  const tooltipBorder = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 88%)';
+  const strokeColor = isDark ? 'hsl(220, 18%, 8%)' : 'hsl(0, 0%, 100%)';
+
+  const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     if (percent < 0.05) return null; // Hide labels for small slices
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -55,7 +75,7 @@ export function InventoryDistributionChart({
       <text
         x={x}
         y={y}
-        fill="white"
+        fill={isDark ? 'hsl(220, 15%, 90%)' : 'hsl(0, 0%, 100%)'}
         textAnchor="middle"
         dominantBaseline="central"
         fontSize={10}
@@ -67,7 +87,7 @@ export function InventoryDistributionChart({
   };
 
   return (
-    <Card className="bg-card border-border/50 animate-fade-in">
+    <Card className="bg-card border-border/50 card-shadow animate-fade-in">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <PieIcon className="h-4 w-4 text-primary" />
@@ -103,25 +123,25 @@ export function InventoryDistributionChart({
                       labelLine={false}
                       label={CustomLabel}
                       isAnimationActive={true}
-                      animationDuration={800}
+                      animationDuration={600}
                       animationEasing="ease-out"
                     >
                       {categoryData.map((_, index) => (
                         <Cell 
                           key={index} 
-                          fill={COLORS[index % COLORS.length]}
-                          stroke="hsl(0, 0%, 4%)"
+                          fill={colors[index % colors.length]}
+                          stroke={strokeColor}
                           strokeWidth={2}
                         />
                       ))}
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'hsl(0, 0%, 4%)',
-                        border: '1px solid hsl(0, 0%, 20%)',
+                        backgroundColor: tooltipBg,
+                        border: `1px solid ${tooltipBorder}`,
                         borderRadius: '8px',
                         fontSize: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
                       formatter={(value: number) => [formatCurrency(value), 'Value']}
                     />
@@ -132,7 +152,7 @@ export function InventoryDistributionChart({
                     <div key={item.name} className="flex items-center gap-1.5 text-xs">
                       <div 
                         className="w-2.5 h-2.5 rounded-full" 
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        style={{ backgroundColor: colors[index % colors.length] }}
                       />
                       <span className="text-muted-foreground">{item.name}</span>
                     </div>
@@ -151,36 +171,36 @@ export function InventoryDistributionChart({
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={brandData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(0, 0%, 15%)" />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={gridColor} />
                     <XAxis
                       type="number"
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
+                      tick={{ fontSize: 10, fill: textColor }}
+                      axisLine={{ stroke: gridColor }}
                       tickFormatter={(v) => formatCurrencyShort(v)}
                     />
                     <YAxis
                       dataKey="name"
                       type="category"
-                      tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                      axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
+                      tick={{ fontSize: 10, fill: textColor }}
+                      axisLine={{ stroke: gridColor }}
                       width={80}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'hsl(0, 0%, 4%)',
-                        border: '1px solid hsl(0, 0%, 20%)',
+                        backgroundColor: tooltipBg,
+                        border: `1px solid ${tooltipBorder}`,
                         borderRadius: '8px',
                         fontSize: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
                       formatter={(value: number) => [formatCurrency(value), 'Value']}
                     />
                     <Bar 
                       dataKey="value" 
-                      fill="hsl(142, 76%, 36%)" 
+                      fill={isDark ? 'hsl(175, 40%, 50%)' : 'hsl(175, 45%, 45%)'} 
                       radius={[0, 4, 4, 0]}
                       isAnimationActive={true}
-                      animationDuration={800}
+                      animationDuration={600}
                     />
                   </BarChart>
                 </ResponsiveContainer>

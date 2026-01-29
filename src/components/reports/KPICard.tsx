@@ -59,9 +59,12 @@ export function KPICard({
     }
   };
 
+  // Use CSS variables for dynamic theme support
+  const sparklineColor = 'hsl(var(--primary))';
+
   return (
     <Card className={cn(
-      "bg-card border-border/50 overflow-hidden transition-all duration-300 hover:border-primary/30",
+      "bg-card border-border/50 card-shadow overflow-hidden transition-all duration-200 hover:border-primary/30",
       "animate-fade-in",
       className
     )}>
@@ -84,7 +87,7 @@ export function KPICard({
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
             {title}
           </p>
-          <p className="text-2xl font-bold tracking-tight">
+          <p className="text-2xl font-bold tracking-tight text-foreground">
             {displayValue}
           </p>
         </div>
@@ -96,18 +99,18 @@ export function KPICard({
               <AreaChart data={sparklineData}>
                 <defs>
                   <linearGradient id={`sparkline-gradient-${title.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor={sparklineColor} stopOpacity={0.25} />
+                    <stop offset="100%" stopColor={sparklineColor} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="hsl(142, 76%, 36%)"
+                  stroke={sparklineColor}
                   strokeWidth={1.5}
                   fill={`url(#sparkline-gradient-${title.replace(/\s/g, '')})`}
                   isAnimationActive={true}
-                  animationDuration={1000}
+                  animationDuration={800}
                   animationEasing="ease-out"
                 />
               </AreaChart>

@@ -26,24 +26,28 @@ interface ProductPerformanceChartProps {
   title?: string;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'default': 'hsl(142, 76%, 36%)',
-};
+// Muted, professional category colors
+const CATEGORY_COLORS_LIGHT = [
+  'hsl(152, 45%, 42%)',  // Green
+  'hsl(210, 60%, 50%)',  // Blue
+  'hsl(175, 45%, 45%)',  // Teal
+  'hsl(35, 70%, 52%)',   // Amber
+  'hsl(280, 45%, 55%)',  // Purple
+  'hsl(350, 55%, 55%)',  // Rose
+  'hsl(45, 65%, 52%)',   // Gold
+  'hsl(195, 55%, 48%)',  // Cyan
+];
 
-// Generate consistent colors for categories
-const getCategoryColor = (category: string, index: number): string => {
-  const colors = [
-    'hsl(142, 76%, 36%)', // Green
-    'hsl(38, 92%, 50%)',  // Amber
-    'hsl(200, 80%, 50%)', // Blue
-    'hsl(280, 70%, 50%)', // Purple
-    'hsl(0, 84%, 60%)',   // Red
-    'hsl(160, 60%, 45%)', // Teal
-    'hsl(320, 70%, 50%)', // Pink
-    'hsl(45, 90%, 55%)',  // Yellow
-  ];
-  return colors[index % colors.length];
-};
+const CATEGORY_COLORS_DARK = [
+  'hsl(152, 40%, 48%)',  // Green (softer)
+  'hsl(210, 55%, 55%)',  // Blue (softer)
+  'hsl(175, 40%, 50%)',  // Teal (softer)
+  'hsl(35, 60%, 55%)',   // Amber (softer)
+  'hsl(280, 40%, 58%)',  // Purple (softer)
+  'hsl(350, 48%, 58%)',  // Rose (softer)
+  'hsl(45, 55%, 55%)',   // Gold (softer)
+  'hsl(195, 48%, 52%)',  // Cyan (softer)
+];
 
 export function ProductPerformanceChart({ 
   data, 
@@ -51,16 +55,23 @@ export function ProductPerformanceChart({
 }: ProductPerformanceChartProps) {
   if (data.length === 0) return null;
 
+  const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const colors = isDark ? CATEGORY_COLORS_DARK : CATEGORY_COLORS_LIGHT;
+  const gridColor = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 88%)';
+  const textColor = isDark ? 'hsl(220, 10%, 55%)' : 'hsl(220, 10%, 46%)';
+  const tooltipBg = isDark ? 'hsl(220, 16%, 12%)' : 'hsl(0, 0%, 100%)';
+  const tooltipBorder = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 88%)';
+
   // Get unique categories
   const categories = [...new Set(data.map(d => d.category))];
-  const categoryColorMap = new Map(categories.map((cat, idx) => [cat, getCategoryColor(cat, idx)]));
+  const categoryColorMap = new Map(categories.map((cat, idx) => [cat, colors[idx % colors.length]]));
 
   // Calculate size range for ZAxis
   const maxProfit = Math.max(...data.map(d => d.profit), 1);
   const minProfit = Math.min(...data.map(d => d.profit), 0);
 
   return (
-    <Card className="bg-card border-border/50 animate-fade-in">
+    <Card className="bg-card border-border/50 card-shadow animate-fade-in">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Target className="h-4 w-4 text-primary" />
@@ -70,7 +81,7 @@ export function ProductPerformanceChart({
       <CardContent>
         {/* Legend */}
         <div className="flex flex-wrap gap-3 mb-4">
-          {categories.slice(0, 6).map((cat, idx) => (
+          {categories.slice(0, 6).map((cat) => (
             <div key={cat} className="flex items-center gap-1.5 text-xs">
               <div 
                 className="w-2.5 h-2.5 rounded-full" 
@@ -88,21 +99,21 @@ export function ProductPerformanceChart({
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <ScatterChart margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 15%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
               <XAxis
                 type="number"
                 dataKey="unitsSold"
                 name="Units Sold"
-                tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
-                label={{ value: 'Units Sold', position: 'bottom', fontSize: 10, fill: 'hsl(0, 0%, 50%)' }}
+                tick={{ fontSize: 10, fill: textColor }}
+                axisLine={{ stroke: gridColor }}
+                label={{ value: 'Units Sold', position: 'bottom', fontSize: 10, fill: textColor }}
               />
               <YAxis
                 type="number"
                 dataKey="revenue"
                 name="Revenue"
-                tick={{ fontSize: 10, fill: 'hsl(0, 0%, 65%)' }}
-                axisLine={{ stroke: 'hsl(0, 0%, 15%)' }}
+                tick={{ fontSize: 10, fill: textColor }}
+                axisLine={{ stroke: gridColor }}
                 tickFormatter={(v) => formatCurrencyShort(v)}
               />
               <ZAxis
@@ -114,11 +125,11 @@ export function ProductPerformanceChart({
               <Tooltip
                 cursor={{ strokeDasharray: '3 3' }}
                 contentStyle={{
-                  backgroundColor: 'hsl(0, 0%, 4%)',
-                  border: '1px solid hsl(0, 0%, 20%)',
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${tooltipBorder}`,
                   borderRadius: '8px',
                   fontSize: '12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                 }}
                 formatter={(value: number, name: string) => {
                   if (name === 'Revenue' || name === 'Profit') {
@@ -136,13 +147,13 @@ export function ProductPerformanceChart({
               <Scatter 
                 data={data} 
                 isAnimationActive={true}
-                animationDuration={800}
+                animationDuration={600}
               >
                 {data.map((entry, index) => (
                   <Cell 
                     key={index} 
-                    fill={categoryColorMap.get(entry.category) || 'hsl(142, 76%, 36%)'} 
-                    fillOpacity={0.8}
+                    fill={categoryColorMap.get(entry.category) || colors[0]} 
+                    fillOpacity={0.75}
                   />
                 ))}
               </Scatter>
