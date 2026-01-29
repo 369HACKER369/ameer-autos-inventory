@@ -31,17 +31,19 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { DateRange, ReportSummary } from '@/types';
-import { useEffect, useState as useReactState } from 'react';
+import { useEffect, useState as useReactState, useRef } from 'react';
 import {
   exportReportToPDF,
   exportReportToExcel,
   exportReportToCSV
 } from '@/utils/exportUtils';
+import { captureElementAsPng, type CapturedSection } from '@/utils/reportCapture';
 import { toast } from 'sonner';
 import { startOfDay, endOfDay } from 'date-fns';
 
 export default function Reports() {
-  const dateRanges = getDateRanges();
+  // Memoize to avoid render loops (getDateRanges() creates a fresh array each render)
+  const dateRanges = useMemo(() => getDateRanges(), []);
   const [selectedRangeIndex, setSelectedRangeIndex] = useState(4); // This Month
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
@@ -57,6 +59,14 @@ export default function Reports() {
   const [inventoryValue, setInventoryValue] = useState<{ cost: number; retail: number }>({ cost: 0, retail: 0 });
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState<string | null>(null);
+
+  // Refs used to capture visible sections for PDF export (no UI changes)
+  const kpiGridRef = useRef<HTMLDivElement | null>(null);
+  const salesTrendRef = useRef<HTMLDivElement | null>(null);
+  const inventoryDistRef = useRef<HTMLDivElement | null>(null);
+  const lowStockChartRef = useRef<HTMLDivElement | null>(null);
+  const productPerfRef = useRef<HTMLDivElement | null>(null);
+  const heatmapRef = useRef<HTMLDivElement | null>(null);
 
   // Determine active date range (custom or preset)
   const selectedRange = useMemo((): DateRange => {
@@ -96,7 +106,28 @@ export default function Reports() {
       }
     };
     fetchData();
-  }, [selectedRange]);
+  }, [selectedRange.startDate.getTime(), selectedRange.endDate.getTime(), selectedRange.label]);
+
+  const captureVisibleSections = useCallback(async (): Promise<CapturedSection[]> => {
+    const candidates: Array<{ title: string; el: HTMLElement | null }> = [
+      { title: 'Executive Summary', el: kpiGridRef.current },
+      { title: 'Revenue & Profit Trends', el: salesTrendRef.current },
+      { title: 'Inventory Value Distribution', el: inventoryDistRef.current },
+      { title: 'Low Stock Risk Analysis', el: lowStockChartRef.current },
+      { title: 'Product Performance Matrix', el: productPerfRef.current },
+      { title: 'Sales Activity Heatmap', el: heatmapRef.current },
+    ];
+
+    const results = await Promise.all(
+      candidates.map(async (c) => {
+        if (!c.el) return null;
+        const dataUrl = await captureElementAsPng(c.el);
+        return { title: c.title, dataUrl } as CapturedSection;
+      })
+    );
+
+    return results.filter(Boolean) as CapturedSection[];
+  }, []);
 
   // Filtered sales for current range
   const filteredSales = useMemo(() => {
@@ -287,27 +318,37 @@ export default function Reports() {
   const handleExportPDF = async () => {
     setIsExporting('pdf');
     try {
+      // Freeze computed state by snapshotting data before any async work
+      const rangeSnapshot = selectedRange;
+      const summarySnapshot = summary ? { ...summary } : null;
+      const topPartsSnapshot = topParts.map((p) => ({ ...p }));
+      const salesByDateSnapshot = salesByDate.map((d) => ({ ...d }));
+      const partsSnapshot = parts.map((p) => ({ ...p }));
+
       // Prepare low stock items for export
       const lowStockForExport = lowStockItems.map(item => ({
         name: item.name,
         quantity: item.quantity,
         minStock: item.minStock,
       }));
+
+      const visuals = await captureVisibleSections();
       
       await exportReportToPDF(
-        selectedRange, 
-        summary, 
-        topParts, 
-        salesByDate, 
-        parts,
+        rangeSnapshot,
+        summarySnapshot,
+        topPartsSnapshot,
+        salesByDateSnapshot,
+        partsSnapshot,
         lowStockForExport,
         inventoryByCategory,
-        inventoryByBrand
+        inventoryByBrand,
+        visuals
       );
       toast.success('PDF report exported successfully');
     } catch (error) {
       console.error('PDF export failed:', error);
-      toast.error('Failed to export PDF');
+      toast.error(error instanceof Error ? error.message : 'Failed to export PDF');
     } finally {
       setIsExporting(null);
     }
@@ -359,7 +400,7 @@ export default function Reports() {
         />
 
         {/* Executive Summary - KPI Cards */}
-        <div className="grid grid-cols-2 gap-3">
+        <div ref={kpiGridRef} className="grid grid-cols-2 gap-3">
           <KPICard
             title="Total Sales"
             value={summary?.totalSales || 0}
@@ -396,30 +437,40 @@ export default function Reports() {
 
         {/* Sales & Profit Trend */}
         {salesByDate.length > 0 && (
-          <SalesTrendChart data={salesByDate} />
+          <div ref={salesTrendRef}>
+            <SalesTrendChart data={salesByDate} />
+          </div>
         )}
 
         {/* Inventory Distribution */}
         {(inventoryByCategory.length > 0 || inventoryByBrand.length > 0) && (
-          <InventoryDistributionChart
-            categoryData={inventoryByCategory}
-            brandData={inventoryByBrand}
-          />
+          <div ref={inventoryDistRef}>
+            <InventoryDistributionChart
+              categoryData={inventoryByCategory}
+              brandData={inventoryByBrand}
+            />
+          </div>
         )}
 
         {/* Low Stock Risk Analysis */}
         {lowStockItems.length > 0 && (
-          <LowStockChart data={lowStockItems} />
+          <div ref={lowStockChartRef}>
+            <LowStockChart data={lowStockItems} />
+          </div>
         )}
 
         {/* Product Performance Matrix */}
         {productPerformance.length > 0 && (
-          <ProductPerformanceChart data={productPerformance} />
+          <div ref={productPerfRef}>
+            <ProductPerformanceChart data={productPerformance} />
+          </div>
         )}
 
         {/* Sales Heatmap */}
         {salesHeatmapData.length > 0 && (
-          <SalesHeatmap data={salesHeatmapData} />
+          <div ref={heatmapRef}>
+            <SalesHeatmap data={salesHeatmapData} />
+          </div>
         )}
 
         {/* Top Selling Parts */}

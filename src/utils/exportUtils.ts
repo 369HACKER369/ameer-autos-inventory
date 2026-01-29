@@ -41,11 +41,29 @@ export async function exportReportToPDF(
   parts: Part[],
   lowStockItems?: { name: string; quantity: number; minStock: number }[],
   inventoryByCategory?: { name: string; value: number }[],
-  inventoryByBrand?: { name: string; value: number }[]
+  inventoryByBrand?: { name: string; value: number }[],
+  visuals?: Array<{ title: string; dataUrl: string }>
 ): Promise<void> {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
+
+  const marginX = 14;
+  const maxContentWidth = pageWidth - marginX * 2;
+
+  const loadImageSize = (dataUrl: string) =>
+    new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.width, height: img.height });
+      img.onerror = () => reject(new Error('Failed to load chart image for PDF export'));
+      img.src = dataUrl;
+    });
+
+  const ensureSpace = (cursorY: number, requiredHeight: number) => {
+    if (cursorY + requiredHeight <= pageHeight - 18) return cursorY;
+    doc.addPage();
+    return 22;
+  };
 
   // Header with branding
   doc.setFillColor(22, 101, 52); // Green-800
@@ -61,7 +79,8 @@ export async function exportReportToPDF(
   // Report title section
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
-  doc.text('Sales & Inventory Report', 14, 50);
+  // Title requirement: Shop Name + Selected Time Range
+  doc.text(`Ameer Autos - ${range.label}`, 14, 50);
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
@@ -102,6 +121,41 @@ export async function exportReportToPDF(
         1: { halign: 'right' }
       }
     });
+  }
+
+  // Charts / Graphs (captured from the current screen)
+  if (visuals && visuals.length > 0) {
+    let cursorY = ((doc as any).lastAutoTable?.finalY ?? 70) + 12;
+    cursorY = ensureSpace(cursorY, 18);
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Charts & Graphs (as on screen)', marginX, cursorY);
+    cursorY += 10;
+
+    for (const visual of visuals) {
+      cursorY = ensureSpace(cursorY, 22);
+
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 60);
+      doc.text(visual.title, marginX, cursorY);
+      cursorY += 6;
+
+      const { width, height } = await loadImageSize(visual.dataUrl);
+      let renderW = maxContentWidth;
+      let renderH = (height / Math.max(1, width)) * renderW;
+
+      // If it won't fit, scale down to page height.
+      const maxH = pageHeight - cursorY - 18;
+      if (renderH > maxH) {
+        renderH = maxH;
+        renderW = (width / Math.max(1, height)) * renderH;
+      }
+
+      cursorY = ensureSpace(cursorY, renderH + 12);
+      doc.addImage(visual.dataUrl, 'PNG', marginX, cursorY, renderW, renderH, undefined, 'FAST');
+      cursorY += renderH + 12;
+    }
   }
 
   // Top Selling Parts
@@ -191,7 +245,8 @@ export async function exportReportToPDF(
 
     doc.setFontSize(14);
     doc.setTextColor(220, 38, 38); // Red for warning
-    doc.text('⚠ Low Stock Alert', 14, finalY > pageHeight - 60 ? 22 : finalY + 15);
+    // Avoid unicode glyphs (emoji) because jsPDF default fonts can fail to render them.
+    doc.text('Low Stock Alert', 14, finalY > pageHeight - 60 ? 22 : finalY + 15);
 
     const lowStockData = lowStockItems.map(item => [
       item.name,
@@ -300,6 +355,9 @@ export async function exportReportToExcel(
   const inventoryRetail = parts.reduce((sum, p) => sum + safeQty(p.quantity) * safeNum(p.sellingPrice), 0);
   const lowStockCount = parts.filter(p => safeQty(p.quantity) <= safeQty(p.minStockLevel)).length;
 
+  const profitMarginPct = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
+  const avgSaleValue = sales.length > 0 ? totalSales / sales.length : 0;
+
   const summaryData = [
     ['Ameer Autos - Report Summary'],
     [''],
@@ -310,10 +368,10 @@ export async function exportReportToExcel(
     ['KEY PERFORMANCE INDICATORS'],
     ['Total Sales (Rs)', totalSales],
     ['Total Profit (Rs)', totalProfit],
-    ['Profit Margin (%)', totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(2) : 0],
+    ['Profit Margin (%)', Number(profitMarginPct.toFixed(2))],
     ['Items Sold', itemsSold],
     ['Number of Transactions', sales.length],
-    ['Average Sale Value (Rs)', sales.length > 0 ? (totalSales / sales.length).toFixed(2) : 0],
+    ['Average Sale Value (Rs)', Number(avgSaleValue.toFixed(2))],
     [''],
     ['INVENTORY STATUS'],
     ['Total SKUs', parts.length],
@@ -368,7 +426,7 @@ export async function exportReportToExcel(
       p.qty,
       p.revenue,
       p.profit,
-      p.revenue > 0 ? ((p.profit / p.revenue) * 100).toFixed(2) : 0,
+      Number((p.revenue > 0 ? (p.profit / p.revenue) * 100 : 0).toFixed(2)),
     ]);
 
   const profitSheet = XLSX.utils.aoa_to_sheet([profitHeaders, ...profitRows]);
@@ -456,7 +514,12 @@ export async function exportReportToCSV(
   sales: Sale[],
   parts: Part[]
 ): Promise<void> {
-  // Create comprehensive CSV with all data
+  const escapeCsv = (value: unknown) => {
+    const str = value === null || value === undefined ? '' : String(value);
+    return `"${str.replace(/"/g, '""')}"`;
+  };
+
+  const baseName = `ameer-autos-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}`;
 
   // Sales section
   const salesHeaders = ['Sale ID', 'Date', 'Part Name', 'SKU', 'Quantity', 'Unit Price', 'Total Amount', 'Buying Price', 'Profit', 'Customer'];
@@ -474,13 +537,8 @@ export async function exportReportToCSV(
   ]);
 
   const salesCSV = [
-    '# AMEER AUTOS - SALES REPORT',
-    `# Period: ${range.label}`,
-    `# Date Range: ${formatDateRange(range)}`,
-    `# Generated: ${new Date().toISOString()}`,
-    '',
     salesHeaders.join(','),
-    ...salesRows.map(r => r.map(cell => `"${cell}"`).join(',')),
+    ...salesRows.map(r => r.map(escapeCsv).join(',')),
   ].join('\n');
 
   // Inventory section
@@ -500,11 +558,8 @@ export async function exportReportToCSV(
   });
 
   const inventoryCSV = [
-    '',
-    '',
-    '# INVENTORY SNAPSHOT',
     inventoryHeaders.join(','),
-    ...inventoryRows.map(r => r.map(cell => `"${cell}"`).join(',')),
+    ...inventoryRows.map(r => r.map(escapeCsv).join(',')),
   ].join('\n');
 
   // Low stock section
@@ -522,17 +577,12 @@ export async function exportReportToCSV(
   });
 
   const lowStockCSV = [
-    '',
-    '',
-    '# LOW STOCK ITEMS',
     lowStockHeaders.join(','),
-    ...lowStockRows.map(r => r.map(cell => `"${cell}"`).join(',')),
+    ...lowStockRows.map(r => r.map(escapeCsv).join(',')),
   ].join('\n');
 
-  // Combine all sections
-  const fullCSV = salesCSV + inventoryCSV + lowStockCSV;
-
-  const blob = new Blob([fullCSV], { type: 'text/csv;charset=utf-8;' });
-  const filename = `ameer-autos-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
-  saveAs(blob, filename);
+  // Separate files (as required)
+  saveAs(new Blob([salesCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-sales.csv`);
+  saveAs(new Blob([inventoryCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-inventory.csv`);
+  saveAs(new Blob([lowStockCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-low-stock.csv`);
 }
