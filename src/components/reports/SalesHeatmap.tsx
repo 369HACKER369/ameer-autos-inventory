@@ -12,7 +12,28 @@ interface SalesHeatmapProps {
   title?: string;
 }
 
+// Muted green scale for heatmap - no glow in dark mode
+const HEATMAP_COLORS = {
+  light: {
+    empty: 'hsl(220, 14%, 92%)',
+    low: 'hsl(152, 35%, 75%)',
+    medium: 'hsl(152, 40%, 60%)',
+    high: 'hsl(152, 45%, 48%)',
+    max: 'hsl(152, 50%, 38%)',
+  },
+  dark: {
+    empty: 'hsl(220, 12%, 16%)',
+    low: 'hsl(152, 30%, 28%)',
+    medium: 'hsl(152, 35%, 36%)',
+    high: 'hsl(152, 38%, 44%)',
+    max: 'hsl(152, 40%, 50%)',
+  },
+};
+
 export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHeatmapProps) {
+  const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const colors = isDark ? HEATMAP_COLORS.dark : HEATMAP_COLORS.light;
+
   const { weeks, maxValue, monthLabels } = useMemo(() => {
     if (data.length === 0) {
       return { weeks: [], maxValue: 0, monthLabels: [] };
@@ -82,20 +103,19 @@ export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHe
   if (data.length === 0) return null;
 
   const getColorIntensity = (value: number): string => {
-    if (value === 0) return 'hsl(0, 0%, 12%)';
+    if (value === 0) return colors.empty;
     const intensity = Math.min(value / maxValue, 1);
     
-    // Green color scale from light to dark
-    if (intensity < 0.25) return 'hsl(142, 50%, 25%)';
-    if (intensity < 0.5) return 'hsl(142, 60%, 35%)';
-    if (intensity < 0.75) return 'hsl(142, 70%, 40%)';
-    return 'hsl(142, 76%, 45%)';
+    if (intensity < 0.25) return colors.low;
+    if (intensity < 0.5) return colors.medium;
+    if (intensity < 0.75) return colors.high;
+    return colors.max;
   };
 
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   return (
-    <Card className="bg-card border-border/50 animate-fade-in">
+    <Card className="bg-card border-border/50 card-shadow animate-fade-in">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Calendar className="h-4 w-4 text-primary" />
@@ -107,11 +127,11 @@ export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHe
         <div className="flex items-center justify-end gap-1 mb-4 text-xs text-muted-foreground">
           <span>Less</span>
           <div className="flex gap-0.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'hsl(0, 0%, 12%)' }} />
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'hsl(142, 50%, 25%)' }} />
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'hsl(142, 60%, 35%)' }} />
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'hsl(142, 70%, 40%)' }} />
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'hsl(142, 76%, 45%)' }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors.empty }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors.low }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors.medium }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors.high }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors.max }} />
           </div>
           <span>More</span>
         </div>
@@ -156,7 +176,7 @@ export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHe
                   {week.map((day, dayIdx) => (
                     <div
                       key={dayIdx}
-                      className="w-3 h-3 rounded-sm transition-all duration-200 hover:ring-1 hover:ring-primary/50 cursor-pointer"
+                      className="w-3 h-3 rounded-sm transition-colors duration-150 hover:ring-1 hover:ring-primary/40 cursor-pointer"
                       style={{ backgroundColor: getColorIntensity(day.value) }}
                       title={`${day.date.toLocaleDateString('en-GB')}: Rs ${day.value.toLocaleString()}`}
                     />
