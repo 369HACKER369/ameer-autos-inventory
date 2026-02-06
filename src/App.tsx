@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
+import { AdvancedThemeProvider } from "@/contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import AddEditPart from "./pages/AddEditPart";
@@ -30,31 +31,33 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AppProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/inventory/add" element={<AddEditPart />} />
-            <Route path="/inventory/edit/:id" element={<AddEditPart />} />
-            <Route path="/inventory/:id" element={<PartDetails />} />
-            <Route path="/sale" element={<RecordSale />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/settings/language" element={<LanguageLocalization />} />
-            <Route path="/settings/theme" element={<ThemeAppearance />} />
-            <Route path="/settings/navigation" element={<NavigationLayout />} />
-            <Route path="/settings/sync" element={<GoogleDriveSync />} />
-            <Route path="/settings/backup" element={<BackupRestore />} />
-            <Route path="/settings/notifications" element={<Notifications />} />
-            <Route path="/settings/activity-log" element={<ActivityLogSettings />} />
-            <Route path="/settings/logo" element={<AppLogo />} />
-            <Route path="/activity-log" element={<ActivityLog />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AdvancedThemeProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/inventory/add" element={<AddEditPart />} />
+              <Route path="/inventory/edit/:id" element={<AddEditPart />} />
+              <Route path="/inventory/:id" element={<PartDetails />} />
+              <Route path="/sale" element={<RecordSale />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/language" element={<LanguageLocalization />} />
+              <Route path="/settings/theme" element={<ThemeAppearance />} />
+              <Route path="/settings/navigation" element={<NavigationLayout />} />
+              <Route path="/settings/sync" element={<GoogleDriveSync />} />
+              <Route path="/settings/backup" element={<BackupRestore />} />
+              <Route path="/settings/notifications" element={<Notifications />} />
+              <Route path="/settings/activity-log" element={<ActivityLogSettings />} />
+              <Route path="/settings/logo" element={<AppLogo />} />
+              <Route path="/activity-log" element={<ActivityLog />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AdvancedThemeProvider>
       </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
