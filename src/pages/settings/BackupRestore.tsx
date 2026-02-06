@@ -184,8 +184,17 @@ export default function BackupRestore() {
       // Validate backup structure using Zod schema
       const validatedData = validateBackupFile(rawData);
 
-      // Extract the data object for import (importDatabase expects flat data)
-      const result = await importDatabase(validatedData.data);
+      // Extract validated data for import (schema validates and transforms)
+      const importData = {
+        parts: validatedData.parts,
+        brands: validatedData.brands,
+        categories: validatedData.categories,
+        sales: validatedData.sales,
+        activityLogs: validatedData.activityLogs,
+        settings: validatedData.settings,
+      };
+
+      const result = await importDatabase(importData as Parameters<typeof importDatabase>[0]);
       
       if (result.success) {
         await logActivity({

@@ -11,45 +11,55 @@ const MAX_SHORT_STRING = 100;
 const MAX_NOTES_LENGTH = 5000;
 const MAX_ARRAY_LENGTH = 50000;
 
-// Part schema
+// Unit types
+const unitTypeSchema = z.enum(['piece', 'set', 'pair', 'box', 'custom']).default('piece');
+
+// Activity action types
+const activityActionSchema = z.enum(['create', 'update', 'delete', 'sale', 'backup', 'restore', 'sync']);
+
+// Entity types
+const entityTypeSchema = z.enum(['part', 'sale', 'brand', 'category', 'settings', 'backup']);
+
+// Helper to parse dates - accepts string or Date, returns Date
+const dateSchema = z.union([
+  z.string().transform(val => new Date(val)),
+  z.date(),
+  z.number().transform(val => new Date(val)),
+]).pipe(z.date());
+
+// Part schema - matches Part interface
 const partSchema = z.object({
   id: z.string().max(MAX_SHORT_STRING),
   name: z.string().max(MAX_STRING_LENGTH),
   sku: z.string().max(MAX_SHORT_STRING),
   brandId: z.string().max(MAX_SHORT_STRING),
   categoryId: z.string().max(MAX_SHORT_STRING),
+  unitType: unitTypeSchema.optional().default('piece'),
+  customUnit: z.string().max(MAX_SHORT_STRING).optional(),
   quantity: z.number().int().min(0).max(999999999),
+  minStockLevel: z.number().int().min(0).max(999999).optional().default(0),
   buyingPrice: z.number().min(0).max(999999999),
   sellingPrice: z.number().min(0).max(999999999),
-  minStockLevel: z.number().int().min(0).max(999999).optional().default(0),
   location: z.string().max(MAX_STRING_LENGTH).optional().default(''),
   notes: z.string().max(MAX_NOTES_LENGTH).optional().default(''),
   images: z.array(z.string().max(MAX_STRING_LENGTH * 10)).max(10).optional().default([]),
-  createdAt: z.union([z.string(), z.date()]).transform(val => 
-    typeof val === 'string' ? val : val.toISOString()
-  ),
-  updatedAt: z.union([z.string(), z.date()]).transform(val => 
-    typeof val === 'string' ? val : val.toISOString()
-  ),
-}).strict();
+  createdAt: dateSchema,
+  updatedAt: dateSchema,
+}).passthrough(); // Allow additional fields for forward compatibility
 
 // Brand schema
 const brandSchema = z.object({
   id: z.string().max(MAX_SHORT_STRING),
   name: z.string().max(MAX_STRING_LENGTH),
-  createdAt: z.union([z.string(), z.date()]).transform(val => 
-    typeof val === 'string' ? val : val.toISOString()
-  ),
-}).strict();
+  createdAt: dateSchema,
+}).passthrough();
 
 // Category schema
 const categorySchema = z.object({
   id: z.string().max(MAX_SHORT_STRING),
   name: z.string().max(MAX_STRING_LENGTH),
-  createdAt: z.union([z.string(), z.date()]).transform(val => 
-    typeof val === 'string' ? val : val.toISOString()
-  ),
-}).strict();
+  createdAt: dateSchema,
+}).passthrough();
 
 // Sale schema
 const saleSchema = z.object({
@@ -65,43 +75,38 @@ const saleSchema = z.object({
   customerName: z.string().max(MAX_STRING_LENGTH).optional().default(''),
   customerPhone: z.string().max(MAX_SHORT_STRING).optional().default(''),
   notes: z.string().max(MAX_NOTES_LENGTH).optional().default(''),
-  createdAt: z.union([z.string(), z.date()]).transform(val => 
-    typeof val === 'string' ? val : val.toISOString()
-  ),
-}).strict();
+  createdAt: dateSchema,
+}).passthrough();
 
 // Activity log schema
 const activityLogSchema = z.object({
   id: z.string().max(MAX_SHORT_STRING),
-  action: z.string().max(MAX_SHORT_STRING),
-  entityType: z.string().max(MAX_SHORT_STRING),
+  action: activityActionSchema,
+  entityType: entityTypeSchema,
   entityId: z.string().max(MAX_SHORT_STRING).optional(),
   description: z.string().max(MAX_STRING_LENGTH),
   metadata: z.record(z.unknown()).optional(),
-  timestamp: z.union([z.string(), z.date()]).transform(val => 
-    typeof val === 'string' ? val : val.toISOString()
-  ),
-}).strict();
+  createdAt: dateSchema,
+}).passthrough();
 
 // Settings schema
 const settingsSchema = z.object({
   id: z.string().max(MAX_SHORT_STRING),
   key: z.string().max(MAX_SHORT_STRING),
   value: z.unknown(),
-}).strict();
+  updatedAt: dateSchema.optional(),
+}).passthrough();
 
 // Full backup file schema
 export const backupFileSchema = z.object({
-  version: z.string().max(20),
+  version: z.union([z.string(), z.number()]).transform(val => String(val)),
   exportedAt: z.string(),
-  data: z.object({
-    parts: z.array(partSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
-    brands: z.array(brandSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
-    categories: z.array(categorySchema).max(MAX_ARRAY_LENGTH).optional().default([]),
-    sales: z.array(saleSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
-    activityLogs: z.array(activityLogSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
-    settings: z.array(settingsSchema).max(1000).optional().default([]),
-  }),
+  parts: z.array(partSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
+  brands: z.array(brandSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
+  categories: z.array(categorySchema).max(MAX_ARRAY_LENGTH).optional().default([]),
+  sales: z.array(saleSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
+  activityLogs: z.array(activityLogSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
+  settings: z.array(settingsSchema).max(1000).optional().default([]),
 });
 
 export type BackupFile = z.infer<typeof backupFileSchema>;
