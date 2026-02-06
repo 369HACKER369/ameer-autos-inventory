@@ -13,7 +13,7 @@ const KEY_LENGTH = 256;
  */
 async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
   const encoder = new TextEncoder();
-  const passwordKey = await crypto.subtle.importKey(
+  const keyMaterial = await crypto.subtle.importKey(
     'raw',
     encoder.encode(password),
     'PBKDF2',
@@ -24,11 +24,11 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: salt as unknown as BufferSource,
       iterations: ITERATIONS,
       hash: 'SHA-256',
     },
-    passwordKey,
+    keyMaterial,
     { name: 'AES-GCM', length: KEY_LENGTH },
     false,
     ['encrypt', 'decrypt']
@@ -43,20 +43,43 @@ function getDevicePassword(): string {
   // Use a combination of stable browser/device properties
   const factors = [
     APP_SALT,
-    navigator.userAgent,
-    navigator.language,
-    screen.width.toString(),
-    screen.height.toString(),
-    screen.colorDepth.toString(),
+    typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
+    typeof navigator !== 'undefined' ? navigator.language : 'en',
+    typeof screen !== 'undefined' ? screen.width.toString() : '1920',
+    typeof screen !== 'undefined' ? screen.height.toString() : '1080',
+    typeof screen !== 'undefined' ? screen.colorDepth.toString() : '24',
   ];
   return factors.join('|');
 }
 
 /**
- * Encrypt a string using AES-GCM
+ * Convert Uint8Array to base64 string
+ */
+function uint8ArrayToBase64(arr: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < arr.length; i++) {
+    binary += String.fromCharCode(arr[i]);
+  }
+  return btoa(binary);
+}
+
+/**
+ * Convert base64 string to Uint8Array
+ */
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const arr = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    arr[i] = binary.charCodeAt(i);
+  }
+  return arr;
+}
+
+/**
+ * Encrypt a string using AES-GCM (async)
  * Returns a base64-encoded string containing salt + iv + ciphertext
  */
-export const encrypt = async (text: string): Promise<string> => {
+export const encryptAsync = async (text: string): Promise<string> => {
   if (!text) return '';
 
   try {
@@ -72,35 +95,36 @@ export const encrypt = async (text: string): Promise<string> => {
 
     // Encrypt the data
     const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
+      { name: 'AES-GCM', iv: iv as unknown as BufferSource },
       key,
       data
     );
 
     // Combine salt + iv + ciphertext
-    const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+    const encryptedArray = new Uint8Array(encrypted);
+    const combined = new Uint8Array(salt.length + iv.length + encryptedArray.length);
     combined.set(salt, 0);
     combined.set(iv, salt.length);
-    combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+    combined.set(encryptedArray, salt.length + iv.length);
 
     // Convert to base64 for storage
-    return btoa(String.fromCharCode(...combined));
+    return uint8ArrayToBase64(combined);
   } catch (error) {
-    // Fallback for environments without Web Crypto API (shouldn't happen in modern browsers)
+    // Fallback for environments without Web Crypto API
     console.warn('Web Crypto API not available, using fallback');
     return btoa(text + '::encrypted');
   }
 };
 
 /**
- * Decrypt a string encrypted with the encrypt function
+ * Decrypt a string encrypted with the encryptAsync function (async)
  */
-export const decrypt = async (encoded: string): Promise<string> => {
+export const decryptAsync = async (encoded: string): Promise<string> => {
   if (!encoded) return '';
 
   try {
     // Decode from base64
-    const combined = Uint8Array.from(atob(encoded), c => c.charCodeAt(0));
+    const combined = base64ToUint8Array(encoded);
 
     // Extract salt, iv, and ciphertext
     const salt = combined.slice(0, 16);
@@ -112,13 +136,13 @@ export const decrypt = async (encoded: string): Promise<string> => {
 
     // Decrypt
     const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
+      { name: 'AES-GCM', iv: iv as unknown as BufferSource },
       key,
       ciphertext
     );
 
     return new TextDecoder().decode(decrypted);
-  } catch (error) {
+  } catch {
     // Try legacy format (old base64 obfuscation)
     try {
       const decoded = atob(encoded);
@@ -130,6 +154,11 @@ export const decrypt = async (encoded: string): Promise<string> => {
       if (decoded.endsWith('::encrypted')) {
         return decoded.slice(0, -11);
       }
+      // Check sync format
+      const parts = decoded.split(':');
+      if (parts.length >= 3 && parts[parts.length - 1] === APP_SALT) {
+        return parts.slice(1, -1).join(':');
+      }
       return '';
     } catch {
       return '';
@@ -138,36 +167,47 @@ export const decrypt = async (encoded: string): Promise<string> => {
 };
 
 /**
- * Synchronous encrypt for backwards compatibility
- * Uses the async version internally but provides a sync interface
- * Note: This is a wrapper that returns a Promise
+ * Synchronous encrypt - simpler obfuscation for backwards compatibility
+ * For stronger security, use encryptAsync
  */
-export const encryptSync = (text: string): string => {
+export const encrypt = (text: string): string => {
   if (!text) return '';
-  // For sync contexts, use simple obfuscation as a fallback
-  // The async version should be preferred
-  const salt = crypto.getRandomValues(new Uint8Array(8));
-  const saltStr = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
-  return btoa(saltStr + ':' + text + ':' + APP_SALT);
+  // Generate random prefix for some entropy
+  const randomBytes = crypto.getRandomValues(new Uint8Array(8));
+  const randomPrefix = Array.from(randomBytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  return btoa(randomPrefix + ':' + text + ':' + APP_SALT);
 };
 
 /**
- * Synchronous decrypt for backwards compatibility
+ * Synchronous decrypt - handles both sync and legacy formats
  */
-export const decryptSync = (encoded: string): string => {
+export const decrypt = (encoded: string): string => {
   if (!encoded) return '';
   try {
     const decoded = atob(encoded);
-    // Try new sync format
-    const parts = decoded.split(':');
-    if (parts.length >= 3 && parts[parts.length - 1] === APP_SALT) {
-      return parts.slice(1, -1).join(':');
+    
+    // Try new sync format: randomHex:value:salt
+    if (decoded.includes(':' + APP_SALT)) {
+      const parts = decoded.split(':');
+      if (parts.length >= 3 && parts[parts.length - 1] === APP_SALT) {
+        // Remove first (random prefix) and last (salt) parts
+        return parts.slice(1, -1).join(':');
+      }
     }
+    
     // Try legacy format
     const legacySalt = 'ameer-autos-2024';
     if (decoded.endsWith(legacySalt)) {
       return decoded.slice(0, -legacySalt.length);
     }
+    
+    // Try fallback format
+    if (decoded.endsWith('::encrypted')) {
+      return decoded.slice(0, -11);
+    }
+    
     return '';
   } catch {
     return '';
