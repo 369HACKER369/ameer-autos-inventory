@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+import { validateBackupFile, safeJsonParse } from '@/utils/backupValidation';
 
 export default function BackupRestore() {
   const [isExporting, setIsExporting] = useState<string | null>(null);
@@ -45,7 +46,6 @@ export default function BackupRestore() {
       toast.success('JSON backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
-      console.error(error);
     } finally {
       setIsExporting(null);
     }
@@ -119,7 +119,6 @@ export default function BackupRestore() {
       toast.success('Excel backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
-      console.error(error);
     } finally {
       setIsExporting(null);
     }
@@ -155,7 +154,6 @@ export default function BackupRestore() {
       toast.success('CSV backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
-      console.error(error);
     } finally {
       setIsExporting(null);
     }
@@ -170,18 +168,33 @@ export default function BackupRestore() {
       return;
     }
 
+    // Check file size (100MB max)
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error('Backup file is too large. Maximum size is 100MB.');
+      return;
+    }
+
     setIsRestoring(true);
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
+      
+      // Safe JSON parse with size validation
+      const rawData = safeJsonParse(text);
+      
+      // Validate backup structure using Zod schema
+      const validatedData = validateBackupFile(rawData);
 
-      // Validate backup structure
-      if (!data.version || !data.exportedAt) {
-        toast.error('Invalid backup file format');
-        return;
-      }
+      // Extract validated data for import (schema validates and transforms)
+      const importData = {
+        parts: validatedData.parts,
+        brands: validatedData.brands,
+        categories: validatedData.categories,
+        sales: validatedData.sales,
+        activityLogs: validatedData.activityLogs,
+        settings: validatedData.settings,
+      };
 
-      const result = await importDatabase(data);
+      const result = await importDatabase(importData as Parameters<typeof importDatabase>[0]);
       
       if (result.success) {
         await logActivity({
@@ -194,8 +207,8 @@ export default function BackupRestore() {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Failed to restore backup. Invalid file format.');
-      console.error(error);
+      const message = error instanceof Error ? error.message : 'Invalid backup file format';
+      toast.error(message);
     } finally {
       setIsRestoring(false);
       if (fileInputRef.current) {
