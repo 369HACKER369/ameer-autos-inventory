@@ -103,7 +103,9 @@ export type ThemePresetId =
   | 'orchid'
   | 'solar'
   | 'tide'
-  | 'verdant';
+  | 'verdant'
+  | 'industrial-steel'
+  | 'factory-floor';
 
 // Color validation types
 export interface ContrastResult {
