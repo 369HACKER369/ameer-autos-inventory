@@ -1,559 +1,152 @@
-// Professional Theme Presets
-// 9 carefully designed themes + default
+// Industrial Theme Presets
+// Two professional themes designed for heavy machinery and industrial inventory use
 
-import type { ThemePreset, ThemeColors } from '@/types/theme';
+import type { ThemePreset, ThemeColors, ThemeId } from '@/types/theme';
 
-// Default theme colors (matches current index.css)
-const defaultLight: ThemeColors = {
-  primary: '152 45% 38%',
-  primaryForeground: '0 0% 100%',
-  secondary: '220 14% 94%',
-  secondaryForeground: '220 25% 25%',
-  accent: '152 45% 38%',
-  accentForeground: '0 0% 100%',
-  background: '220 20% 97%',
-  foreground: '220 25% 20%',
-  card: '0 0% 100%',
-  cardForeground: '220 25% 20%',
-  popover: '0 0% 100%',
-  popoverForeground: '220 25% 20%',
-  destructive: '0 65% 50%',
-  destructiveForeground: '0 0% 100%',
-  warning: '35 85% 52%',
-  warningForeground: '35 90% 15%',
-  success: '152 45% 38%',
-  successForeground: '0 0% 100%',
-  info: '210 65% 48%',
-  infoForeground: '0 0% 100%',
-  muted: '220 14% 92%',
-  mutedForeground: '220 10% 46%',
-  border: '220 14% 88%',
-  input: '220 14% 88%',
-  ring: '152 45% 38%',
-  chartSales: '152 45% 42%',
-  chartProfit: '210 65% 50%',
-  chartInventory: '175 50% 42%',
-  chartAlert: '0 65% 55%',
-  chartNeutral: '220 10% 60%',
+// ============================================
+// INDUSTRIAL DARK THEME
+// Professional dark mode for heavy-duty workshop use
+// ============================================
+const industrialDarkColors: ThemeColors = {
+  // Core colors - Deep Blue primary with Industrial Orange accent
+  primary: '207 90% 32%',              // #0D47A1 - Deep Blue
+  primaryForeground: '0 0% 100%',      // White
+  secondary: '200 18% 26%',            // #37474F - Slate Gray
+  secondaryForeground: '200 10% 85%',  // #B0BEC5
+  accent: '27 100% 50%',               // #FF6D00 - Industrial Orange
+  accentForeground: '0 0% 100%',       // White
+  
+  // Background colors - AMOLED dark surfaces
+  background: '0 0% 7%',               // #121212
+  foreground: '0 0% 100%',             // White
+  card: '0 0% 12%',                    // #1E1E1E
+  cardForeground: '0 0% 100%',         // White
+  popover: '0 0% 12%',                 // #1E1E1E
+  popoverForeground: '0 0% 100%',      // White
+  
+  // Semantic colors
+  destructive: '0 72% 51%',            // #D32F2F
+  destructiveForeground: '0 0% 100%',  // White
+  warning: '27 100% 50%',              // #FF6D00 - matches accent
+  warningForeground: '0 0% 100%',      // White
+  success: '122 39% 39%',              // #388E3C
+  successForeground: '0 0% 100%',      // White
+  info: '207 90% 54%',                 // #1E88E5
+  infoForeground: '0 0% 100%',         // White
+  
+  // UI colors
+  muted: '200 15% 16%',                // Slightly lighter than card
+  mutedForeground: '200 10% 65%',      // #78909C - Muted text
+  border: '200 24% 23%',               // #263238
+  input: '200 18% 20%',                // Slightly lighter for inputs
+  ring: '27 100% 50%',                 // Industrial Orange - focus ring
+  
+  // Chart colors - gradients from primary to accent
+  chartPrimary: '207 90% 40%',         // Deep Blue
+  chartSecondary: '200 18% 35%',       // Slate Gray
+  chartAccent: '27 100% 50%',          // Industrial Orange
+  chartSuccess: '122 39% 45%',         // Green
+  chartWarning: '27 100% 55%',         // Orange
+  chartNeutral: '200 10% 50%',         // Gray
+
+  // Sidebar colors
+  sidebarBackground: '0 0% 9%',        // Slightly lighter than bg
+  sidebarForeground: '0 0% 100%',      // White
+  sidebarPrimary: '207 90% 32%',       // Deep Blue
+  sidebarPrimaryForeground: '0 0% 100%', // White
+  sidebarAccent: '200 15% 16%',        // Muted
+  sidebarAccentForeground: '200 10% 85%', // Light gray
+  sidebarBorder: '200 24% 23%',        // Border
 };
 
-const defaultDark: ThemeColors = {
-  primary: '152 42% 45%',
-  primaryForeground: '220 18% 8%',
-  secondary: '220 14% 18%',
-  secondaryForeground: '220 15% 85%',
-  accent: '152 42% 45%',
-  accentForeground: '220 18% 8%',
-  background: '220 18% 8%',
-  foreground: '220 15% 88%',
-  card: '220 16% 12%',
-  cardForeground: '220 15% 90%',
-  popover: '220 16% 12%',
-  popoverForeground: '220 15% 90%',
-  destructive: '0 60% 55%',
-  destructiveForeground: '0 0% 100%',
-  warning: '35 75% 50%',
-  warningForeground: '35 90% 10%',
-  success: '152 42% 45%',
-  successForeground: '220 18% 8%',
-  info: '210 60% 55%',
-  infoForeground: '0 0% 100%',
-  muted: '220 12% 20%',
-  mutedForeground: '220 10% 55%',
-  border: '220 12% 22%',
-  input: '220 12% 18%',
-  ring: '152 42% 45%',
-  chartSales: '152 40% 48%',
-  chartProfit: '210 55% 55%',
-  chartInventory: '175 45% 48%',
-  chartAlert: '0 55% 58%',
-  chartNeutral: '220 8% 50%',
+// ============================================
+// FACTORY LIGHT THEME
+// Bright, clean, professional theme for office/shop usage
+// ============================================
+const factoryLightColors: ThemeColors = {
+  // Core colors - Slate Gray primary with Amber accent
+  primary: '200 18% 26%',              // #37474F - Slate Gray
+  primaryForeground: '0 0% 100%',      // White
+  secondary: '200 16% 62%',            // #90A4AE - Soft Gray-Blue
+  secondaryForeground: '0 0% 100%',    // White
+  accent: '38 100% 50%',               // #FF8F00 - Warning Amber
+  accentForeground: '0 0% 13%',        // Dark text on amber
+  
+  // Background colors - Clean light surfaces
+  background: '0 0% 96%',              // #F5F5F5
+  foreground: '0 0% 13%',              // #212121
+  card: '0 0% 100%',                   // White
+  cardForeground: '0 0% 13%',          // #212121
+  popover: '0 0% 100%',                // White
+  popoverForeground: '0 0% 13%',       // #212121
+  
+  // Semantic colors
+  destructive: '0 72% 51%',            // #D32F2F
+  destructiveForeground: '0 0% 100%',  // White
+  warning: '38 100% 50%',              // #FF8F00 - matches accent
+  warningForeground: '0 0% 13%',       // Dark text
+  success: '122 39% 39%',              // #388E3C
+  successForeground: '0 0% 100%',      // White
+  info: '207 90% 54%',                 // #1E88E5
+  infoForeground: '0 0% 100%',         // White
+  
+  // UI colors
+  muted: '200 12% 90%',                // Light muted
+  mutedForeground: '200 18% 34%',      // #546E7A - Secondary text
+  border: '200 14% 82%',               // #CFD8DC
+  input: '200 14% 86%',                // Slightly darker for inputs
+  ring: '38 100% 50%',                 // Amber - focus ring
+  
+  // Chart colors - gradients from primary to accent
+  chartPrimary: '200 18% 32%',         // Slate Gray
+  chartSecondary: '200 16% 55%',       // Soft Gray-Blue
+  chartAccent: '38 100% 50%',          // Amber
+  chartSuccess: '122 39% 45%',         // Green
+  chartWarning: '38 100% 55%',         // Amber
+  chartNeutral: '200 12% 60%',         // Gray
+
+  // Sidebar colors
+  sidebarBackground: '0 0% 98%',       // Almost white
+  sidebarForeground: '0 0% 13%',       // Dark text
+  sidebarPrimary: '200 18% 26%',       // Slate Gray
+  sidebarPrimaryForeground: '0 0% 100%', // White
+  sidebarAccent: '200 12% 92%',        // Light muted
+  sidebarAccentForeground: '200 18% 34%', // Secondary text
+  sidebarBorder: '200 14% 82%',        // Border
 };
 
-// Glacier - Cool blue tones
-const glacierLight: ThemeColors = {
-  ...defaultLight,
-  primary: '200 70% 45%',
-  primaryForeground: '0 0% 100%',
-  accent: '195 65% 50%',
-  accentForeground: '0 0% 100%',
-  success: '170 60% 40%',
-  successForeground: '0 0% 100%',
-  ring: '200 70% 45%',
-  chartSales: '200 60% 50%',
-  chartProfit: '170 55% 45%',
-  chartInventory: '185 50% 45%',
-};
-
-const glacierDark: ThemeColors = {
-  ...defaultDark,
-  primary: '200 65% 55%',
-  primaryForeground: '200 80% 10%',
-  accent: '195 60% 50%',
-  accentForeground: '200 80% 10%',
-  success: '170 55% 50%',
-  successForeground: '170 80% 10%',
-  ring: '200 65% 55%',
-  chartSales: '200 55% 55%',
-  chartProfit: '170 50% 50%',
-  chartInventory: '185 45% 50%',
-};
-
-// Harvest - Warm orange tones
-const harvestLight: ThemeColors = {
-  ...defaultLight,
-  primary: '25 85% 50%',
-  primaryForeground: '0 0% 100%',
-  accent: '35 80% 55%',
-  accentForeground: '25 90% 15%',
-  success: '85 50% 42%',
-  successForeground: '0 0% 100%',
-  ring: '25 85% 50%',
-  chartSales: '25 75% 55%',
-  chartProfit: '85 45% 45%',
-  chartInventory: '45 65% 50%',
-};
-
-const harvestDark: ThemeColors = {
-  ...defaultDark,
-  primary: '25 75% 55%',
-  primaryForeground: '25 90% 10%',
-  accent: '35 70% 50%',
-  accentForeground: '25 90% 10%',
-  success: '85 45% 50%',
-  successForeground: '85 80% 10%',
-  ring: '25 75% 55%',
-  chartSales: '25 65% 55%',
-  chartProfit: '85 40% 50%',
-  chartInventory: '45 55% 50%',
-};
-
-// Lavender - Soft purple tones
-const lavenderLight: ThemeColors = {
-  ...defaultLight,
-  primary: '270 50% 55%',
-  primaryForeground: '0 0% 100%',
-  accent: '280 45% 60%',
-  accentForeground: '0 0% 100%',
-  success: '165 50% 42%',
-  successForeground: '0 0% 100%',
-  ring: '270 50% 55%',
-  chartSales: '270 45% 55%',
-  chartProfit: '165 45% 45%',
-  chartInventory: '250 40% 55%',
-};
-
-const lavenderDark: ThemeColors = {
-  ...defaultDark,
-  primary: '270 45% 60%',
-  primaryForeground: '270 80% 10%',
-  accent: '280 40% 55%',
-  accentForeground: '270 80% 10%',
-  success: '165 45% 50%',
-  successForeground: '165 80% 10%',
-  ring: '270 45% 60%',
-  chartSales: '270 40% 58%',
-  chartProfit: '165 40% 50%',
-  chartInventory: '250 35% 55%',
-};
-
-// Brutalist - High contrast monochrome
-const brutalistLight: ThemeColors = {
-  ...defaultLight,
-  primary: '0 0% 15%',
-  primaryForeground: '0 0% 100%',
-  secondary: '0 0% 92%',
-  secondaryForeground: '0 0% 15%',
-  accent: '0 0% 25%',
-  accentForeground: '0 0% 100%',
-  background: '0 0% 98%',
-  foreground: '0 0% 10%',
-  card: '0 0% 100%',
-  cardForeground: '0 0% 10%',
-  muted: '0 0% 94%',
-  mutedForeground: '0 0% 40%',
-  border: '0 0% 82%',
-  ring: '0 0% 15%',
-  chartSales: '0 0% 25%',
-  chartProfit: '0 0% 45%',
-  chartInventory: '0 0% 60%',
-  chartNeutral: '0 0% 70%',
-};
-
-const brutalistDark: ThemeColors = {
-  ...defaultDark,
-  primary: '0 0% 90%',
-  primaryForeground: '0 0% 5%',
-  secondary: '0 0% 18%',
-  secondaryForeground: '0 0% 90%',
-  accent: '0 0% 85%',
-  accentForeground: '0 0% 5%',
-  background: '0 0% 5%',
-  foreground: '0 0% 92%',
-  card: '0 0% 10%',
-  cardForeground: '0 0% 92%',
-  muted: '0 0% 15%',
-  mutedForeground: '0 0% 55%',
-  border: '0 0% 20%',
-  ring: '0 0% 90%',
-  chartSales: '0 0% 75%',
-  chartProfit: '0 0% 55%',
-  chartInventory: '0 0% 40%',
-  chartNeutral: '0 0% 30%',
-};
-
-// Obsidian - Deep dark with teal accent
-const obsidianLight: ThemeColors = {
-  ...defaultLight,
-  primary: '175 65% 40%',
-  primaryForeground: '0 0% 100%',
-  accent: '185 60% 45%',
-  accentForeground: '0 0% 100%',
-  background: '200 15% 96%',
-  card: '200 10% 100%',
-  ring: '175 65% 40%',
-  chartSales: '175 55% 45%',
-  chartProfit: '200 50% 50%',
-  chartInventory: '160 50% 42%',
-};
-
-const obsidianDark: ThemeColors = {
-  ...defaultDark,
-  primary: '175 55% 50%',
-  primaryForeground: '175 80% 8%',
-  accent: '185 50% 45%',
-  accentForeground: '175 80% 8%',
-  background: '200 25% 6%',
-  foreground: '180 15% 90%',
-  card: '200 20% 10%',
-  cardForeground: '180 15% 90%',
-  muted: '200 15% 15%',
-  border: '200 15% 18%',
-  ring: '175 55% 50%',
-  chartSales: '175 50% 52%',
-  chartProfit: '200 45% 55%',
-  chartInventory: '160 45% 48%',
-};
-
-// Orchid - Pink/magenta tones
-const orchidLight: ThemeColors = {
-  ...defaultLight,
-  primary: '330 65% 52%',
-  primaryForeground: '0 0% 100%',
-  accent: '340 60% 58%',
-  accentForeground: '0 0% 100%',
-  success: '160 55% 40%',
-  successForeground: '0 0% 100%',
-  ring: '330 65% 52%',
-  chartSales: '330 55% 55%',
-  chartProfit: '160 50% 45%',
-  chartInventory: '300 45% 55%',
-};
-
-const orchidDark: ThemeColors = {
-  ...defaultDark,
-  primary: '330 55% 60%',
-  primaryForeground: '330 80% 10%',
-  accent: '340 50% 55%',
-  accentForeground: '330 80% 10%',
-  success: '160 50% 48%',
-  successForeground: '160 80% 10%',
-  ring: '330 55% 60%',
-  chartSales: '330 50% 58%',
-  chartProfit: '160 45% 50%',
-  chartInventory: '300 40% 55%',
-};
-
-// Solar - Yellow/amber tones
-const solarLight: ThemeColors = {
-  ...defaultLight,
-  primary: '42 85% 48%',
-  primaryForeground: '42 90% 12%',
-  accent: '35 80% 52%',
-  accentForeground: '35 90% 12%',
-  success: '95 55% 42%',
-  successForeground: '0 0% 100%',
-  ring: '42 85% 48%',
-  chartSales: '42 75% 52%',
-  chartProfit: '95 50% 45%',
-  chartInventory: '55 65% 50%',
-};
-
-const solarDark: ThemeColors = {
-  ...defaultDark,
-  primary: '42 75% 55%',
-  primaryForeground: '42 90% 8%',
-  accent: '35 70% 50%',
-  accentForeground: '35 90% 8%',
-  success: '95 50% 48%',
-  successForeground: '95 80% 10%',
-  ring: '42 75% 55%',
-  chartSales: '42 65% 55%',
-  chartProfit: '95 45% 50%',
-  chartInventory: '55 55% 52%',
-};
-
-// Tide - Blue/cyan tones
-const tideLight: ThemeColors = {
-  ...defaultLight,
-  primary: '195 80% 42%',
-  primaryForeground: '0 0% 100%',
-  accent: '180 70% 45%',
-  accentForeground: '0 0% 100%',
-  success: '155 55% 42%',
-  successForeground: '0 0% 100%',
-  ring: '195 80% 42%',
-  chartSales: '195 70% 48%',
-  chartProfit: '155 50% 45%',
-  chartInventory: '210 55% 50%',
-};
-
-const tideDark: ThemeColors = {
-  ...defaultDark,
-  primary: '195 70% 52%',
-  primaryForeground: '195 85% 10%',
-  accent: '180 60% 48%',
-  accentForeground: '195 85% 10%',
-  success: '155 50% 50%',
-  successForeground: '155 80% 10%',
-  ring: '195 70% 52%',
-  chartSales: '195 60% 55%',
-  chartProfit: '155 45% 50%',
-  chartInventory: '210 50% 52%',
-};
-
-// Verdant - Green tones (enhanced version of default)
-const verdantLight: ThemeColors = {
-  ...defaultLight,
-  primary: '140 60% 38%',
-  primaryForeground: '0 0% 100%',
-  accent: '160 55% 42%',
-  accentForeground: '0 0% 100%',
-  ring: '140 60% 38%',
-  chartSales: '140 50% 45%',
-  chartProfit: '180 45% 45%',
-  chartInventory: '120 45% 42%',
-};
-
-const verdantDark: ThemeColors = {
-  ...defaultDark,
-  primary: '140 50% 48%',
-  primaryForeground: '140 80% 10%',
-  accent: '160 45% 45%',
-  accentForeground: '140 80% 10%',
-  ring: '140 50% 48%',
-  chartSales: '140 45% 52%',
-  chartProfit: '180 40% 50%',
-  chartInventory: '120 40% 48%',
-};
-
-// Industrial Steel - Dark professional for heavy machinery
-const industrialSteelLight: ThemeColors = {
-  ...defaultLight,
-  primary: '200 18% 40%',
-  primaryForeground: '0 0% 100%',
-  secondary: '200 15% 55%',
-  secondaryForeground: '0 0% 100%',
-  accent: '26 100% 50%',
-  accentForeground: '0 0% 100%',
-  background: '200 10% 96%',
-  foreground: '0 0% 15%',
-  card: '0 0% 100%',
-  cardForeground: '0 0% 15%',
-  muted: '200 10% 92%',
-  mutedForeground: '200 15% 45%',
-  border: '200 12% 85%',
-  ring: '26 100% 50%',
-  chartSales: '200 18% 45%',
-  chartProfit: '26 85% 55%',
-  chartInventory: '200 15% 55%',
-  chartAlert: '0 65% 55%',
-};
-
-const industrialSteelDark: ThemeColors = {
-  ...defaultDark,
-  primary: '200 18% 33%',
-  primaryForeground: '0 0% 100%',
-  secondary: '200 18% 46%',
-  secondaryForeground: '0 0% 100%',
-  accent: '26 100% 50%',
-  accentForeground: '0 0% 100%',
-  background: '0 0% 7%',
-  foreground: '0 0% 100%',
-  card: '0 0% 12%',
-  cardForeground: '0 0% 100%',
-  popover: '0 0% 12%',
-  popoverForeground: '0 0% 100%',
-  muted: '200 10% 18%',
-  mutedForeground: '200 15% 73%',
-  border: '200 18% 26%',
-  input: '200 15% 18%',
-  ring: '26 100% 50%',
-  chartSales: '200 18% 45%',
-  chartProfit: '26 85% 55%',
-  chartInventory: '200 15% 55%',
-  chartAlert: '0 60% 55%',
-  chartNeutral: '200 10% 50%',
-};
-
-// Factory Floor - Light professional for industrial workflow
-const factoryFloorLight: ThemeColors = {
-  ...defaultLight,
-  primary: '200 18% 26%',
-  primaryForeground: '0 0% 100%',
-  secondary: '200 15% 62%',
-  secondaryForeground: '0 0% 100%',
-  accent: '34 100% 50%',
-  accentForeground: '0 0% 10%',
-  background: '0 0% 96%',
-  foreground: '0 0% 13%',
-  card: '0 0% 100%',
-  cardForeground: '0 0% 13%',
-  popover: '0 0% 100%',
-  popoverForeground: '0 0% 13%',
-  muted: '200 10% 94%',
-  mutedForeground: '200 18% 40%',
-  border: '200 15% 84%',
-  input: '200 12% 88%',
-  ring: '34 100% 50%',
-  chartSales: '200 18% 35%',
-  chartProfit: '34 85% 52%',
-  chartInventory: '200 15% 55%',
-  chartAlert: '0 65% 55%',
-  chartNeutral: '200 10% 65%',
-};
-
-const factoryFloorDark: ThemeColors = {
-  ...defaultDark,
-  primary: '200 18% 45%',
-  primaryForeground: '0 0% 100%',
-  secondary: '200 15% 55%',
-  secondaryForeground: '0 0% 100%',
-  accent: '34 90% 55%',
-  accentForeground: '0 0% 10%',
-  background: '200 15% 10%',
-  foreground: '200 10% 92%',
-  card: '200 12% 14%',
-  cardForeground: '200 10% 92%',
-  popover: '200 12% 14%',
-  popoverForeground: '200 10% 92%',
-  muted: '200 12% 18%',
-  mutedForeground: '200 12% 60%',
-  border: '200 15% 22%',
-  input: '200 12% 18%',
-  ring: '34 90% 55%',
-  chartSales: '200 18% 50%',
-  chartProfit: '34 80% 55%',
-  chartInventory: '200 15% 58%',
-  chartAlert: '0 60% 55%',
-  chartNeutral: '200 8% 50%',
-};
-
-// All theme presets
+// ============================================
+// THEME PRESETS EXPORT
+// ============================================
 export const themePresets: ThemePreset[] = [
   {
-    id: 'default',
-    name: 'Default',
-    description: 'Professional green theme',
-    icon: '🌿',
-    light: defaultLight,
-    dark: defaultDark,
-  },
-  {
-    id: 'glacier',
-    name: 'Glacier',
-    description: 'Cool blue tones',
-    icon: '🧊',
-    light: glacierLight,
-    dark: glacierDark,
-  },
-  {
-    id: 'harvest',
-    name: 'Harvest',
-    description: 'Warm orange tones',
-    icon: '🍂',
-    light: harvestLight,
-    dark: harvestDark,
-  },
-  {
-    id: 'lavender',
-    name: 'Lavender',
-    description: 'Soft purple tones',
-    icon: '💜',
-    light: lavenderLight,
-    dark: lavenderDark,
-  },
-  {
-    id: 'brutalist',
-    name: 'Brutalist',
-    description: 'High contrast monochrome',
-    icon: '◼️',
-    light: brutalistLight,
-    dark: brutalistDark,
-  },
-  {
-    id: 'obsidian',
-    name: 'Obsidian',
-    description: 'Deep dark with teal accent',
-    icon: '🖤',
-    light: obsidianLight,
-    dark: obsidianDark,
-  },
-  {
-    id: 'orchid',
-    name: 'Orchid',
-    description: 'Pink and magenta tones',
-    icon: '🌸',
-    light: orchidLight,
-    dark: orchidDark,
-  },
-  {
-    id: 'solar',
-    name: 'Solar',
-    description: 'Yellow and amber tones',
-    icon: '☀️',
-    light: solarLight,
-    dark: solarDark,
-  },
-  {
-    id: 'tide',
-    name: 'Tide',
-    description: 'Blue and cyan tones',
-    icon: '🌊',
-    light: tideLight,
-    dark: tideDark,
-  },
-  {
-    id: 'verdant',
-    name: 'Verdant',
-    description: 'Rich green tones',
-    icon: '🌲',
-    light: verdantLight,
-    dark: verdantDark,
-  },
-  {
-    id: 'industrial-steel',
-    name: 'Industrial Steel',
-    description: 'Dark professional for heavy machinery',
+    id: 'industrial-dark',
+    name: 'Industrial Dark',
+    description: 'Professional dark mode for heavy-duty workshop use',
     icon: '⚙️',
-    light: industrialSteelLight,
-    dark: industrialSteelDark,
+    category: 'dark',
+    colors: industrialDarkColors,
   },
   {
-    id: 'factory-floor',
-    name: 'Factory Floor',
-    description: 'Clean industrial workflow',
+    id: 'factory-light',
+    name: 'Factory Light',
+    description: 'Bright, clean industrial theme for office/shop usage',
     icon: '🏭',
-    light: factoryFloorLight,
-    dark: factoryFloorDark,
+    category: 'light',
+    colors: factoryLightColors,
   },
 ];
 
-export function getPresetById(id: string): ThemePreset | undefined {
-  return themePresets.find(p => p.id === id);
+export function getPresetById(id: ThemeId): ThemePreset {
+  return themePresets.find(p => p.id === id) || themePresets[0];
 }
 
-export function getPresetColors(presetId: string, mode: 'light' | 'dark'): ThemeColors {
-  const preset = getPresetById(presetId) || themePresets[0];
-  return mode === 'light' ? preset.light : preset.dark;
+export function getPresetColors(themeId: ThemeId): ThemeColors {
+  const preset = getPresetById(themeId);
+  return preset.colors;
+}
+
+export function getThemeCategory(themeId: ThemeId): 'dark' | 'light' {
+  const preset = getPresetById(themeId);
+  return preset.category;
 }

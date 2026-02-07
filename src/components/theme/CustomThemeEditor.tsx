@@ -1,11 +1,9 @@
 // Custom Theme Editor Component
 // Full customization panel for advanced users
 
-import { useState } from 'react';
 import { useAdvancedTheme } from '@/contexts/ThemeContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ColorPicker } from './ColorPicker';
@@ -78,8 +76,15 @@ export function CustomThemeEditor() {
                 defaultValue={currentColors.primary}
               />
               <ColorPicker
+                label="Secondary Color"
+                description="Secondary elements and backgrounds"
+                value={customColors.secondary || currentColors.secondary}
+                onChange={(v) => setCustomColor('secondary', v)}
+                defaultValue={currentColors.secondary}
+              />
+              <ColorPicker
                 label="Accent Color"
-                description="Secondary emphasis color"
+                description="Highlights and call-to-action elements"
                 value={customColors.accent || currentColors.accent}
                 onChange={(v) => setCustomColor('accent', v)}
                 defaultValue={currentColors.accent}
@@ -134,12 +139,12 @@ export function CustomThemeEditor() {
                 defaultValue={currentColors.primaryForeground}
               />
               <ColorPicker
-                label="Warning Text"
-                description="Warning message text"
-                value={customColors.warningForeground || currentColors.warningForeground}
-                onChange={(v) => setCustomColor('warningForeground', v)}
-                contrastWith={customColors.warning || currentColors.warning}
-                defaultValue={currentColors.warningForeground}
+                label="Accent Button Text"
+                description="Text on accent buttons"
+                value={customColors.accentForeground || currentColors.accentForeground}
+                onChange={(v) => setCustomColor('accentForeground', v)}
+                contrastWith={customColors.accent || currentColors.accent}
+                defaultValue={currentColors.accentForeground}
               />
             </TabsContent>
 
@@ -185,32 +190,32 @@ export function CustomThemeEditor() {
             {/* Chart Colors */}
             <TabsContent value="charts" className="space-y-4 mt-0">
               <ColorPicker
-                label="Sales Chart Color"
-                description="Sales data in charts"
-                value={customColors.chartSales || currentColors.chartSales}
-                onChange={(v) => setCustomColor('chartSales', v)}
-                defaultValue={currentColors.chartSales}
+                label="Chart Primary"
+                description="Primary data in charts"
+                value={customColors.chartPrimary || currentColors.chartPrimary}
+                onChange={(v) => setCustomColor('chartPrimary', v)}
+                defaultValue={currentColors.chartPrimary}
               />
               <ColorPicker
-                label="Profit Chart Color"
-                description="Profit data in charts"
-                value={customColors.chartProfit || currentColors.chartProfit}
-                onChange={(v) => setCustomColor('chartProfit', v)}
-                defaultValue={currentColors.chartProfit}
+                label="Chart Secondary"
+                description="Secondary data in charts"
+                value={customColors.chartSecondary || currentColors.chartSecondary}
+                onChange={(v) => setCustomColor('chartSecondary', v)}
+                defaultValue={currentColors.chartSecondary}
               />
               <ColorPicker
-                label="Inventory Chart Color"
-                description="Inventory data in charts"
-                value={customColors.chartInventory || currentColors.chartInventory}
-                onChange={(v) => setCustomColor('chartInventory', v)}
-                defaultValue={currentColors.chartInventory}
+                label="Chart Accent"
+                description="Highlighted data in charts"
+                value={customColors.chartAccent || currentColors.chartAccent}
+                onChange={(v) => setCustomColor('chartAccent', v)}
+                defaultValue={currentColors.chartAccent}
               />
               <ColorPicker
-                label="Alert Chart Color"
-                description="Alert indicators in charts"
-                value={customColors.chartAlert || currentColors.chartAlert}
-                onChange={(v) => setCustomColor('chartAlert', v)}
-                defaultValue={currentColors.chartAlert}
+                label="Chart Success"
+                description="Success indicators in charts"
+                value={customColors.chartSuccess || currentColors.chartSuccess}
+                onChange={(v) => setCustomColor('chartSuccess', v)}
+                defaultValue={currentColors.chartSuccess}
               />
             </TabsContent>
           </Tabs>
@@ -231,7 +236,7 @@ export function CustomThemeEditor() {
                     Reset Custom Theme?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will remove all your custom color settings and revert to the selected preset theme.
+                    This will remove all your custom color settings and revert to the selected theme preset.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
