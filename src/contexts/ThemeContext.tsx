@@ -52,7 +52,7 @@ const defaultThemeState: ThemeState = {
   resolvedMode: 'dark',
 };
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function AdvancedThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeState, setThemeState] = useState<ThemeState>(defaultThemeState);
@@ -303,7 +303,7 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
 
 export function useAdvancedTheme() {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAdvancedTheme must be used within an AdvancedThemeProvider');
   }
   return context;
