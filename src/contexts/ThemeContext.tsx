@@ -1,21 +1,17 @@
-// Advanced Theme Context
-// Manages theme state, presets, custom colors, and section overrides
+// Industrial Theme Context
+// Manages Industrial Dark & Factory Light themes with offline-first persistence
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { getSetting, updateSetting } from '@/db/database';
-import type { ThemeState, CustomThemeConfig, ThemeColors, SectionOverrides } from '@/types/theme';
-import { themePresets, getPresetColors } from '@/utils/themePresets';
-import { applyThemeToDocument, validateColor, adjustForContrast } from '@/utils/themeUtils';
+import type { ThemeState, CustomThemeConfig, ThemeColors, SectionOverrides, ThemeId } from '@/types/theme';
+import { themePresets, getPresetColors, getThemeCategory } from '@/utils/themePresets';
 
 interface ThemeContextType {
   // Theme state
   themeState: ThemeState;
   
-  // Mode controls
-  setMode: (mode: 'light' | 'dark' | 'system') => Promise<void>;
-  
-  // Preset controls
-  setPreset: (presetId: string) => Promise<void>;
+  // Theme controls
+  setTheme: (themeId: ThemeId) => Promise<void>;
   
   // Custom theme controls
   enableCustomTheme: (enabled: boolean) => Promise<void>;
@@ -29,7 +25,7 @@ interface ThemeContextType {
   // Utilities
   getCurrentColors: () => ThemeColors;
   getSectionColors: (section: keyof SectionOverrides) => Partial<ThemeColors>;
-  validateThemeColor: (foreground: string, background: string) => { isValid: boolean; ratio: number };
+  isDarkTheme: boolean;
   
   // Available presets
   presets: typeof themePresets;
@@ -40,16 +36,14 @@ interface ThemeContextType {
 
 const defaultCustomConfig: CustomThemeConfig = {
   enabled: false,
-  basePreset: 'default',
+  baseTheme: 'industrial-dark',
   colors: {},
   sectionOverrides: {},
 };
 
 const defaultThemeState: ThemeState = {
-  mode: 'dark',
-  selectedPreset: 'default',
+  selectedTheme: 'industrial-dark',
   customConfig: defaultCustomConfig,
-  resolvedMode: 'dark',
 };
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -58,30 +52,16 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
   const [themeState, setThemeState] = useState<ThemeState>(defaultThemeState);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Resolve system theme preference
-  const resolveMode = useCallback((mode: 'light' | 'dark' | 'system'): 'light' | 'dark' => {
-    if (mode === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return mode;
-  }, []);
-
   // Load theme settings from database
   useEffect(() => {
     const loadThemeSettings = async () => {
       try {
-        const savedMode = await getSetting<'light' | 'dark' | 'system'>('themeMode');
-        const savedPreset = await getSetting<string>('themePreset');
+        const savedTheme = await getSetting<ThemeId>('selectedTheme');
         const savedCustomConfig = await getSetting<CustomThemeConfig>('themeCustomConfig');
 
-        const mode = savedMode || 'dark';
-        const resolvedMode = resolveMode(mode);
-
         setThemeState({
-          mode,
-          selectedPreset: savedPreset || 'default',
+          selectedTheme: savedTheme || 'industrial-dark',
           customConfig: savedCustomConfig || defaultCustomConfig,
-          resolvedMode,
         });
       } catch (error) {
         console.error('Failed to load theme settings:', error);
@@ -91,27 +71,11 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
     };
 
     loadThemeSettings();
-  }, [resolveMode]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      if (themeState.mode === 'system') {
-        setThemeState(prev => ({
-          ...prev,
-          resolvedMode: resolveMode('system'),
-        }));
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [themeState.mode, resolveMode]);
+  }, []);
 
   // Get current theme colors
   const getCurrentColors = useCallback((): ThemeColors => {
-    const baseColors = getPresetColors(themeState.selectedPreset, themeState.resolvedMode);
+    const baseColors = getPresetColors(themeState.selectedTheme);
     
     if (themeState.customConfig.enabled && Object.keys(themeState.customConfig.colors).length > 0) {
       return { ...baseColors, ...themeState.customConfig.colors };
@@ -120,15 +84,20 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
     return baseColors;
   }, [themeState]);
 
-  // Apply theme to document
+  // Check if current theme is dark
+  const isDarkTheme = useMemo(() => {
+    return getThemeCategory(themeState.selectedTheme) === 'dark';
+  }, [themeState.selectedTheme]);
+
+  // Apply theme to document with smooth transition
   useEffect(() => {
     if (isLoading) return;
 
     const root = document.documentElement;
     
-    // Apply light/dark class
+    // Apply light/dark class based on theme category
     root.classList.remove('light', 'dark');
-    root.classList.add(themeState.resolvedMode);
+    root.classList.add(isDarkTheme ? 'dark' : 'light');
 
     // Get and apply colors
     const colors = getCurrentColors();
@@ -160,29 +129,30 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
       'border': colors.border,
       'input': colors.input,
       'ring': colors.ring,
-      'chart-sales': colors.chartSales,
-      'chart-profit': colors.chartProfit,
-      'chart-inventory': colors.chartInventory,
-      'chart-alert': colors.chartAlert,
+      'chart-primary': colors.chartPrimary,
+      'chart-secondary': colors.chartSecondary,
+      'chart-accent': colors.chartAccent,
+      'chart-success': colors.chartSuccess,
+      'chart-warning': colors.chartWarning,
       'chart-neutral': colors.chartNeutral,
+      'sidebar-background': colors.sidebarBackground,
+      'sidebar-foreground': colors.sidebarForeground,
+      'sidebar-primary': colors.sidebarPrimary,
+      'sidebar-primary-foreground': colors.sidebarPrimaryForeground,
+      'sidebar-accent': colors.sidebarAccent,
+      'sidebar-accent-foreground': colors.sidebarAccentForeground,
+      'sidebar-border': colors.sidebarBorder,
     };
 
     Object.entries(cssVars).forEach(([key, value]) => {
       root.style.setProperty(`--${key}`, value);
     });
-  }, [themeState, isLoading, getCurrentColors]);
+  }, [themeState, isLoading, getCurrentColors, isDarkTheme]);
 
-  // Set mode
-  const setMode = useCallback(async (mode: 'light' | 'dark' | 'system') => {
-    const resolvedMode = resolveMode(mode);
-    setThemeState(prev => ({ ...prev, mode, resolvedMode }));
-    await updateSetting('themeMode', mode);
-  }, [resolveMode]);
-
-  // Set preset
-  const setPreset = useCallback(async (presetId: string) => {
-    setThemeState(prev => ({ ...prev, selectedPreset: presetId }));
-    await updateSetting('themePreset', presetId);
+  // Set theme
+  const setTheme = useCallback(async (themeId: ThemeId) => {
+    setThemeState(prev => ({ ...prev, selectedTheme: themeId }));
+    await updateSetting('selectedTheme', themeId);
   }, []);
 
   // Enable/disable custom theme
@@ -259,16 +229,9 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
     return baseColors;
   }, [getCurrentColors, themeState.customConfig.sectionOverrides]);
 
-  // Validate theme color
-  const validateThemeColor = useCallback((foreground: string, background: string) => {
-    const result = validateColor(foreground, background);
-    return { isValid: result.isValid, ratio: result.contrastRatio };
-  }, []);
-
   const value = useMemo<ThemeContextType>(() => ({
     themeState,
-    setMode,
-    setPreset,
+    setTheme,
     enableCustomTheme,
     setCustomColor,
     resetCustomColors,
@@ -276,13 +239,12 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
     clearSectionOverride,
     getCurrentColors,
     getSectionColors,
-    validateThemeColor,
+    isDarkTheme,
     presets: themePresets,
     isLoading,
   }), [
     themeState,
-    setMode,
-    setPreset,
+    setTheme,
     enableCustomTheme,
     setCustomColor,
     resetCustomColors,
@@ -290,7 +252,7 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
     clearSectionOverride,
     getCurrentColors,
     getSectionColors,
-    validateThemeColor,
+    isDarkTheme,
     isLoading,
   ]);
 

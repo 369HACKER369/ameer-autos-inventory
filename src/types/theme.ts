@@ -1,5 +1,5 @@
 // Theme System Types
-// Comprehensive type definitions for the advanced theming system
+// Streamlined type definitions for Industrial Dark & Factory Light themes
 
 export interface ThemeColors {
   // Core colors
@@ -36,20 +36,32 @@ export interface ThemeColors {
   ring: string;
   
   // Chart colors
-  chartSales: string;
-  chartProfit: string;
-  chartInventory: string;
-  chartAlert: string;
+  chartPrimary: string;
+  chartSecondary: string;
+  chartAccent: string;
+  chartSuccess: string;
+  chartWarning: string;
   chartNeutral: string;
+
+  // Sidebar colors
+  sidebarBackground: string;
+  sidebarForeground: string;
+  sidebarPrimary: string;
+  sidebarPrimaryForeground: string;
+  sidebarAccent: string;
+  sidebarAccentForeground: string;
+  sidebarBorder: string;
 }
 
+export type ThemeId = 'industrial-dark' | 'factory-light';
+
 export interface ThemePreset {
-  id: string;
+  id: ThemeId;
   name: string;
   description: string;
   icon: string;
-  light: ThemeColors;
-  dark: ThemeColors;
+  category: 'dark' | 'light';
+  colors: ThemeColors;
 }
 
 export interface SectionOverride {
@@ -74,38 +86,18 @@ export interface SectionOverrides {
 
 export interface CustomThemeConfig {
   enabled: boolean;
-  basePreset: string;
+  baseTheme: ThemeId;
   colors: Partial<ThemeColors>;
   sectionOverrides: SectionOverrides;
 }
 
 export interface ThemeState {
-  // Base mode
-  mode: 'light' | 'dark' | 'system';
-  
-  // Selected preset
-  selectedPreset: string;
+  // Selected theme
+  selectedTheme: ThemeId;
   
   // Custom theme configuration
   customConfig: CustomThemeConfig;
-  
-  // Resolved mode (after system preference)
-  resolvedMode: 'light' | 'dark';
 }
-
-export type ThemePresetId = 
-  | 'default'
-  | 'glacier'
-  | 'harvest'
-  | 'lavender'
-  | 'brutalist'
-  | 'obsidian'
-  | 'orchid'
-  | 'solar'
-  | 'tide'
-  | 'verdant'
-  | 'industrial-steel'
-  | 'factory-floor';
 
 // Color validation types
 export interface ContrastResult {

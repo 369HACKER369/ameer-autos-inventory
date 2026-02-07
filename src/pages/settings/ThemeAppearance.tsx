@@ -1,10 +1,9 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Moon, Info, RefreshCw } from 'lucide-react';
+import { Moon, Sun, Info, RefreshCw, Wrench } from 'lucide-react';
 import {
   ThemePresetSelector,
-  ThemeModeSelector,
   CustomThemeEditor,
   SectionThemeOverrides,
   ThemePreviewCard,
@@ -54,7 +53,7 @@ class ThemeErrorBoundary extends Component<
 }
 
 function ThemeAppearanceContent() {
-  const { isLoading } = useAdvancedTheme();
+  const { isLoading, isDarkTheme } = useAdvancedTheme();
 
   if (isLoading) {
     return (
@@ -74,22 +73,15 @@ function ThemeAppearanceContent() {
       <Header title="Theme & Appearance" showBack />
 
       <div className="p-4 space-y-4 pb-8">
-        {/* Mode Selection */}
+        {/* Theme Selection */}
         <Card className="bg-card">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Display Mode</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <ThemeModeSelector />
-          </CardContent>
-        </Card>
-
-        {/* Theme Presets */}
-        <Card className="bg-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Theme Presets</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wrench className="h-5 w-5 text-primary" />
+              Industrial Themes
+            </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Choose a professional color palette
+              Professional themes designed for heavy machinery and industrial use
             </p>
           </CardHeader>
           <CardContent className="pt-0">
@@ -106,25 +98,47 @@ function ThemeAppearanceContent() {
         {/* Section Overrides */}
         <SectionThemeOverrides />
 
-        {/* AMOLED Info */}
-        <Card className="bg-card">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-black border border-border flex items-center justify-center shrink-0">
-                <Moon className="h-5 w-5 text-white" />
+        {/* Theme Info - Dark */}
+        {isDarkTheme && (
+          <Card className="bg-card">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
+                  <Moon className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium">Industrial Dark Theme</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    AMOLED-optimized dark surfaces with Deep Blue primary and Industrial 
+                    Orange accents. Designed for heavy-duty workshop environments.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium">AMOLED Optimized</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  The dark theme uses deep charcoal backgrounds optimized for 
-                  AMOLED displays. Use the "Obsidian" or "Industrial Steel" preset for even deeper blacks.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Theme Info */}
+        {/* Theme Info - Light */}
+        {!isDarkTheme && (
+          <Card className="bg-card">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                  <Sun className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium">Factory Light Theme</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Clean, bright industrial theme with Slate Gray primary and Warning 
+                    Amber accents. Optimized for office and bright shop environments.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Persistence Info */}
         <Card className="bg-card">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -132,10 +146,10 @@ function ThemeAppearanceContent() {
                 <Info className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Theme Persistence</p>
+                <p className="font-medium">Offline-First Persistence</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  All theme settings are saved locally and will persist across app restarts.
-                  Changes apply instantly with smooth 200ms transitions.
+                  All theme settings are saved locally and persist across app restarts.
+                  Changes apply instantly with smooth 250ms transitions.
                 </p>
               </div>
             </div>

@@ -1,15 +1,14 @@
 // Theme Preview Card Component
-// Live preview of current theme settings
+// Live preview of current Industrial theme settings
 
 import { useAdvancedTheme } from '@/contexts/ThemeContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Eye, Package, TrendingUp, AlertTriangle, Check } from 'lucide-react';
+import { Eye, Package, TrendingUp, AlertTriangle, Wrench } from 'lucide-react';
 
 export function ThemePreviewCard() {
-  const { themeState, getCurrentColors } = useAdvancedTheme();
+  const { themeState, getCurrentColors, isDarkTheme, presets } = useAdvancedTheme();
   const colors = getCurrentColors();
+  const currentPreset = presets.find(p => p.id === themeState.selectedTheme);
 
   return (
     <Card className="bg-card overflow-hidden">
@@ -41,14 +40,14 @@ export function ThemePreviewCard() {
                 className="h-8 w-8 rounded-lg flex items-center justify-center"
                 style={{ background: `hsl(${colors.primary})` }}
               >
-                <Package className="h-4 w-4" style={{ color: `hsl(${colors.primaryForeground})` }} />
+                <Wrench className="h-4 w-4" style={{ color: `hsl(${colors.primaryForeground})` }} />
               </div>
               <div>
                 <p 
                   className="font-medium text-sm"
                   style={{ color: `hsl(${colors.foreground})` }}
                 >
-                  Inventory Stats
+                  Parts Inventory
                 </p>
                 <p 
                   className="text-xs"
@@ -60,7 +59,7 @@ export function ThemePreviewCard() {
             </div>
             
             {/* Sample badges */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <span 
                 className="px-2 py-0.5 rounded text-xs font-medium"
                 style={{ 
@@ -68,7 +67,7 @@ export function ThemePreviewCard() {
                   color: `hsl(${colors.successForeground})`
                 }}
               >
-                Success
+                In Stock
               </span>
               <span 
                 className="px-2 py-0.5 rounded text-xs font-medium"
@@ -77,7 +76,7 @@ export function ThemePreviewCard() {
                   color: `hsl(${colors.warningForeground})`
                 }}
               >
-                Warning
+                Low Stock
               </span>
               <span 
                 className="px-2 py-0.5 rounded text-xs font-medium"
@@ -86,7 +85,7 @@ export function ThemePreviewCard() {
                   color: `hsl(${colors.destructiveForeground})`
                 }}
               >
-                Error
+                Out of Stock
               </span>
             </div>
           </div>
@@ -95,30 +94,30 @@ export function ThemePreviewCard() {
           <div className="flex gap-1 h-8">
             <div 
               className="flex-1 rounded"
-              style={{ background: `hsl(${colors.chartSales})` }}
-              title="Sales"
+              style={{ background: `hsl(${colors.chartPrimary})` }}
+              title="Primary"
             />
             <div 
               className="flex-1 rounded"
-              style={{ background: `hsl(${colors.chartProfit})` }}
-              title="Profit"
+              style={{ background: `hsl(${colors.chartSecondary})` }}
+              title="Secondary"
             />
             <div 
               className="flex-1 rounded"
-              style={{ background: `hsl(${colors.chartInventory})` }}
-              title="Inventory"
+              style={{ background: `hsl(${colors.chartAccent})` }}
+              title="Accent"
             />
             <div 
               className="flex-1 rounded"
-              style={{ background: `hsl(${colors.chartAlert})` }}
-              title="Alert"
+              style={{ background: `hsl(${colors.chartSuccess})` }}
+              title="Success"
             />
           </div>
 
           {/* Sample buttons */}
           <div className="flex gap-2">
             <button
-              className="flex-1 py-2 rounded-lg text-sm font-medium"
+              className="flex-1 py-2 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
               style={{ 
                 background: `hsl(${colors.primary})`,
                 color: `hsl(${colors.primaryForeground})`
@@ -127,13 +126,13 @@ export function ThemePreviewCard() {
               Primary
             </button>
             <button
-              className="flex-1 py-2 rounded-lg text-sm font-medium"
+              className="flex-1 py-2 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
               style={{ 
-                background: `hsl(${colors.secondary})`,
-                color: `hsl(${colors.secondaryForeground})`
+                background: `hsl(${colors.accent})`,
+                color: `hsl(${colors.accentForeground})`
               }}
             >
-              Secondary
+              Accent
             </button>
           </div>
         </div>
@@ -141,10 +140,10 @@ export function ThemePreviewCard() {
         {/* Current theme info */}
         <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Mode: <span className="font-medium text-foreground capitalize">{themeState.mode}</span>
+            Theme: <span className="font-medium text-foreground">{currentPreset?.name || 'Unknown'}</span>
           </span>
           <span>
-            Preset: <span className="font-medium text-foreground capitalize">{themeState.selectedPreset}</span>
+            Mode: <span className="font-medium text-foreground capitalize">{isDarkTheme ? 'Dark' : 'Light'}</span>
           </span>
         </div>
       </CardContent>
