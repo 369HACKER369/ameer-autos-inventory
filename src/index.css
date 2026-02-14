@@ -11,142 +11,120 @@
 @layer base {
   :root {
     /* ===== FACTORY LIGHT THEME (Default for :root) ===== */
-    /* Clean light surfaces for bright shop environments */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 13%;
+    --background: 60 4% 95%;
+    --foreground: 24 9% 10%;
 
-    /* Cards with subtle elevation */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    --card: 60 9% 97%;
+    --card-foreground: 24 9% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
+    --popover: 20 5% 90%;
+    --popover-foreground: 24 9% 10%;
 
-    /* Slate Gray primary */
-    --primary: 200 18% 26%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 37 92% 50%;
+    --primary-foreground: 47 100% 96%;
 
-    /* Soft Gray-Blue secondary */
-    --secondary: 200 16% 62%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 24 5% 44%;
+    --secondary-foreground: 60 9% 97%;
 
-    /* Muted elements */
-    --muted: 200 12% 90%;
-    --muted-foreground: 200 18% 34%;
+    --muted: 23 5% 82%;
+    --muted-foreground: 24 9% 10%;
 
-    /* Warning Amber accent */
-    --accent: 38 100% 50%;
-    --accent-foreground: 0 0% 13%;
+    --accent: 47 100% 96%;
+    --accent-foreground: 37 92% 50%;
 
-    /* Critical alerts - red */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 85% 97%;
 
-    /* Warnings - amber */
-    --warning: 38 100% 50%;
-    --warning-foreground: 0 0% 13%;
+    --warning: 37 92% 50%;
+    --warning-foreground: 47 100% 96%;
 
-    /* Success - green */
     --success: 122 39% 39%;
     --success-foreground: 0 0% 100%;
 
-    /* Info - blue */
     --info: 207 90% 54%;
     --info-foreground: 0 0% 100%;
 
-    /* Borders - subtle gray */
-    --border: 200 14% 82%;
-    --input: 200 14% 86%;
-    --ring: 38 100% 50%;
+    --border: 23 5% 82%;
+    --input: 23 5% 82%;
+    --ring: 37 92% 50%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
     /* Sidebar - Factory Light */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 13%;
-    --sidebar-primary: 200 18% 26%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 12% 92%;
-    --sidebar-accent-foreground: 200 18% 34%;
-    --sidebar-border: 200 14% 82%;
-    --sidebar-ring: 38 100% 50%;
+    --sidebar-background: 60 9% 97%;
+    --sidebar-foreground: 24 9% 10%;
+    --sidebar-primary: 37 92% 50%;
+    --sidebar-primary-foreground: 47 100% 96%;
+    --sidebar-accent: 24 5% 44%;
+    --sidebar-accent-foreground: 60 9% 97%;
+    --sidebar-border: 23 5% 82%;
+    --sidebar-ring: 37 92% 50%;
 
     /* Chart colors - Factory Light */
-    --chart-primary: 200 18% 32%;
-    --chart-secondary: 200 16% 55%;
-    --chart-accent: 38 100% 50%;
-    --chart-success: 122 39% 45%;
-    --chart-warning: 38 100% 55%;
-    --chart-neutral: 200 12% 60%;
+    --chart-primary: 45 96% 64%;
+    --chart-secondary: 47 95% 53%;
+    --chart-accent: 43 96% 56%;
+    --chart-success: 37 92% 50%;
+    --chart-warning: 24 5% 44%;
+    --chart-neutral: 23 5% 82%;
   }
 
   .dark {
     /* ===== INDUSTRIAL DARK THEME ===== */
-    /* AMOLED-optimized dark surfaces for workshop use */
-    --background: 0 0% 7%;
-    --foreground: 0 0% 100%;
+    --background: 24 9% 10%;
+    --foreground: 60 9% 97%;
 
-    /* Cards slightly elevated from background */
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 100%;
+    --card: 12 6% 15%;
+    --card-foreground: 60 9% 97%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 30 6% 25%;
+    --popover-foreground: 60 9% 97%;
 
-    /* Deep Blue primary */
-    --primary: 207 90% 32%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 20 91% 14%;
 
-    /* Slate Gray secondary */
-    --secondary: 200 18% 26%;
-    --secondary-foreground: 200 10% 85%;
+    --secondary: 24 5% 44%;
+    --secondary-foreground: 60 9% 97%;
 
-    /* Muted elements */
-    --muted: 200 15% 16%;
-    --muted-foreground: 200 10% 65%;
+    --muted: 24 5% 44%;
+    --muted-foreground: 60 9% 97%;
 
-    /* Industrial Orange accent */
-    --accent: 27 100% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 25 83% 14%;
+    --accent-foreground: 47 95% 53%;
 
-    /* Critical alerts - red */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 85% 97%;
 
-    /* Warnings - industrial orange */
-    --warning: 27 100% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 43 96% 56%;
+    --warning-foreground: 20 91% 14%;
 
-    /* Success - green */
     --success: 122 39% 39%;
     --success-foreground: 0 0% 100%;
 
-    /* Info - blue */
     --info: 207 90% 54%;
     --info-foreground: 0 0% 100%;
 
-    /* Borders - dark slate */
-    --border: 200 24% 23%;
-    --input: 200 18% 20%;
-    --ring: 27 100% 50%;
+    --border: 33 5% 32%;
+    --input: 33 5% 32%;
+    --ring: 43 96% 56%;
 
     /* Sidebar - Industrial Dark */
-    --sidebar-background: 0 0% 9%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 207 90% 32%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 15% 16%;
-    --sidebar-accent-foreground: 200 10% 85%;
-    --sidebar-border: 200 24% 23%;
-    --sidebar-ring: 27 100% 50%;
+    --sidebar-background: 12 6% 15%;
+    --sidebar-foreground: 60 9% 97%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 20 91% 14%;
+    --sidebar-accent: 47 95% 53%;
+    --sidebar-accent-foreground: 25 83% 14%;
+    --sidebar-border: 33 5% 32%;
+    --sidebar-ring: 43 96% 56%;
 
     /* Chart colors - Industrial Dark */
-    --chart-primary: 207 90% 40%;
-    --chart-secondary: 200 18% 35%;
-    --chart-accent: 27 100% 50%;
-    --chart-success: 122 39% 45%;
-    --chart-warning: 27 100% 55%;
-    --chart-neutral: 200 10% 50%;
+    --chart-primary: 45 96% 64%;
+    --chart-secondary: 48 96% 76%;
+    --chart-accent: 43 96% 56%;
+    --chart-success: 37 92% 50%;
+    --chart-warning: 33 5% 32%;
+    --chart-neutral: 24 5% 44%;
   }
 }
 
