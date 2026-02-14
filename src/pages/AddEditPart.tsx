@@ -590,7 +590,7 @@ export default function AddEditPart() {
                       <FormItem>
                         <FormLabel>Quantity</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" {...field} />
+                          <Input type="number" min="0" {...field} onFocus={(e) => e.target.select()} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -604,7 +604,7 @@ export default function AddEditPart() {
                       <FormItem>
                         <FormLabel>Min Stock Level</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" {...field} />
+                          <Input type="number" min="0" {...field} onFocus={(e) => e.target.select()} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -620,7 +620,7 @@ export default function AddEditPart() {
                       <FormItem>
                         <FormLabel>Buying Price (Rs)</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" step="1" {...field} />
+                          <Input type="number" min="0" step="1" {...field} onFocus={(e) => e.target.select()} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -634,7 +634,7 @@ export default function AddEditPart() {
                       <FormItem>
                         <FormLabel>Selling Price (Rs)</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" step="1" {...field} />
+                          <Input type="number" min="0" step="1" {...field} onFocus={(e) => e.target.select()} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
