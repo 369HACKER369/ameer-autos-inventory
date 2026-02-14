@@ -8,55 +8,44 @@ import type { ThemePreset, ThemeColors, ThemeId } from '@/types/theme';
 // Professional dark mode for heavy-duty workshop use
 // ============================================
 const industrialDarkColors: ThemeColors = {
-  // Core colors - Deep Blue primary with Industrial Orange accent
-  primary: '207 90% 32%',              // #0D47A1 - Deep Blue
-  primaryForeground: '0 0% 100%',      // White
-  secondary: '200 18% 26%',            // #37474F - Slate Gray
-  secondaryForeground: '200 10% 85%',  // #B0BEC5
-  accent: '27 100% 50%',               // #FF6D00 - Industrial Orange
-  accentForeground: '0 0% 100%',       // White
-  
-  // Background colors - AMOLED dark surfaces
-  background: '0 0% 7%',               // #121212
-  foreground: '0 0% 100%',             // White
-  card: '0 0% 12%',                    // #1E1E1E
-  cardForeground: '0 0% 100%',         // White
-  popover: '0 0% 12%',                 // #1E1E1E
-  popoverForeground: '0 0% 100%',      // White
-  
-  // Semantic colors
-  destructive: '0 72% 51%',            // #D32F2F
-  destructiveForeground: '0 0% 100%',  // White
-  warning: '27 100% 50%',              // #FF6D00 - matches accent
-  warningForeground: '0 0% 100%',      // White
-  success: '122 39% 39%',              // #388E3C
-  successForeground: '0 0% 100%',      // White
-  info: '207 90% 54%',                 // #1E88E5
-  infoForeground: '0 0% 100%',         // White
-  
-  // UI colors
-  muted: '200 15% 16%',                // Slightly lighter than card
-  mutedForeground: '200 10% 65%',      // #78909C - Muted text
-  border: '200 24% 23%',               // #263238
-  input: '200 18% 20%',                // Slightly lighter for inputs
-  ring: '27 100% 50%',                 // Industrial Orange - focus ring
-  
-  // Chart colors - gradients from primary to accent
-  chartPrimary: '207 90% 40%',         // Deep Blue
-  chartSecondary: '200 18% 35%',       // Slate Gray
-  chartAccent: '27 100% 50%',          // Industrial Orange
-  chartSuccess: '122 39% 45%',         // Green
-  chartWarning: '27 100% 55%',         // Orange
-  chartNeutral: '200 10% 50%',         // Gray
-
-  // Sidebar colors
-  sidebarBackground: '0 0% 9%',        // Slightly lighter than bg
-  sidebarForeground: '0 0% 100%',      // White
-  sidebarPrimary: '207 90% 32%',       // Deep Blue
-  sidebarPrimaryForeground: '0 0% 100%', // White
-  sidebarAccent: '200 15% 16%',        // Muted
-  sidebarAccentForeground: '200 10% 85%', // Light gray
-  sidebarBorder: '200 24% 23%',        // Border
+  primary: '43 96% 56%',
+  primaryForeground: '20 91% 14%',
+  secondary: '24 5% 44%',
+  secondaryForeground: '60 9% 97%',
+  accent: '25 83% 14%',
+  accentForeground: '47 95% 53%',
+  background: '24 9% 10%',
+  foreground: '60 9% 97%',
+  card: '12 6% 15%',
+  cardForeground: '60 9% 97%',
+  popover: '30 6% 25%',
+  popoverForeground: '60 9% 97%',
+  destructive: '0 84% 60%',
+  destructiveForeground: '0 85% 97%',
+  warning: '43 96% 56%',
+  warningForeground: '20 91% 14%',
+  success: '122 39% 39%',
+  successForeground: '0 0% 100%',
+  info: '207 90% 54%',
+  infoForeground: '0 0% 100%',
+  muted: '24 5% 44%',
+  mutedForeground: '60 9% 97%',
+  border: '33 5% 32%',
+  input: '33 5% 32%',
+  ring: '43 96% 56%',
+  chartPrimary: '45 96% 64%',
+  chartSecondary: '48 96% 76%',
+  chartAccent: '43 96% 56%',
+  chartSuccess: '37 92% 50%',
+  chartWarning: '33 5% 32%',
+  chartNeutral: '24 5% 44%',
+  sidebarBackground: '12 6% 15%',
+  sidebarForeground: '60 9% 97%',
+  sidebarPrimary: '43 96% 56%',
+  sidebarPrimaryForeground: '20 91% 14%',
+  sidebarAccent: '47 95% 53%',
+  sidebarAccentForeground: '25 83% 14%',
+  sidebarBorder: '33 5% 32%',
 };
 
 // ============================================
@@ -64,55 +53,44 @@ const industrialDarkColors: ThemeColors = {
 // Bright, clean, professional theme for office/shop usage
 // ============================================
 const factoryLightColors: ThemeColors = {
-  // Core colors - Slate Gray primary with Amber accent
-  primary: '200 18% 26%',              // #37474F - Slate Gray
-  primaryForeground: '0 0% 100%',      // White
-  secondary: '200 16% 62%',            // #90A4AE - Soft Gray-Blue
-  secondaryForeground: '0 0% 100%',    // White
-  accent: '38 100% 50%',               // #FF8F00 - Warning Amber
-  accentForeground: '0 0% 13%',        // Dark text on amber
-  
-  // Background colors - Clean light surfaces
-  background: '0 0% 96%',              // #F5F5F5
-  foreground: '0 0% 13%',              // #212121
-  card: '0 0% 100%',                   // White
-  cardForeground: '0 0% 13%',          // #212121
-  popover: '0 0% 100%',                // White
-  popoverForeground: '0 0% 13%',       // #212121
-  
-  // Semantic colors
-  destructive: '0 72% 51%',            // #D32F2F
-  destructiveForeground: '0 0% 100%',  // White
-  warning: '38 100% 50%',              // #FF8F00 - matches accent
-  warningForeground: '0 0% 13%',       // Dark text
-  success: '122 39% 39%',              // #388E3C
-  successForeground: '0 0% 100%',      // White
-  info: '207 90% 54%',                 // #1E88E5
-  infoForeground: '0 0% 100%',         // White
-  
-  // UI colors
-  muted: '200 12% 90%',                // Light muted
-  mutedForeground: '200 18% 34%',      // #546E7A - Secondary text
-  border: '200 14% 82%',               // #CFD8DC
-  input: '200 14% 86%',                // Slightly darker for inputs
-  ring: '38 100% 50%',                 // Amber - focus ring
-  
-  // Chart colors - gradients from primary to accent
-  chartPrimary: '200 18% 32%',         // Slate Gray
-  chartSecondary: '200 16% 55%',       // Soft Gray-Blue
-  chartAccent: '38 100% 50%',          // Amber
-  chartSuccess: '122 39% 45%',         // Green
-  chartWarning: '38 100% 55%',         // Amber
-  chartNeutral: '200 12% 60%',         // Gray
-
-  // Sidebar colors
-  sidebarBackground: '0 0% 98%',       // Almost white
-  sidebarForeground: '0 0% 13%',       // Dark text
-  sidebarPrimary: '200 18% 26%',       // Slate Gray
-  sidebarPrimaryForeground: '0 0% 100%', // White
-  sidebarAccent: '200 12% 92%',        // Light muted
-  sidebarAccentForeground: '200 18% 34%', // Secondary text
-  sidebarBorder: '200 14% 82%',        // Border
+  primary: '37 92% 50%',
+  primaryForeground: '47 100% 96%',
+  secondary: '24 5% 44%',
+  secondaryForeground: '60 9% 97%',
+  accent: '47 100% 96%',
+  accentForeground: '37 92% 50%',
+  background: '60 4% 95%',
+  foreground: '24 9% 10%',
+  card: '60 9% 97%',
+  cardForeground: '24 9% 10%',
+  popover: '20 5% 90%',
+  popoverForeground: '24 9% 10%',
+  destructive: '0 72% 50%',
+  destructiveForeground: '0 85% 97%',
+  warning: '37 92% 50%',
+  warningForeground: '47 100% 96%',
+  success: '122 39% 39%',
+  successForeground: '0 0% 100%',
+  info: '207 90% 54%',
+  infoForeground: '0 0% 100%',
+  muted: '23 5% 82%',
+  mutedForeground: '24 9% 10%',
+  border: '23 5% 82%',
+  input: '23 5% 82%',
+  ring: '37 92% 50%',
+  chartPrimary: '45 96% 64%',
+  chartSecondary: '47 95% 53%',
+  chartAccent: '43 96% 56%',
+  chartSuccess: '37 92% 50%',
+  chartWarning: '24 5% 44%',
+  chartNeutral: '23 5% 82%',
+  sidebarBackground: '60 9% 97%',
+  sidebarForeground: '24 9% 10%',
+  sidebarPrimary: '37 92% 50%',
+  sidebarPrimaryForeground: '47 100% 96%',
+  sidebarAccent: '24 5% 44%',
+  sidebarAccentForeground: '60 9% 97%',
+  sidebarBorder: '23 5% 82%',
 };
 
 // ============================================
