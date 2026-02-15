@@ -24,6 +24,7 @@ import BackupRestore from "./pages/settings/BackupRestore";
 import Notifications from "./pages/settings/Notifications";
 import ActivityLogSettings from "./pages/settings/ActivityLogSettings";
 import AppLogo from "./pages/settings/AppLogo";
+import Branding from "./pages/settings/Branding";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/settings/notifications" element={<Notifications />} />
               <Route path="/settings/activity-log" element={<ActivityLogSettings />} />
               <Route path="/settings/logo" element={<AppLogo />} />
+              <Route path="/settings/branding" element={<Branding />} />
               <Route path="/activity-log" element={<ActivityLog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

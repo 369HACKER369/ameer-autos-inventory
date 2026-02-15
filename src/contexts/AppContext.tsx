@@ -46,6 +46,10 @@ interface AppContextType {
   // Custom logo
   customLogo: string | null;
   setCustomLogo: (logo: string | null) => Promise<void>;
+  
+  // App name
+  appName: string;
+  setAppName: (name: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -67,6 +71,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [navCompactMode, setNavCompactModeState] = useState(false);
   const [navigationLayout, setNavigationLayoutState] = useState<NavigationLayout>('bottom');
   const [customLogo, setCustomLogoState] = useState<string | null>(null);
+  const [appName, setAppNameState] = useState('Ameer Autos');
 
   // Initialize database
   useEffect(() => {
@@ -81,8 +86,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const savedCompactMode = await getSetting<boolean>('navCompactMode');
         const savedNavigationLayout = await getSetting<NavigationLayout>('navigationLayout');
         const savedCustomLogo = await getSetting<string | null>('customLogo');
+        const savedAppName = await getSetting<string>('appName');
         
         if (savedTheme) setThemeState(savedTheme);
+        if (savedAppName) setAppNameState(savedAppName);
         if (savedNotifications !== undefined) setNotificationsState(savedNotifications);
         if (savedShowLabels !== undefined) setNavShowLabelsState(savedShowLabels);
         if (savedCompactMode !== undefined) setNavCompactModeState(savedCompactMode);
@@ -244,6 +251,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await updateSetting('customLogo', logo);
   };
 
+  // App name setter
+  const setAppName = async (name: string) => {
+    setAppNameState(name);
+    await updateSetting('appName', name);
+  };
+
   const value: AppContextType = {
     isInitialized,
     stats,
@@ -266,6 +279,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNavigationLayout,
     customLogo,
     setCustomLogo,
+    appName,
+    setAppName,
   };
 
   return (

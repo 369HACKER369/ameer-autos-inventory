@@ -67,8 +67,17 @@ function SettingItem({
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { notifications, setNotifications } = useApp();
+  const { notifications, setNotifications, appName } = useApp();
   const [search, setSearch] = useState('');
+
+  const brandingItems = [
+    {
+      icon: ImageIcon,
+      title: 'Branding',
+      description: 'App name, logo customization',
+      path: '/settings/branding',
+    },
+  ];
 
   const settingsItems = [
     {
@@ -88,12 +97,6 @@ export default function Settings() {
       title: 'Navigation Layout',
       description: 'Bottom nav or sidebar drawer',
       path: '/settings/navigation',
-    },
-    {
-      icon: ImageIcon,
-      title: 'App Logo',
-      description: 'Upload your custom logo',
-      path: '/settings/logo',
     },
   ];
 
@@ -115,6 +118,13 @@ export default function Settings() {
   const handleNotificationsClick = () => {
     navigate('/settings/notifications');
   };
+
+  const filteredBranding = search
+    ? brandingItems.filter(item =>
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.description?.toLowerCase().includes(search.toLowerCase())
+      )
+    : brandingItems;
 
   const filteredSettings = search
     ? settingsItems.filter(item => 
@@ -145,6 +155,23 @@ export default function Settings() {
             className="pl-10 bg-card"
           />
         </div>
+
+        {/* Branding */}
+        {filteredBranding.length > 0 && (
+          <Card className="bg-card overflow-hidden">
+            <CardContent className="p-0 divide-y divide-border">
+              {filteredBranding.map((item) => (
+                <SettingItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  description={item.description}
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* General Settings */}
         {filteredSettings.length > 0 && (
@@ -242,7 +269,7 @@ export default function Settings() {
 
         {/* App Info */}
         <div className="text-center pt-4 pb-8 text-muted-foreground">
-          <p className="text-sm font-medium">Ameer Autos</p>
+          <p className="text-sm font-medium">{appName}</p>
           <p className="text-xs">Inventory & Sales Manager v1.0.0</p>
         </div>
       </div>
