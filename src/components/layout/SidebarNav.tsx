@@ -19,7 +19,7 @@ interface SidebarNavProps {
 
 export function SidebarNav({ isOpen, onClose }: SidebarNavProps) {
   const location = useLocation();
-  const { customLogo, navShowLabels } = useApp();
+  const { customLogo, navShowLabels, appName } = useApp();
 
   // Close sidebar on route change only
   const previousPathRef = useRef(location.pathname);
@@ -108,7 +108,7 @@ export function SidebarNav({ isOpen, onClose }: SidebarNavProps) {
               </div>
             )}
             <div>
-              <p className="font-bold text-sm">Ameer Autos</p>
+              <p className="font-bold text-sm">{appName}</p>
               <p className="text-[10px] text-muted-foreground">Heavy Duty Parts</p>
             </div>
           </div>

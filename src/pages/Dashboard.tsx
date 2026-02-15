@@ -28,7 +28,8 @@ export default function Dashboard() {
     isLoadingStats, 
     lowStockParts, 
     recentActivity,
-    isInitialized 
+    isInitialized,
+    appName,
   } = useApp();
 
   if (!isInitialized) {
@@ -43,7 +44,7 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <Header title="Ameer Autos" subtitle="Inventory & Sales Manager" />
+      <Header title={appName} subtitle="Inventory & Sales Manager" />
       
       <div className="p-4 space-y-6">
         {/* Summary Cards */}

@@ -5,6 +5,94 @@ import { logActivity } from './activityLogService';
 import { updateStock } from './inventoryService';
 import { toSafeNumber, toSafeQuantity, safeAdd, calculateProfitSafe, calculateTotalSafe } from '@/utils/safeNumber';
 
+interface MultiSaleInput {
+  items: { partId: string; quantity: number; unitPrice: number }[];
+  customerName?: string;
+  customerPhone?: string;
+  notes?: string;
+}
+
+/**
+ * Record a multi-item sale
+ */
+export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sale[] } | { error: string }> {
+  // Validate cart not empty
+  if (!data.items.length) return { error: 'Cart is empty' };
+
+  // Load all parts
+  const partIds = data.items.map(i => i.partId);
+  const partsArr = await Promise.all(partIds.map(id => db.parts.get(id)));
+  const partsMap = new Map<string, Part>();
+  for (let i = 0; i < data.items.length; i++) {
+    const part = partsArr[i];
+    if (!part) return { error: `Part not found: ${data.items[i].partId}` };
+    partsMap.set(part.id, part);
+  }
+
+  // Aggregate quantities per part to check stock
+  const qtyPerPart = new Map<string, number>();
+  for (const item of data.items) {
+    qtyPerPart.set(item.partId, (qtyPerPart.get(item.partId) || 0) + item.quantity);
+  }
+  for (const [partId, totalQty] of qtyPerPart) {
+    const part = partsMap.get(partId)!;
+    if (totalQty > part.quantity) {
+      return { error: `Insufficient stock for ${part.name}. Available: ${part.quantity}` };
+    }
+  }
+
+  const sales: Sale[] = [];
+  let grandTotal = 0;
+  let grandProfit = 0;
+
+  for (const item of data.items) {
+    const part = partsMap.get(item.partId)!;
+    const qty = toSafeQuantity(item.quantity, 0);
+    const unitPrice = toSafeNumber(item.unitPrice, 0);
+    const buyingPrice = toSafeNumber(part.buyingPrice, 0);
+    const totalAmount = calculateTotalSafe(qty, unitPrice);
+    const profit = calculateProfitSafe(buyingPrice, unitPrice, qty);
+
+    sales.push({
+      id: uuidv4(),
+      partId: part.id,
+      partName: part.name,
+      partSku: part.sku,
+      quantity: qty,
+      unitPrice,
+      totalAmount,
+      buyingPrice,
+      profit,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      notes: data.notes,
+      createdAt: new Date(),
+    });
+
+    grandTotal += totalAmount;
+    grandProfit += profit;
+  }
+
+  // Atomic transaction
+  await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
+    for (const sale of sales) {
+      await db.sales.add(sale);
+      await updateStock(sale.partId, -sale.quantity, 'Sale');
+    }
+  });
+
+  const itemsSummary = sales.map(s => `${s.quantity}x ${s.partName}`).join(', ');
+  await logActivity({
+    action: 'sale',
+    entityType: 'sale',
+    entityId: sales[0].id,
+    description: `Sold ${itemsSummary} for Rs ${grandTotal.toLocaleString()}`,
+    metadata: { saleIds: sales.map(s => s.id), totalAmount: grandTotal, totalProfit: grandProfit },
+  });
+
+  return { sales };
+}
+
 /**
  * Record a new sale
  */
