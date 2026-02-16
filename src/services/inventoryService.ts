@@ -121,12 +121,13 @@ export async function updatePart(id: string, data: Partial<PartFormData>): Promi
 }
 
 /**
- * Delete a part
+ * Delete a part - hard delete for demo items, soft delete logging for all
  */
 export async function deletePart(id: string): Promise<boolean> {
   const part = await db.parts.get(id);
   if (!part) return false;
   
+  // Always hard delete from parts table (both demo and real items)
   await db.parts.delete(id);
   
   await logActivity({
@@ -134,6 +135,7 @@ export async function deletePart(id: string): Promise<boolean> {
     entityType: 'part',
     entityId: id,
     description: `Deleted part: ${part.name} (SKU: ${part.sku})`,
+    metadata: { isDemo: !!part.isDemo },
   });
   
   return true;
