@@ -83,6 +83,7 @@ export interface ActivityLog {
   entityId?: string;
   description: string;
   metadata?: Record<string, unknown>;
+  isDeleted?: boolean;
   createdAt: Date;
 }
 

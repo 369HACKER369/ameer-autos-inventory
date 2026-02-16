@@ -21,6 +21,7 @@ export async function logActivity(params: LogActivityParams): Promise<ActivityLo
     entityId: params.entityId,
     description: params.description,
     metadata: params.metadata,
+    isDeleted: false,
     createdAt: new Date(),
   };
   
