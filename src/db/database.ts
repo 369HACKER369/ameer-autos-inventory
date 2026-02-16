@@ -32,9 +32,20 @@ export class AmeerAutosDB extends Dexie {
       backupRecords: 'id, type, createdAt'
     });
 
-    // Version 2: Add isDeleted index to activityLogs
+    // Version 2: Add isDeleted to activityLogs
     this.version(2).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt'
+    });
+
+    // Version 3: Add isDemo index to parts
+    this.version(3).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
       categories: 'id, name, createdAt',
       sales: 'id, partId, createdAt',
