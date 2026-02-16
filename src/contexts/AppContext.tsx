@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { db, initializeDatabase, getSetting, updateSetting } from '@/db/database';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category } from '@/types';
-import { startOfDay, endOfDay, startOfMonth } from 'date-fns';
+import { startOfDay, endOfDay, startOfMonth, subDays } from 'date-fns';
 import { toSafeNumber, toSafeQuantity, safeAdd } from '@/utils/safeNumber';
 
 type NavigationLayout = 'bottom' | 'sidebar';
@@ -97,9 +97,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (savedCustomLogo !== undefined) setCustomLogoState(savedCustomLogo);
         
         setIsInitialized(true);
+
+        // Run auto-cleanup for activity logs
+        const autoDeleteEnabled = await getSetting<boolean>('autoDeleteLogs');
+        const autoDeleteDays = await getSetting<string>('autoDeleteDays');
+        const autoDeleteCustom = await getSetting<string>('autoDeleteCustomDays');
+        if (autoDeleteEnabled) {
+          const daysStr = autoDeleteDays === 'custom' ? autoDeleteCustom : autoDeleteDays;
+          const days = parseInt(daysStr || '30');
+          if (!isNaN(days) && days > 0) {
+            const cutoff = subDays(new Date(), days);
+            const oldLogs = await db.activityLogs.where('createdAt').below(cutoff).toArray();
+            const ids = oldLogs.filter(l => !l.isDeleted).map(l => l.id);
+            if (ids.length > 0) {
+              await db.activityLogs.where('id').anyOf(ids).modify({ isDeleted: true });
+            }
+          }
+        }
       } catch (error) {
         console.error('Failed to initialize database:', error);
-        setIsInitialized(true); // Still set to true to show error state
+        setIsInitialized(true);
       }
     };
     
@@ -125,7 +142,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const brands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
   const categories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
   const activityLogs = useLiveQuery(
-    () => db.activityLogs.orderBy('createdAt').reverse().limit(10).toArray(),
+    () => db.activityLogs.orderBy('createdAt').reverse().toArray()
+      .then(logs => logs.filter(l => !l.isDeleted).slice(0, 10)),
     []
   ) ?? [];
 

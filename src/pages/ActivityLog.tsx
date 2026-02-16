@@ -10,32 +10,23 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuSeparator, DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
-  MoreVertical, Filter, CalendarIcon, X
+  MoreVertical, Filter, CalendarIcon, X, Settings2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format, startOfDay, endOfDay } from 'date-fns';
-import type { ActivityAction, ActivityLog } from '@/types';
+import type { ActivityAction } from '@/types';
+import { ManageLogsSheet } from '@/components/activity/ManageLogsSheet';
 
 const iconMap: Record<string, React.ElementType> = { Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity };
 
@@ -55,24 +46,22 @@ export default function ActivityLogPage() {
   const [dateStart, setDateStart] = useState<Date | undefined>(undefined);
   const [dateEnd, setDateEnd] = useState<Date | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [bulkDeleteMode, setBulkDeleteMode] = useState<'range' | 'type' | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
 
+  // Only show non-deleted logs
   const activityLogs = useLiveQuery(
-    () => db.activityLogs.orderBy('createdAt').reverse().toArray(), []
+    () => db.activityLogs.orderBy('createdAt').reverse().toArray(),
+    []
   ) ?? [];
 
+  const visibleLogs = activityLogs.filter(log => !log.isDeleted);
+
   // Apply filters
-  const filteredLogs = activityLogs.filter(log => {
+  const filteredLogs = visibleLogs.filter(log => {
     if (typeFilter && !typeFilter.includes(log.action)) return false;
-    if (dateStart) {
-      const logDate = new Date(log.createdAt);
-      if (logDate < startOfDay(dateStart)) return false;
-    }
-    if (dateEnd) {
-      const logDate = new Date(log.createdAt);
-      if (logDate > endOfDay(dateEnd)) return false;
-    }
+    if (dateStart && new Date(log.createdAt) < startOfDay(dateStart)) return false;
+    if (dateEnd && new Date(log.createdAt) > endOfDay(dateEnd)) return false;
     return true;
   });
 
@@ -80,7 +69,8 @@ export default function ActivityLogPage() {
 
   const handleDeleteSingle = useCallback(async () => {
     if (!deleteTarget) return;
-    await db.activityLogs.delete(deleteTarget);
+    // Soft delete
+    await db.activityLogs.update(deleteTarget, { isDeleted: true });
     toast.success('Log entry deleted');
     setDeleteTarget(null);
     setShowDeleteConfirm(false);
@@ -89,10 +79,9 @@ export default function ActivityLogPage() {
   const handleBulkDelete = useCallback(async () => {
     const idsToDelete = filteredLogs.map(l => l.id);
     if (idsToDelete.length === 0) { toast.info('No logs match the filter'); setShowDeleteConfirm(false); return; }
-    await db.activityLogs.bulkDelete(idsToDelete);
+    await db.activityLogs.where('id').anyOf(idsToDelete).modify({ isDeleted: true });
     toast.success(`Deleted ${idsToDelete.length} log entries`);
     setShowDeleteConfirm(false);
-    setBulkDeleteMode(null);
   }, [filteredLogs]);
 
   const clearFilters = () => {
@@ -109,42 +98,49 @@ export default function ActivityLogPage() {
         title="Activity Log"
         showBack
         rightAction={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
-              {ACTION_FILTERS.map(f => (
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setManageOpen(true)}>
+              <Settings2 className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
+                {ACTION_FILTERS.map(f => (
+                  <DropdownMenuItem
+                    key={f.label}
+                    onClick={() => setTypeFilter(prev =>
+                      prev && prev.every(a => f.actions.includes(a)) && prev.length === f.actions.length
+                        ? null : f.actions
+                    )}
+                  >
+                    <span className="flex-1">{f.label}</span>
+                    {typeFilter && typeFilter.every(a => f.actions.includes(a)) && typeFilter.length === f.actions.length && (
+                      <Badge variant="secondary" className="ml-2 text-[10px]">Active</Badge>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Bulk Delete</DropdownMenuLabel>
                 <DropdownMenuItem
-                  key={f.label}
-                  onClick={() => setTypeFilter(prev =>
-                    prev && prev.every(a => f.actions.includes(a)) && prev.length === f.actions.length
-                      ? null : f.actions
-                  )}
+                  onClick={() => { setDeleteTarget(null); setShowDeleteConfirm(true); }}
+                  className="text-destructive focus:text-destructive"
                 >
-                  <span className="flex-1">{f.label}</span>
-                  {typeFilter && typeFilter.every(a => f.actions.includes(a)) && typeFilter.length === f.actions.length && (
-                    <Badge variant="secondary" className="ml-2 text-[10px]">Active</Badge>
-                  )}
+                  Delete Filtered Logs
                 </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Bulk Delete</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => { setBulkDeleteMode('range'); setShowDeleteConfirm(true); }}
-                className="text-destructive focus:text-destructive">
-                Delete Filtered Logs
-              </DropdownMenuItem>
-              {hasFilters && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={clearFilters}>Clear All Filters</DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {hasFilters && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={clearFilters}>Clear All Filters</DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         }
       />
 
@@ -257,6 +253,9 @@ export default function ActivityLogPage() {
         )}
       </div>
 
+      {/* Manage Logs Bottom Sheet */}
+      <ManageLogsSheet open={manageOpen} onOpenChange={setManageOpen} />
+
       {/* Delete Confirmation */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
@@ -272,7 +271,7 @@ export default function ActivityLogPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setDeleteTarget(null); setBulkDeleteMode(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => { setDeleteTarget(null); }}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={deleteTarget ? handleDeleteSingle : handleBulkDelete}

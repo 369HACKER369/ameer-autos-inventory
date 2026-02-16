@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
 import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
 import { getRelativeDate, formatTime } from '@/utils/dateUtils';
+import { getActivityIcon, getActivityColor } from '@/services/activityLogService';
 import { toSafeQuantity } from '@/utils/safeNumber';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,13 +15,47 @@ import {
   ShoppingCart, 
   AlertTriangle,
   Plus,
+  Pencil,
+  Trash2,
   BarChart3,
   Download,
-  Activity
+  Upload,
+  RefreshCw,
+  Activity,
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
+import type { ActivityAction } from '@/types';
 
+const activityIconMap: Record<string, React.ElementType> = {
+  Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
+};
+
+const ACTION_LABELS: Record<ActivityAction, string> = {
+  create: 'Added', update: 'Updated', delete: 'Deleted',
+  sale: 'Sale', backup: 'Backup', restore: 'Restore', sync: 'Sync',
+};
+
+const ACTION_BG: Record<ActivityAction, string> = {
+  create: 'bg-green-500/12',
+  update: 'bg-primary/12',
+  delete: 'bg-destructive/12',
+  sale: 'bg-primary/12',
+  backup: 'bg-muted',
+  restore: 'bg-orange-500/12',
+  sync: 'bg-primary/12',
+};
+
+const ACTION_BAR_COLOR: Record<ActivityAction, string> = {
+  create: 'bg-green-500',
+  update: 'bg-primary',
+  delete: 'bg-destructive',
+  sale: 'bg-primary',
+  backup: 'bg-muted-foreground',
+  restore: 'bg-orange-500',
+  sync: 'bg-primary',
+};
 export default function Dashboard() {
   const navigate = useNavigate();
   const { 
@@ -154,41 +189,69 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Recent Activity */}
+        {/* Recent Activity - Upgraded */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-muted-foreground">Recent Activity</h2>
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-xs h-7"
+              className="text-xs h-7 gap-1 group"
               onClick={() => navigate('/activity-log')}
             >
               View All
+              <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
             </Button>
           </div>
-          <Card className="bg-card">
-            <CardContent className="p-0 divide-y divide-border">
+          <Card className="bg-card rounded-xl shadow-md">
+            <CardContent className="p-0">
               {recentActivity.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground text-sm">
-                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No activity yet</p>
-                  <p className="text-xs mt-1">Start by adding your first part</p>
+                <div className="p-8 text-center text-muted-foreground text-sm">
+                  <Activity className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                  <p className="font-medium">No activity yet</p>
+                  <p className="text-xs mt-1 text-muted-foreground/70">Start by adding your first part</p>
                 </div>
               ) : (
-                recentActivity.slice(0, 5).map((log) => (
-                  <div key={log.id} className="flex items-start gap-3 p-3">
-                    <div className="shrink-0 mt-0.5">
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm leading-snug">{log.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {getRelativeDate(log.createdAt)} at {formatTime(log.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                ))
+                <div className="divide-y divide-border">
+                  {recentActivity.slice(0, 6).map((log) => {
+                    const iconName = getActivityIcon(log.action);
+                    const Icon = activityIconMap[iconName] || Activity;
+                    const colorClass = getActivityColor(log.action);
+                    const bgClass = ACTION_BG[log.action] || 'bg-muted';
+                    const barColor = ACTION_BAR_COLOR[log.action] || 'bg-muted-foreground';
+                    const label = ACTION_LABELS[log.action] || log.action;
+
+                    return (
+                      <div
+                        key={log.id}
+                        className="flex items-start gap-3 p-4 cursor-pointer hover:bg-muted/40 transition-colors relative"
+                        onClick={() => navigate('/activity-log')}
+                      >
+                        {/* Color bar */}
+                        <div className={cn('absolute right-0 top-3 bottom-3 w-[3px] rounded-full', barColor)} />
+
+                        {/* Icon */}
+                        <div className={cn(
+                          'h-9 w-9 rounded-full flex items-center justify-center shrink-0',
+                          bgClass
+                        )}>
+                          <Icon className={cn('h-4 w-4', colorClass)} />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 pr-3">
+                          <p className="text-sm font-semibold leading-snug">{label} – {log.description?.split('–')[0]?.split(':')[0]?.trim() || ''}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-1">
+                            {log.description}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/60 mt-1">
+                            {getRelativeDate(log.createdAt)} at {formatTime(log.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </CardContent>
           </Card>
