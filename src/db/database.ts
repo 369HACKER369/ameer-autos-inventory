@@ -32,7 +32,7 @@ export class AmeerAutosDB extends Dexie {
       backupRecords: 'id, type, createdAt'
     });
 
-    // Version 2: Add isDeleted to activityLogs
+    // Version 2: Add isDeleted index to activityLogs
     this.version(2).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
       brands: 'id, name, createdAt',
@@ -41,12 +41,6 @@ export class AmeerAutosDB extends Dexie {
       activityLogs: 'id, action, entityType, createdAt, isDeleted',
       settings: 'id, key',
       backupRecords: 'id, type, createdAt'
-    }).upgrade(tx => {
-      return tx.table('activityLogs').toCollection().modify(log => {
-        if (log.isDeleted === undefined) {
-          log.isDeleted = false;
-        }
-      });
     });
   }
 }
