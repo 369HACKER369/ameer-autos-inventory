@@ -2,7 +2,7 @@ import { ReactNode, useState, useCallback } from 'react';
 import { BottomNav } from './BottomNav';
 import { SidebarNav, SidebarTrigger } from './SidebarNav';
 import { cn } from '@/lib/utils';
-import { useApp } from '@/contexts/AppContext';
+import { useAppSafe } from '@/contexts/AppContext';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -12,7 +12,9 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, hideNav = false, className, showMenuButton = true }: AppLayoutProps) {
-  const { navigationLayout, isInitialized } = useApp();
+  const app = useAppSafe();
+  const navigationLayout = app?.navigationLayout ?? 'bottom';
+  const isInitialized = app?.isInitialized ?? false;
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const openSidebar = useCallback(() => setSidebarOpen(true), []);
