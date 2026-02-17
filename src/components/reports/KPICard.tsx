@@ -31,9 +31,18 @@ export function KPICard({
   suffix = '',
   className,
 }: KPICardProps) {
-  const displayValue = isCurrency && typeof value === 'number' 
-    ? formatCurrencyShort(value)
-    : `${value}${suffix}`;
+  // Parse currency into structured parts for balanced typography
+  const parseCurrencyParts = (amount: number) => {
+    const abs = Math.abs(amount);
+    const sign = amount < 0 ? '-' : '';
+    if (abs >= 10000000) return { prefix: `Rs ${sign}`, number: (abs / 10000000).toFixed(2), unit: 'Cr' };
+    if (abs >= 100000) return { prefix: `Rs ${sign}`, number: (abs / 100000).toFixed(2), unit: 'Lac' };
+    if (abs >= 1000) return { prefix: `Rs ${sign}`, number: (abs / 1000).toFixed(1), unit: 'K' };
+    return { prefix: 'Rs', number: formatCurrencyShort(amount).replace(/^Rs\s*/, ''), unit: '' };
+  };
+
+  const currencyParts = isCurrency && typeof value === 'number' ? parseCurrencyParts(value) : null;
+  const displayValue = currencyParts ? null : `${value}${suffix}`;
 
   const getTrendIcon = () => {
     if (!trend) return null;
@@ -84,12 +93,25 @@ export function KPICard({
         </div>
         
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+          <p
+            className="text-muted-foreground font-medium uppercase tracking-wide"
+            style={{ fontSize: `calc(0.75rem * var(--card-label-scale, 1) * var(--text-scale, 1))` }}
+          >
             {title}
           </p>
-          <p className="text-2xl font-bold tracking-tight text-foreground">
-            {displayValue}
-          </p>
+          {currencyParts ? (
+            <div className="flex items-baseline gap-1" style={{ fontSize: `calc(1.25rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
+              <span className="text-muted-foreground font-medium" style={{ fontSize: '0.65em' }}>{currencyParts.prefix}</span>
+              <span className="font-bold tracking-tight text-foreground">{currencyParts.number}</span>
+              {currencyParts.unit && (
+                <span className="text-muted-foreground font-medium" style={{ fontSize: '0.7em' }}>{currencyParts.unit}</span>
+              )}
+            </div>
+          ) : (
+            <p className="font-bold tracking-tight text-foreground" style={{ fontSize: `calc(1.5rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
+              {displayValue}
+            </p>
+          )}
         </div>
 
         {/* Sparkline */}
