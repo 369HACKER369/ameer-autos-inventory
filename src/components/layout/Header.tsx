@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useApp } from '@/contexts/AppContext';
+import { useAppSafe } from '@/contexts/AppContext';
 import { SidebarNav } from './SidebarNav';
 import { AlertBell } from './AlertBell';
 
@@ -25,7 +25,10 @@ export function Header({
   className 
 }: HeaderProps) {
   const navigate = useNavigate();
-  const { navigationLayout, customLogo, isInitialized } = useApp();
+  const app = useAppSafe();
+  const navigationLayout = app?.navigationLayout ?? 'bottom';
+  const customLogo = app?.customLogo ?? null;
+  const isInitialized = app?.isInitialized ?? false;
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleBack = () => {

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Package, BarChart3, Settings, X, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useApp } from '@/contexts/AppContext';
+import { useAppSafe } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
@@ -19,7 +19,10 @@ interface SidebarNavProps {
 
 export function SidebarNav({ isOpen, onClose }: SidebarNavProps) {
   const location = useLocation();
-  const { customLogo, navShowLabels, appName } = useApp();
+  const app = useAppSafe();
+  const customLogo = app?.customLogo ?? null;
+  const navShowLabels = app?.navShowLabels ?? true;
+  const appName = app?.appName ?? 'Ameer Autos';
 
   // Close sidebar on route change only
   const previousPathRef = useRef(location.pathname);
