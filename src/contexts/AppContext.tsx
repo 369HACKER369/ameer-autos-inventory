@@ -139,14 +139,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  // Live query for parts
-  const parts = useLiveQuery(() => db.parts.toArray(), []) ?? [];
-  const sales = useLiveQuery(() => db.sales.toArray(), []) ?? [];
-  const brands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
-  const categories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
+  // Live query for parts — wrapped safely so AppProvider never crashes
+  const parts = useLiveQuery(() => db.parts.toArray().catch(() => []), []) ?? [];
+  const sales = useLiveQuery(() => db.sales.toArray().catch(() => []), []) ?? [];
+  const brands = useLiveQuery(() => db.brands.toArray().catch(() => []), []) ?? [];
+  const categories = useLiveQuery(() => db.categories.toArray().catch(() => []), []) ?? [];
   const activityLogs = useLiveQuery(
     () => db.activityLogs.orderBy('createdAt').reverse().toArray()
-      .then(logs => logs.filter(l => !l.isDeleted).slice(0, 10)),
+      .then(logs => logs.filter(l => !l.isDeleted).slice(0, 10))
+      .catch(() => []),
     []
   ) ?? [];
 
