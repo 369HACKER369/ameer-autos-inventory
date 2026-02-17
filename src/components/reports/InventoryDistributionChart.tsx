@@ -147,14 +147,16 @@ export function InventoryDistributionChart({
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="flex flex-wrap gap-2 justify-center mt-2">
+                <div className="flex flex-wrap gap-x-3 gap-y-2 justify-center mt-2 px-2 overflow-visible"
+                  style={{ fontSize: `calc(0.75rem * var(--chart-legend-scale, 1) * var(--text-scale, 1))` }}
+                >
                   {categoryData.map((item, index) => (
-                    <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                    <div key={item.name} className="flex items-center gap-1.5 shrink-0 max-w-[45%]">
                       <div 
-                        className="w-2.5 h-2.5 rounded-full" 
+                        className="w-2.5 h-2.5 rounded-full shrink-0" 
                         style={{ backgroundColor: colors[index % colors.length] }}
                       />
-                      <span className="text-muted-foreground">{item.name}</span>
+                      <span className="text-muted-foreground break-words leading-tight">{item.name}</span>
                     </div>
                   ))}
                 </div>

@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Download,
   RefreshCw,
-  ImageIcon
+  ImageIcon,
+  Type
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -91,6 +92,12 @@ export default function Settings() {
       title: 'Theme & Appearance',
       description: 'Dark mode, AMOLED black',
       path: '/settings/theme',
+    },
+    {
+      icon: Type,
+      title: 'Typography & Icon Size',
+      description: 'Text scale, icon size controls',
+      path: '/settings/typography',
     },
     {
       icon: Layout,

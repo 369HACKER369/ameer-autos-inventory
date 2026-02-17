@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import { AdvancedThemeProvider } from "@/contexts/ThemeContext";
+import { TypographyProvider } from "@/contexts/TypographyContext";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import AddEditPart from "./pages/AddEditPart";
@@ -25,6 +26,7 @@ import Notifications from "./pages/settings/Notifications";
 import ActivityLogSettings from "./pages/settings/ActivityLogSettings";
 import AppLogo from "./pages/settings/AppLogo";
 import Branding from "./pages/settings/Branding";
+import TypographySettings from "./pages/settings/TypographySettings";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,7 @@ const App = () => (
     <TooltipProvider>
       <AppProvider>
         <AdvancedThemeProvider>
+          <TypographyProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -54,12 +57,14 @@ const App = () => (
               <Route path="/settings/activity-log" element={<ActivityLogSettings />} />
               <Route path="/settings/logo" element={<AppLogo />} />
               <Route path="/settings/branding" element={<Branding />} />
+              <Route path="/settings/typography" element={<TypographySettings />} />
               <Route path="/activity-log" element={<ActivityLog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </AdvancedThemeProvider>
+          </TypographyProvider>
+          </AdvancedThemeProvider>
       </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
