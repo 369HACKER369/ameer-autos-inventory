@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Package, BarChart3, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useApp } from '@/contexts/AppContext';
+import { useAppSafe } from '@/contexts/AppContext';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -14,7 +14,9 @@ const navItems = [
 export const BottomNav = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
   function BottomNav(props, ref) {
     const location = useLocation();
-    const { navShowLabels, navCompactMode } = useApp();
+    const app = useAppSafe();
+    const navShowLabels = app?.navShowLabels ?? true;
+    const navCompactMode = app?.navCompactMode ?? false;
 
     const isActive = (path: string) => {
       if (path === '/') {

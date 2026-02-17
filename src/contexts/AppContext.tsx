@@ -318,3 +318,8 @@ export function useApp() {
   }
   return context;
 }
+
+/** Safe version that returns undefined instead of throwing if outside provider */
+export function useAppSafe() {
+  return useContext(AppContext);
+}
