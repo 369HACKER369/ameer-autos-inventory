@@ -140,16 +140,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   // Live query for parts — wrapped safely so AppProvider never crashes
-  const parts = useLiveQuery(() => db.parts.toArray().catch(() => []), []) ?? [];
-  const sales = useLiveQuery(() => db.sales.toArray().catch(() => []), []) ?? [];
-  const brands = useLiveQuery(() => db.brands.toArray().catch(() => []), []) ?? [];
-  const categories = useLiveQuery(() => db.categories.toArray().catch(() => []), []) ?? [];
-  const activityLogs = useLiveQuery(
-    () => db.activityLogs.orderBy('createdAt').reverse().toArray()
-      .then(logs => logs.filter(l => !l.isDeleted).slice(0, 10))
-      .catch(() => []),
-    []
-  ) ?? [];
+  const parts = useLiveQuery(() => {
+    try { return db.parts.toArray().catch(() => []); } catch { return Promise.resolve([]); }
+  }, []) ?? [];
+  const sales = useLiveQuery(() => {
+    try { return db.sales.toArray().catch(() => []); } catch { return Promise.resolve([]); }
+  }, []) ?? [];
+  const brands = useLiveQuery(() => {
+    try { return db.brands.toArray().catch(() => []); } catch { return Promise.resolve([]); }
+  }, []) ?? [];
+  const categories = useLiveQuery(() => {
+    try { return db.categories.toArray().catch(() => []); } catch { return Promise.resolve([]); }
+  }, []) ?? [];
+  const activityLogs = useLiveQuery(() => {
+    try {
+      return db.activityLogs.orderBy('createdAt').reverse().toArray()
+        .then(logs => logs.filter(l => !l.isDeleted).slice(0, 10))
+        .catch(() => []);
+    } catch { return Promise.resolve([]); }
+  }, []) ?? [];
 
   // Calculate low stock parts
   const lowStockParts = parts.filter(p => p.quantity <= p.minStockLevel);
