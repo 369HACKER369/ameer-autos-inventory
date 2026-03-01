@@ -64,8 +64,12 @@ export async function seedDemoDataIfNeeded(): Promise<boolean> {
 
   await db.parts.bulkAdd(parts);
 
-  // Set flag to prevent re-seeding
-  await updateSetting('demoDataInserted', true);
-
-  return true;
+    // Set flag to prevent re-seeding
+    await updateSetting('demoDataInserted', true);
+    console.log(`[DemoSeed] Seeded ${parts.length} demo parts, ${Object.keys(brandMap).length} brands, ${Object.keys(categoryMap).length} categories`);
+    return true;
+  } catch (error) {
+    console.error('[DemoSeed] Failed to seed demo data:', error);
+    return false;
+  }
 }
