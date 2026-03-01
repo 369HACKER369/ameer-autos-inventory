@@ -109,7 +109,7 @@ export function InventoryDistributionChart({
           
           <TabsContent value="category">
             {categoryData.length > 0 ? (
-              <div className="h-64">
+              <div>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie

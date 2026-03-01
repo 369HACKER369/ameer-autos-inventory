@@ -78,27 +78,27 @@ export function KPICard({
       className
     )}>
       <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-primary/10">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
               {icon}
             </div>
+            <p
+              className="text-muted-foreground font-medium uppercase tracking-wide break-words leading-tight"
+              style={{ fontSize: `calc(0.75rem * var(--card-label-scale, 1) * var(--text-scale, 1))` }}
+            >
+              {title}
+            </p>
           </div>
           {trend && trendValue && (
-            <div className={cn("flex items-center gap-1 text-xs", getTrendColor())}>
+            <div className={cn("flex items-center gap-1 text-xs shrink-0", getTrendColor())}>
               {getTrendIcon()}
               <span>{trendValue}</span>
             </div>
           )}
         </div>
         
-        <div className="space-y-1">
-          <p
-            className="text-muted-foreground font-medium uppercase tracking-wide"
-            style={{ fontSize: `calc(0.75rem * var(--card-label-scale, 1) * var(--text-scale, 1))` }}
-          >
-            {title}
-          </p>
+        <div className="space-y-1 pl-[calc(2rem+1rem)]">
           {currencyParts ? (
             <div className="flex items-baseline gap-1" style={{ fontSize: `calc(1.25rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
               <span className="text-muted-foreground font-medium" style={{ fontSize: '0.65em' }}>{currencyParts.prefix}</span>
