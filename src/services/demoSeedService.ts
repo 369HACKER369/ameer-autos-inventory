@@ -7,17 +7,22 @@ import { v4 as uuidv4 } from 'uuid';
  * Sets demoDataInserted flag to prevent re-seeding.
  */
 export async function seedDemoDataIfNeeded(): Promise<boolean> {
-  // Check if demo data was already inserted
-  const alreadyInserted = await getSetting<boolean>('demoDataInserted');
-  if (alreadyInserted) return false;
+  try {
+    // Check if demo data was already inserted
+    const alreadyInserted = await getSetting<boolean>('demoDataInserted');
+    if (alreadyInserted) {
+      // Verify data actually exists
+      const existingParts = await db.parts.count();
+      if (existingParts > 0) return false;
+      // Flag was set but no data — re-seed
+    }
 
-  // Check if database already has parts (user data exists)
-  const existingParts = await db.parts.count();
-  if (existingParts > 0) {
-    // Mark as inserted so we never try again
-    await updateSetting('demoDataInserted', true);
-    return false;
-  }
+    // Check if database already has parts (user data exists)
+    const existingParts = await db.parts.count();
+    if (existingParts > 0) {
+      await updateSetting('demoDataInserted', true);
+      return false;
+    }
 
   const now = new Date();
 
@@ -59,8 +64,12 @@ export async function seedDemoDataIfNeeded(): Promise<boolean> {
 
   await db.parts.bulkAdd(parts);
 
-  // Set flag to prevent re-seeding
-  await updateSetting('demoDataInserted', true);
-
-  return true;
+    // Set flag to prevent re-seeding
+    await updateSetting('demoDataInserted', true);
+    console.log(`[DemoSeed] Seeded ${parts.length} demo parts, ${Object.keys(brandMap).length} brands, ${Object.keys(categoryMap).length} categories`);
+    return true;
+  } catch (error) {
+    console.error('[DemoSeed] Failed to seed demo data:', error);
+    return false;
+  }
 }

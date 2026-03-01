@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "node -e \"const fs=require('fs');const f='node_modules/dexie/dist/dexie.d.ts';if(fs.existsSync(f)){let c=fs.readFileSync(f,'utf8');c=c.replace('export declare module Dexie','export declare namespace Dexie');fs.writeFileSync(f,c)}\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -46,7 +47,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
-    "dexie": "^4.2.1",
+    "dexie": "4.2.1",
     "dexie-react-hooks": "^1.1.7",
     "embla-carousel-react": "^8.6.0",
     "file-saver": "^2.0.5",
@@ -89,7 +90,7 @@
     "lovable-tagger": "^1.1.13",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3",
+    "typescript": "5.4.5",
     "typescript-eslint": "^8.38.0",
     "vite": "^5.4.19",
     "vitest": "^3.2.4"
