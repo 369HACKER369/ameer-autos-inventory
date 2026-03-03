@@ -404,32 +404,31 @@ export default function Reports() {
           <KPICard
             title="Total Sales"
             value={summary?.totalSales || 0}
-            icon={<ShoppingCart className="h-4 w-4 text-primary" />}
-            sparklineData={salesSparkline}
+            icon={<ShoppingCart className="h-5 w-5 text-primary" />}
             isCurrency
           />
           <KPICard
             title="Total Profit"
             value={summary?.totalProfit || 0}
-            icon={<TrendingUp className="h-4 w-4 text-primary" />}
-            sparklineData={profitSparkline}
+            icon={<TrendingUp className="h-5 w-5 text-primary" />}
             isCurrency
           />
           <KPICard
             title="Inventory Value"
             value={inventoryValue.cost}
-            icon={<Package className="h-4 w-4 text-primary" />}
+            icon={<Package className="h-5 w-5 text-primary" />}
             isCurrency
           />
           <KPICard
             title="Low Stock Items"
             value={lowStockCount}
-            icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
+            icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
+            highlight={lowStockCount > 0}
           />
           <KPICard
             title="Avg Daily Sales"
             value={avgDailySales}
-            icon={<Activity className="h-4 w-4 text-primary" />}
+            icon={<Activity className="h-5 w-5 text-primary" />}
             isCurrency
             className="col-span-2"
           />
