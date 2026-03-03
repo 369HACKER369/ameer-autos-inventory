@@ -96,21 +96,10 @@ export function KPICard({
             </div>
           )}
         </div>
-        
-        <div className="space-y-1 pl-[calc(2.5rem+0.5rem)]">
-          {currencyParts ? (
-            <div className="flex items-baseline gap-1" style={{ fontSize: `calc(1.25rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
-              <span className="text-muted-foreground font-medium" style={{ fontSize: '0.65em' }}>{currencyParts.prefix}</span>
-              <span className="font-bold tracking-tight text-foreground">{currencyParts.number}</span>
-              {currencyParts.unit && (
-                <span className="text-muted-foreground font-medium" style={{ fontSize: '0.7em' }}>{currencyParts.unit}</span>
-              )}
-            </div>
-          ) : (
-            <p className="font-bold tracking-tight text-foreground" style={{ fontSize: `calc(1.5rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
-              {displayValue}
-            </p>
-          )}
+        <div className="pl-[calc(2.5rem+0.5rem)]">
+          <p className="font-bold tracking-tight text-foreground" style={{ fontSize: `calc(1.25rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
+            {formatValue()}
+          </p>
         </div>
 
         {/* Sparkline */}
