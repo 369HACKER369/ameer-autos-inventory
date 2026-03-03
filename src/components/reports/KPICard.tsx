@@ -1,35 +1,28 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrencyShort } from '@/utils/currency';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-
-interface SparklineData {
-  value: number;
-}
 
 interface KPICardProps {
   title: string;
   value: number | string;
   icon: React.ReactNode;
-  sparklineData?: SparklineData[];
-  trend?: 'up' | 'down' | 'neutral';
-  trendValue?: string;
   isCurrency?: boolean;
   suffix?: string;
   className?: string;
+  highlight?: boolean;
+  loading?: boolean;
 }
 
 export function KPICard({
   title,
   value,
   icon,
-  sparklineData = [],
-  trend,
-  trendValue,
   isCurrency = false,
   suffix = '',
   className,
+  highlight,
+  loading,
 }: KPICardProps) {
   const formatValue = () => {
     if (isCurrency && typeof value === 'number') {
@@ -43,90 +36,22 @@ export function KPICard({
     return `${value}${suffix}`;
   };
 
-  const getTrendIcon = () => {
-    if (!trend) return null;
-    switch (trend) {
-      case 'up':
-        return <TrendingUp className="h-3 w-3 text-primary" />;
-      case 'down':
-        return <TrendingDown className="h-3 w-3 text-destructive" />;
-      default:
-        return <Minus className="h-3 w-3 text-muted-foreground" />;
-    }
-  };
-
-  const getTrendColor = () => {
-    if (!trend) return 'text-muted-foreground';
-    switch (trend) {
-      case 'up':
-        return 'text-primary';
-      case 'down':
-        return 'text-destructive';
-      default:
-        return 'text-muted-foreground';
-    }
-  };
-
-  // Use CSS variables for dynamic theme support
-  const sparklineColor = 'hsl(var(--primary))';
-
   return (
-    <Card className={cn(
-      "bg-card border-border/50 card-shadow overflow-hidden transition-all duration-200 hover:border-primary/30",
-      "animate-fade-in",
-      className
-    )}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-              {icon}
-            </div>
-            <p
-              className="text-muted-foreground font-medium uppercase tracking-wide break-words leading-tight"
-              style={{ fontSize: `calc(0.75rem * var(--card-label-scale, 1) * var(--text-scale, 1))` }}
-            >
-              {title}
-            </p>
+    <Card className={cn('bg-card', highlight && 'border-warning/50', className)}>
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground truncate">{title}</p>
+            {loading ? (
+              <Skeleton className="h-6 w-16 mt-1" />
+            ) : (
+              <p className="text-lg font-bold mt-1 truncate">{formatValue()}</p>
+            )}
           </div>
-          {trend && trendValue && (
-            <div className={cn("flex items-center gap-1 text-xs shrink-0", getTrendColor())}>
-              {getTrendIcon()}
-              <span>{trendValue}</span>
-            </div>
-          )}
-        </div>
-        <div className="pl-[calc(2.5rem+0.5rem)]">
-          <p className="font-bold tracking-tight text-foreground" style={{ fontSize: `calc(1.25rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
-            {formatValue()}
-          </p>
-        </div>
-
-        {/* Sparkline */}
-        {sparklineData.length > 1 && (
-          <div className="h-10 mt-3 -mx-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sparklineData}>
-                <defs>
-                  <linearGradient id={`sparkline-gradient-${title.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={sparklineColor} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={sparklineColor} stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke={sparklineColor}
-                  strokeWidth={1.5}
-                  fill={`url(#sparkline-gradient-${title.replace(/\s/g, '')})`}
-                  isAnimationActive={true}
-                  animationDuration={800}
-                  animationEasing="ease-out"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="shrink-0">
+            {icon}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
