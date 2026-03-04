@@ -15,6 +15,7 @@ import {
   TrendingUp, 
   ShoppingCart, 
   AlertTriangle,
+  Zap,
   Plus,
   Pencil,
   Trash2,
