@@ -275,6 +275,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+        <QuickSellModal open={quickSellOpen} onOpenChange={setQuickSellOpen} />
       </div>
     </AppLayout>
   );
