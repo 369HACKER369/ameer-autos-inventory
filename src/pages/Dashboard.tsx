@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
@@ -14,6 +15,7 @@ import {
   TrendingUp, 
   ShoppingCart, 
   AlertTriangle,
+  Zap,
   Plus,
   Pencil,
   Trash2,
@@ -27,6 +29,7 @@ import {
 import { cn } from '@/lib/utils';
 import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
 import type { ActivityAction } from '@/types';
+import { QuickSellModal } from '@/components/dashboard/QuickSellModal';
 
 const activityIconMap: Record<string, React.ElementType> = {
   Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
@@ -58,6 +61,7 @@ const ACTION_BAR_COLOR: Record<ActivityAction, string> = {
 };
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [quickSellOpen, setQuickSellOpen] = useState(false);
   const { 
     stats, 
     isLoadingStats, 
@@ -131,9 +135,9 @@ export default function Dashboard() {
               onClick={() => navigate('/reports')}
             />
             <QuickAction
-              icon={Download}
-              label="Backup"
-              onClick={() => navigate('/settings/backup')}
+              icon={Zap}
+              label="QuickSell"
+              onClick={() => setQuickSellOpen(true)}
             />
           </div>
         </div>
@@ -271,6 +275,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+        <QuickSellModal open={quickSellOpen} onOpenChange={setQuickSellOpen} />
       </div>
     </AppLayout>
   );
