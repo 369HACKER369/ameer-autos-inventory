@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/utils';
 import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
 import type { ActivityAction } from '@/types';
+import { QuickSellModal } from '@/components/dashboard/QuickSellModal';
 
 const activityIconMap: Record<string, React.ElementType> = {
   Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
