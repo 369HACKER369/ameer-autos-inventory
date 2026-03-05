@@ -1,7 +1,16 @@
 import { db } from '@/db/database';
-import type { BillSettings, Bill, BillItem, BillFormItem } from '@/types/bill';
+import type { BillSettings, Bill, BillItem, BillFormItem, PaymentInfo } from '@/types/bill';
 import { v4 as uuidv4 } from 'uuid';
 import { logActivity } from './activityLogService';
+
+const DEFAULT_PAYMENT_INFO: PaymentInfo = {
+  bankName: '',
+  accountTitle: '',
+  accountNumber: '',
+  iban: '',
+  easypaisaNumber: '',
+  jazzcashNumber: '',
+};
 
 const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
   shopName: 'Amir Traders',
@@ -13,11 +22,22 @@ const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
   logoPath: null,
   footerMessage: 'Thank you for your business',
   lastBillNumber: 0,
+  showPaymentInfo: false,
+  paymentInfo: DEFAULT_PAYMENT_INFO,
+  showTerms: false,
+  termsConditions: ['Payment due within 7 days', 'No refund after installation', 'Warranty only on manufacturing fault'],
 };
 
 export async function getBillSettings(): Promise<BillSettings> {
   const existing = await db.table('billSettings').toArray();
-  if (existing.length > 0) return existing[0] as BillSettings;
+  if (existing.length > 0) {
+    // Ensure new fields exist via migration
+    const s = existing[0] as BillSettings;
+    return {
+      ...DEFAULT_SETTINGS,
+      ...s,
+    };
+  }
   
   const settings: BillSettings = {
     id: uuidv4(),
@@ -53,6 +73,12 @@ export async function createBill(
   items: BillFormItem[],
   discount: number,
   notes: string,
+  options?: {
+    showPaymentInfo?: boolean;
+    paymentInfo?: PaymentInfo;
+    showTerms?: boolean;
+    termsConditions?: string[];
+  },
 ): Promise<Bill> {
   const settings = await getBillSettings();
   const nextNum = settings.lastBillNumber + 1;
@@ -71,6 +97,10 @@ export async function createBill(
     discount,
     finalTotal,
     notes,
+    showPaymentInfo: options?.showPaymentInfo,
+    paymentInfo: options?.paymentInfo,
+    showTerms: options?.showTerms,
+    termsConditions: options?.termsConditions,
     createdAt: new Date(),
   };
 

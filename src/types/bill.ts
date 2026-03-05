@@ -1,5 +1,14 @@
 // Bill Generator Type Definitions
 
+export interface PaymentInfo {
+  bankName: string;
+  accountTitle: string;
+  accountNumber: string;
+  iban: string;
+  easypaisaNumber: string;
+  jazzcashNumber: string;
+}
+
 export interface BillSettings {
   id: string;
   shopName: string;
@@ -11,6 +20,11 @@ export interface BillSettings {
   logoPath: string | null;
   footerMessage: string;
   lastBillNumber: number;
+  // Advanced settings
+  showPaymentInfo: boolean;
+  paymentInfo: PaymentInfo;
+  showTerms: boolean;
+  termsConditions: string[];
   updatedAt: Date;
 }
 
@@ -24,6 +38,11 @@ export interface Bill {
   discount: number;
   finalTotal: number;
   notes: string;
+  // Optional per-bill overrides
+  showPaymentInfo?: boolean;
+  paymentInfo?: PaymentInfo;
+  showTerms?: boolean;
+  termsConditions?: string[];
   createdAt: Date;
 }
 
