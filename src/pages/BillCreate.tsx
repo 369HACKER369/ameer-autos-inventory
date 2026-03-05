@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, FileText } from 'lucide-react';
-import { createBill, getNextBillNumber, getBillSettings } from '@/services/billService';
+import { Plus, Trash2, FileText, CreditCard, ScrollText } from 'lucide-react';
+import { createBill, getNextBillNumber, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
-import type { BillFormItem, BillSettings } from '@/types/bill';
+import type { BillFormItem, BillSettings, PaymentInfo } from '@/types/bill';
 import { generateBillPdf } from '@/utils/billPdf';
-import { getBillItems } from '@/services/billService';
 
 const emptyItem = (): BillFormItem => ({
   partName: '',
@@ -21,6 +21,15 @@ const emptyItem = (): BillFormItem => ({
   brand: '',
   quantity: 1,
   price: 0,
+});
+
+const emptyPayment = (): PaymentInfo => ({
+  bankName: '',
+  accountTitle: '',
+  accountNumber: '',
+  iban: '',
+  easypaisaNumber: '',
+  jazzcashNumber: '',
 });
 
 export default function BillCreate() {
@@ -35,8 +44,21 @@ export default function BillCreate() {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Advanced optional sections
+  const [showPaymentInfo, setShowPaymentInfo] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>(emptyPayment());
+  const [showTerms, setShowTerms] = useState(false);
+  const [termsConditions, setTermsConditions] = useState<string[]>([]);
+
   useEffect(() => {
     getNextBillNumber().then(setBillNumber);
+    // Load defaults from settings
+    getBillSettings().then(s => {
+      setShowPaymentInfo(s.showPaymentInfo);
+      setPaymentInfo(s.paymentInfo || emptyPayment());
+      setShowTerms(s.showTerms);
+      setTermsConditions(s.termsConditions || []);
+    });
   }, []);
 
   const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.quantity * i.price, 0), [items]);
@@ -56,6 +78,12 @@ export default function BillCreate() {
     setItems(prev => prev.filter((_, i) => i !== index));
   };
 
+  const updateTerm = (index: number, value: string) => {
+    setTermsConditions(prev => { const n = [...prev]; n[index] = value; return n; });
+  };
+  const addTerm = () => setTermsConditions(prev => [...prev, '']);
+  const removeTerm = (index: number) => setTermsConditions(prev => prev.filter((_, i) => i !== index));
+
   const handleSave = async () => {
     if (!buyerName.trim()) {
       toast({ title: 'Buyer name is required', variant: 'destructive' });
@@ -69,9 +97,16 @@ export default function BillCreate() {
 
     setSaving(true);
     try {
-      const bill = await createBill(buyerName.trim(), buyerPhone.trim(), new Date(date), validItems, discount, notes.trim());
+      const bill = await createBill(
+        buyerName.trim(), buyerPhone.trim(), new Date(date), validItems, discount, notes.trim(),
+        {
+          showPaymentInfo,
+          paymentInfo: showPaymentInfo ? paymentInfo : undefined,
+          showTerms,
+          termsConditions: showTerms ? termsConditions.filter(t => t.trim()) : undefined,
+        }
+      );
       
-      // Auto-generate PDF
       const settings = await getBillSettings();
       const billItemsData = await getBillItems(bill.id);
       const pdf = generateBillPdf(settings, bill, billItemsData);
@@ -181,18 +216,89 @@ export default function BillCreate() {
             <div className="flex items-center justify-between gap-3">
               <Label className="text-sm text-muted-foreground shrink-0">Discount</Label>
               <Input
-                type="number"
-                min={0}
-                value={discount || ''}
-                onChange={e => setDiscount(parseFloat(e.target.value) || 0)}
-                className="text-sm h-8 w-28 text-right"
-                placeholder="0"
+                type="number" min={0} value={discount || ''} onChange={e => setDiscount(parseFloat(e.target.value) || 0)}
+                className="text-sm h-8 w-28 text-right" placeholder="0"
               />
             </div>
             <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
               <span>Final Total</span>
               <span className="text-primary">{formatCurrency(finalTotal)}</span>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Information Toggle */}
+        <Card className="bg-card">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <Label className="text-sm font-medium">Payment Information</Label>
+              </div>
+              <Switch checked={showPaymentInfo} onCheckedChange={setShowPaymentInfo} />
+            </div>
+            {showPaymentInfo && (
+              <div className="space-y-2 pt-2 border-t border-border">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px]">Bank Name</Label>
+                    <Input value={paymentInfo.bankName} onChange={e => setPaymentInfo(p => ({ ...p, bankName: e.target.value }))} className="text-sm h-8" placeholder="HBL Bank" />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">Account Title</Label>
+                    <Input value={paymentInfo.accountTitle} onChange={e => setPaymentInfo(p => ({ ...p, accountTitle: e.target.value }))} className="text-sm h-8" placeholder="Amir Traders" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px]">Account Number</Label>
+                    <Input value={paymentInfo.accountNumber} onChange={e => setPaymentInfo(p => ({ ...p, accountNumber: e.target.value }))} className="text-sm h-8" />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">IBAN</Label>
+                    <Input value={paymentInfo.iban} onChange={e => setPaymentInfo(p => ({ ...p, iban: e.target.value }))} className="text-sm h-8" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px]">EasyPaisa</Label>
+                    <Input value={paymentInfo.easypaisaNumber} onChange={e => setPaymentInfo(p => ({ ...p, easypaisaNumber: e.target.value }))} className="text-sm h-8" />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">JazzCash</Label>
+                    <Input value={paymentInfo.jazzcashNumber} onChange={e => setPaymentInfo(p => ({ ...p, jazzcashNumber: e.target.value }))} className="text-sm h-8" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Terms & Conditions Toggle */}
+        <Card className="bg-card">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ScrollText className="h-4 w-4 text-primary" />
+                <Label className="text-sm font-medium">Terms & Conditions</Label>
+              </div>
+              <Switch checked={showTerms} onCheckedChange={setShowTerms} />
+            </div>
+            {showTerms && (
+              <div className="space-y-2 pt-2 border-t border-border">
+                {termsConditions.map((term, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input value={term} onChange={e => updateTerm(i, e.target.value)} className="text-sm h-8 flex-1" placeholder={`Term ${i + 1}`} />
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => removeTerm(i)}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                <Button size="sm" variant="outline" onClick={addTerm} className="h-7 text-xs gap-1 w-full">
+                  <Plus className="h-3 w-3" /> Add Term
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
