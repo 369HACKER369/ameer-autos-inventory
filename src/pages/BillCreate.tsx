@@ -308,7 +308,7 @@ export default function BillCreate() {
           <Button variant="outline" className="flex-1" onClick={() => navigate('/bills')}>Cancel</Button>
           <Button className="flex-1 gap-1" onClick={handleSave} disabled={saving}>
             <FileText className="h-4 w-4" />
-            {saving ? 'Saving...' : 'Save & Download'}
+            {saving ? 'Saving...' : 'Generate Bill'}
           </Button>
         </div>
       </div>
