@@ -10,10 +10,9 @@ import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, FileText, CreditCard, ScrollText } from 'lucide-react';
-import { createBill, getNextBillNumber, getBillSettings, getBillItems } from '@/services/billService';
+import { createBill, getNextBillNumber, getBillSettings } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
-import type { BillFormItem, BillSettings, PaymentInfo } from '@/types/bill';
-import { generateBillPdf } from '@/utils/billPdf';
+import type { BillFormItem, PaymentInfo } from '@/types/bill';
 
 const emptyItem = (): BillFormItem => ({
   partName: '',
