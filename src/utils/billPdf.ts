@@ -66,6 +66,38 @@ function drawGlobeIcon(doc: jsPDF, cx: number, cy: number, r: number) {
   doc.line(cx, cy - gr, cx, cy + gr);
 }
 
+/* ── Dynamic font size for shop name in PDF ── */
+function getShopNamePdfSize(name: string): number {
+  if (name.length <= 16) return 20;
+  if (name.length <= 24) return 16;
+  return 13;
+}
+
+/* ── Draw watermark pattern on PDF ── */
+function drawWatermark(doc: jsPDF, settings: BillSettings) {
+  if (!settings.watermarkEnabled) return;
+  const text = (settings.watermarkText || settings.shopName).toUpperCase();
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  // Use very light gray to simulate low opacity
+  const gray = Math.round(255 - (255 * settings.watermarkOpacity * 3));
+  doc.setTextColor(gray, gray, gray);
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  // Draw diagonal watermark grid
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 3; col++) {
+      const x = 20 + col * (pw / 3);
+      const y = 80 + row * 100;
+      if (y < ph - 40) {
+        doc.text(text, x, y, { angle: 30 });
+      }
+    }
+  }
+  // Reset text color
+  doc.setTextColor(0, 0, 0);
+}
+
 export function generateBillPdf(
   settings: BillSettings,
   bill: Bill,
@@ -158,12 +190,13 @@ export function generateBillPdf(
   doc.setLineWidth(0.5);
   doc.line(divX, logoY - logoR + 2, divX, logoY + logoR - 2);
 
-  // Shop name
+  // Shop name with dynamic sizing
   const textX = divX + 6;
-  doc.setFontSize(20);
+  doc.setFontSize(getShopNamePdfSize(settings.shopName));
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...WHITE);
-  doc.text(settings.shopName.toUpperCase(), textX, logoY - 3);
+  const shopNameLines = doc.splitTextToSize(settings.shopName.toUpperCase(), pw - textX - mx - 10);
+  doc.text(shopNameLines, textX, logoY - (shopNameLines.length > 1 ? 5 : 3));
 
   // Gold ornamental divider under name (line + diamond + line)
   const ornY = logoY + 2;
@@ -193,6 +226,9 @@ export function generateBillPdf(
   // ═══════════════════════════════════════
   // Gold Accent Bar
   // ═══════════════════════════════════════
+  // Draw watermark before content
+  drawWatermark(doc, settings);
+
   doc.setFillColor(...GOLD);
   doc.rect(0, y, pw, 2.5, 'F');
   y += 2.5;

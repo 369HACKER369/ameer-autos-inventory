@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
 import type { BillSettings } from '@/types/bill';
 import {
@@ -185,6 +186,48 @@ export default function BillSettingsPage() {
                 <Button size="sm" variant="outline" onClick={addTerm} className="h-7 text-xs gap-1 w-full">
                   <Plus className="h-3 w-3" /> Add Term
                 </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Watermark & Background */}
+        <Card className="bg-card">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Droplets className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Watermark & Background</h3>
+              </div>
+              <Switch checked={settings.watermarkEnabled} onCheckedChange={v => setSettings({ ...settings, watermarkEnabled: v })} />
+            </div>
+            <p className="text-xs text-muted-foreground">Add a subtle diagonal watermark pattern to the bill body</p>
+            {settings.watermarkEnabled && (
+              <div className="space-y-3 pt-2 border-t border-border">
+                <div>
+                  <Label className="text-xs">Watermark Text</Label>
+                  <Input
+                    value={settings.watermarkText}
+                    onChange={e => setSettings({ ...settings, watermarkText: e.target.value })}
+                    className="text-sm"
+                    placeholder={settings.shopName || 'Shop name used by default'}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Opacity ({Math.round(settings.watermarkOpacity * 100)}%)</Label>
+                  <Slider
+                    value={[settings.watermarkOpacity * 100]}
+                    onValueChange={([v]) => setSettings({ ...settings, watermarkOpacity: v / 100 })}
+                    min={3}
+                    max={10}
+                    step={1}
+                    className="mt-2"
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>Subtle</span>
+                    <span>Visible</span>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
