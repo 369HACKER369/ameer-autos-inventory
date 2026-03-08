@@ -65,67 +65,108 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
         }}
       >
-        {/* ═══ HEADER — Dark Teal ═══ */}
+        {/* ═══ HEADER — Premium Side-by-Side with Decorative Border ═══ */}
         <div style={{
           background: TEAL,
-          padding: '24px 36px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '20px',
+          padding: '0',
+          position: 'relative',
         }}>
-          {/* Logo Circle */}
+          {/* Top gold ornamental line */}
+          <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)` }} />
+          
+          {/* Main header content */}
           <div style={{
-            width: '78px', height: '78px', borderRadius: '50%',
-            border: `3px solid ${GOLD}`,
-            boxShadow: `0 0 0 3px ${TEAL}, 0 0 0 5px ${GOLD}50`,
-            background: WHITE,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, overflow: 'hidden',
+            padding: '20px 36px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '24px',
           }}>
-            {settings.logoPath ? (
-              <img
-                src={settings.logoPath}
-                alt="Logo"
-                style={{
-                  width: '100%', height: '100%', objectFit: 'contain',
-                  borderRadius: '50%',
-                }}
-                crossOrigin="anonymous"
-              />
-            ) : (
+            {/* Logo Badge — double ring with decorative corners */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              {/* Outer decorative ring */}
               <div style={{
-                width: '100%', height: '100%', borderRadius: '50%',
-                background: `linear-gradient(135deg, ${GOLD}, ${TEAL})`,
+                width: '90px', height: '90px', borderRadius: '50%',
+                border: `2px solid ${GOLD}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'relative',
               }}>
-                <span style={{ fontSize: '22px', fontWeight: 800, color: WHITE, letterSpacing: '1px' }}>
-                  {initials}
-                </span>
+                {/* Inner badge circle */}
+                <div style={{
+                  width: '76px', height: '76px', borderRadius: '50%',
+                  border: `2.5px solid ${GOLD}`,
+                  background: WHITE,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  overflow: 'hidden',
+                  boxShadow: `0 0 12px rgba(201,160,32,0.3)`,
+                }}>
+                  {settings.logoPath ? (
+                    <img
+                      src={settings.logoPath}
+                      alt="Logo"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }}
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%', height: '100%', borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${GOLD}, ${TEAL})`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <span style={{ fontSize: '24px', fontWeight: 800, color: WHITE, letterSpacing: '2px' }}>
+                        {initials}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+              {/* Corner accents */}
+              <div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '12px', height: '12px', borderTop: `2px solid ${GOLD}`, borderLeft: `2px solid ${GOLD}` }} />
+              <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '12px', height: '12px', borderTop: `2px solid ${GOLD}`, borderRight: `2px solid ${GOLD}` }} />
+              <div style={{ position: 'absolute', bottom: '-2px', left: '-2px', width: '12px', height: '12px', borderBottom: `2px solid ${GOLD}`, borderLeft: `2px solid ${GOLD}` }} />
+              <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', borderBottom: `2px solid ${GOLD}`, borderRight: `2px solid ${GOLD}` }} />
+            </div>
+
+            {/* Vertical gold divider */}
+            <div style={{
+              width: '2px', alignSelf: 'stretch',
+              background: `linear-gradient(to bottom, transparent, ${GOLD}, transparent)`,
+              margin: '4px 0',
+            }} />
+
+            {/* Shop Name + Tagline + ornament */}
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
+              <div style={{
+                fontSize: '28px', fontWeight: 800, color: WHITE,
+                lineHeight: '1.15', letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+              }}>
+                {settings.shopName}
+              </div>
+              {/* Gold ornamental divider under name */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '6px 0 4px' }}>
+                <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+                <div style={{ width: '6px', height: '6px', background: GOLD, transform: 'rotate(45deg)' }} />
+                <div style={{ width: '40px', height: '1px', background: GOLD }} />
+                <div style={{ width: '6px', height: '6px', background: GOLD, transform: 'rotate(45deg)' }} />
+                <div style={{ flex: 1, height: '1px', background: `linear-gradient(270deg, ${GOLD}, transparent)` }} />
+              </div>
+              {settings.tagline && (
+                <div style={{
+                  fontSize: '12px', fontWeight: 400, color: 'rgba(255,255,255,0.7)',
+                  letterSpacing: '2px', textTransform: 'uppercase', textAlign: 'center',
+                }}>
+                  {settings.tagline}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Shop Name + Tagline */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{
-              fontSize: '30px', fontWeight: 800, color: WHITE,
-              lineHeight: '1.15', letterSpacing: '0.5px',
-            }}>
-              {settings.shopName}
-            </div>
-            {settings.tagline && (
-              <div style={{
-                fontSize: '13px', fontWeight: 400, color: 'rgba(255,255,255,0.75)',
-                marginTop: '4px', letterSpacing: '0.5px',
-              }}>
-                {settings.tagline}
-              </div>
-            )}
-          </div>
+          {/* Bottom gold ornamental line */}
+          <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)` }} />
         </div>
 
         {/* ═══ Gold Accent Bar ═══ */}
-        <div style={{ height: '5px', background: GOLD }} />
+        <div style={{ height: '4px', background: GOLD }} />
 
         {/* ═══ "Invoice From" line ═══ */}
         <div style={{
