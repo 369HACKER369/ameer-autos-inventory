@@ -69,6 +69,21 @@ export class AmeerAutosDB extends Dexie {
       bills: 'id, billNumber, createdAt',
       billItems: 'id, billId'
     });
+
+    // Version 5: Add autocomplete entries
+    this.version(5).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt',
+      billSettings: 'id',
+      bills: 'id, billNumber, createdAt',
+      billItems: 'id, billId',
+      autocompleteEntries: 'id, field, [field+value]'
+    });
   }
 }
 

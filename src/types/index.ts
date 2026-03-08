@@ -96,6 +96,14 @@ export interface AppSettings {
   updatedAt: Date;
 }
 
+// Autocomplete Entry
+export interface AutocompleteEntry {
+  id: string;
+  field: string;
+  value: string;
+  createdAt: Date;
+}
+
 // Backup Records Table
 export interface BackupRecord {
   id: string;
