@@ -11,6 +11,7 @@ import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
 import { captureBillAsImage, downloadDataUrl, getExtension, getMimeType } from '@/utils/billImageExport';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
+import BillSearchFilter from '@/components/bill/BillSearchFilter';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -24,6 +25,7 @@ export default function BillHistory() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [bills, setBills] = useState<Bill[]>([]);
+  const [filteredBills, setFilteredBills] = useState<Bill[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -182,8 +184,15 @@ export default function BillHistory() {
             <p className="text-muted-foreground/60 text-xs mt-1">Create your first bill to get started</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {bills.map(bill => (
+          <>
+            <BillSearchFilter bills={bills} onFiltered={setFilteredBills} />
+            {filteredBills.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground text-sm">No bills match your search</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredBills.map(bill => (
               <Card key={bill.id} className="bg-card">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
@@ -217,7 +226,9 @@ export default function BillHistory() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
