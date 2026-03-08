@@ -309,6 +309,26 @@ export default function AutocompleteSettings() {
           );
         })}
       </div>
+
+      <AlertDialog open={!!clearConfirm} onOpenChange={(open) => { if (!open) setClearConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all {clearConfirm?.label.toLowerCase()}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all saved {clearConfirm?.label.toLowerCase()}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
