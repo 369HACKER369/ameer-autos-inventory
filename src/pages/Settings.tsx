@@ -193,7 +193,7 @@ export default function Settings() {
 
         {/* Profile Card */}
         {!search && (
-          <Card className="bg-card overflow-hidden">
+          <Card className="bg-card overflow-hidden cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => navigate('/settings/branding')}>
             <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
               <Avatar className="h-20 w-20">
                 {customLogo ? (
@@ -206,6 +206,7 @@ export default function Settings() {
               <div>
                 <h2 className="text-xl font-bold">{appName}</h2>
                 <p className="text-sm text-muted-foreground">Inventory & Sales Manager</p>
+                <p className="text-xs text-primary mt-1">Tap to edit branding →</p>
               </div>
               <div className="flex gap-3 w-full justify-center">
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
