@@ -84,6 +84,21 @@ export default function Inventory() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Load persisted preferences on mount
+  useEffect(() => {
+    Promise.all([
+      getSetting<ViewMode>('inventoryViewMode'),
+      getSetting<SortColumn>('inventorySortColumn'),
+      getSetting<SortDirection>('inventorySortDirection'),
+    ]).then(([vm, sc, sd]) => {
+      if (vm) setViewMode(vm);
+      if (sc) setSortColumn(sc);
+      if (sd) setSortDirection(sd);
+      setPrefsLoaded(true);
+    }).catch(() => setPrefsLoaded(true));
+  }, []);
 
   // Live queries
   const parts = useLiveQuery(() => db.parts.toArray(), []) ?? [];
