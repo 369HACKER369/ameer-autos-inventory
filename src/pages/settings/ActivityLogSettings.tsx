@@ -132,7 +132,7 @@ export default function ActivityLogSettings() {
         <Card className="bg-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Filter className="h-5 w-5 text-primary" />
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
               Filters
             </CardTitle>
           </CardHeader>
