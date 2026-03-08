@@ -277,6 +277,23 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* Legal & Info */}
+        {filteredLegal.length > 0 && (
+          <Card className="bg-card overflow-hidden">
+            <CardContent className="p-0 divide-y divide-border">
+              {filteredLegal.map((item) => (
+                <SettingItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  description={item.description}
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
         {/* App Info */}
         <div className="text-center pt-4 pb-8 text-muted-foreground">
           <p className="text-sm font-medium">{appName}</p>
