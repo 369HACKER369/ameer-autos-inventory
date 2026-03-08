@@ -22,6 +22,20 @@ export default function BillSettingsPage() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<BillSettings | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Dummy bill data for live preview
+  const previewBill = useMemo<Bill>(() => ({
+    id: 'preview', billNumber: 'AMT-0001', buyerName: 'Sample Customer',
+    buyerPhone: '0300-1234567', date: new Date(), subtotal: 15500,
+    discount: 500, finalTotal: 15000, notes: '',
+    createdAt: new Date(),
+  }), []);
+
+  const previewItems = useMemo<BillItem[]>(() => [
+    { id: '1', billId: 'preview', partName: 'Engine Oil Filter', partCode: 'EOF-201', brand: 'CAT', quantity: 2, price: 3500, total: 7000 },
+    { id: '2', billId: 'preview', partName: 'Hydraulic Pump Seal', partCode: 'HPS-105', brand: 'Komatsu', quantity: 1, price: 8500, total: 8500 },
+  ], []);
 
   useEffect(() => { getBillSettings().then(setSettings); }, []);
 
