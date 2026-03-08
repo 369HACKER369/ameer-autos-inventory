@@ -30,7 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Camera, ImagePlus, X } from 'lucide-react';
+import { Loader2, Camera, ImagePlus, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import type { UnitType } from '@/types';
 
 // Predefined categories
