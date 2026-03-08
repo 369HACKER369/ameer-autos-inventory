@@ -172,9 +172,11 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
             {/* Shop Name + Tagline + ornament */}
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
               <div style={{
-                fontSize: '28px', fontWeight: 800, color: WHITE,
+                fontSize: getShopNameFontSize(settings.shopName), fontWeight: 800, color: WHITE,
                 lineHeight: '1.15', letterSpacing: '1.5px',
                 textTransform: 'uppercase',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                maxWidth: '500px',
               }}>
                 {settings.shopName}
               </div>
