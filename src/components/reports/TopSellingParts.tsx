@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrency } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { Trophy, TrendingUp, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
