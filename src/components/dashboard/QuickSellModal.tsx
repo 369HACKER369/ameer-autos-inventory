@@ -101,6 +101,12 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
         },
       });
 
+      await persistFormValues({
+        customerName: buyerName.trim(),
+        customerPhone: buyerPhone.trim(),
+        brand: brand.trim(),
+      });
+
       await refreshStats();
       toast.success('Quick sale recorded successfully!');
       resetForm();
