@@ -377,34 +377,65 @@ export function generateBillPdf(
   }
 
   // ═══════════════════════════════════════
-  // FOOTER — Dark teal with icon circles
+  // FOOTER — Red banner bar + Dark teal
   // ═══════════════════════════════════════
-  const footerH = 26;
+  const footerH = 28;
   const fy = ph - footerH;
-  const thirdW = (pw - mx * 2) / 3;
+
+  // Red separator line above footer
+  doc.setFillColor(204, 51, 51);
+  doc.rect(0, fy - 3, pw, 2.5, 'F');
 
   // Teal background
   doc.setFillColor(...TEAL);
   doc.rect(0, fy, pw, footerH, 'F');
 
-  const iconR = 4.5;
-  const col1X = mx + thirdW * 0.5;
-  const col2X = mx + thirdW * 1.5;
-  const col3X = mx + thirdW * 2.5;
-  const iconY = fy + 7;
+  // Red rounded banner bar
+  const barW = pw * 0.75;
+  const barX = (pw - barW) / 2;
+  const barY = fy - 5;
+  const barBH = 10;
 
-  // Draw icons
-  drawLocationIcon(doc, col1X, iconY, iconR);
-  drawPhoneIcon(doc, col2X, iconY, iconR);
-  drawGlobeIcon(doc, col3X, iconY, iconR);
+  // 3-segment red bar: bright / dark / bright
+  const segW = barW / 3;
+  // Left bright red
+  doc.setFillColor(204, 51, 51);
+  doc.roundedRect(barX, barY, segW + 2, barBH, 5, 5, 'F');
+  // Center dark red
+  doc.setFillColor(153, 31, 31);
+  doc.rect(barX + segW - 1, barY, segW + 2, barBH, 'F');
+  // Right bright red
+  doc.setFillColor(204, 51, 51);
+  doc.roundedRect(barX + segW * 2 - 2, barY, segW + 2, barBH, 5, 5, 'F');
 
-  // Column separators
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.15);
-  doc.line(mx + thirdW, fy + 2, mx + thirdW, fy + footerH - 2);
-  doc.line(mx + thirdW * 2, fy + 2, mx + thirdW * 2, fy + footerH - 2);
+  // Icon circles on the bar
+  const iconR = 5.5;
+  const iconCY = barY + barBH / 2;
+  const col1X = barX + barW * 0.17;
+  const col2X = barX + barW * 0.50;
+  const col3X = barX + barW * 0.83;
+
+  // White border circles
+  const drawIconCircle = (cx: number, cy: number, fillColor: [number, number, number]) => {
+    doc.setFillColor(...fillColor);
+    doc.circle(cx, cy, iconR, 'F');
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.6);
+    doc.circle(cx, cy, iconR, 'S');
+  };
+
+  drawIconCircle(col1X, iconCY, [204, 51, 51]);
+  drawIconCircle(col2X, iconCY, [181, 42, 42]);
+  drawIconCircle(col3X, iconCY, [204, 51, 51]);
+
+  // Draw white icons inside circles
+  drawLocationIcon(doc, col1X, iconCY, iconR);
+  drawPhoneIcon(doc, col2X, iconCY, iconR);
+  drawGlobeIcon(doc, col3X, iconCY, iconR);
 
   // Text below icons
+  const textY = iconCY + iconR + 5;
+  const thirdW = barW / 3;
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(255, 255, 255);
@@ -412,19 +443,19 @@ export function generateBillPdf(
   // Address
   const addr = settings.address || 'Shop Address';
   const addrLines = doc.splitTextToSize(addr, thirdW - 8);
-  doc.text(addrLines, col1X, iconY + iconR + 4, { align: 'center' });
+  doc.text(addrLines, col1X, textY, { align: 'center' });
 
   // Phone
   const phoneLines: string[] = [];
   if (settings.phone1) phoneLines.push(settings.phone1);
   if (settings.phone2) phoneLines.push(settings.phone2);
   if (phoneLines.length === 0) phoneLines.push('Contact');
-  doc.text(phoneLines, col2X, iconY + iconR + 4, { align: 'center' });
+  doc.text(phoneLines, col2X, textY, { align: 'center' });
 
   // Social
   const socialText = settings.socialMedia || settings.website || 'Website Coming Soon';
   const socialLines = doc.splitTextToSize(socialText, thirdW - 8);
-  doc.text(socialLines, col3X, iconY + iconR + 4, { align: 'center' });
+  doc.text(socialLines, col3X, textY, { align: 'center' });
 
   return doc;
 }

@@ -281,55 +281,79 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           </div>
         )}
 
-        {/* ═══ FOOTER — Dark Teal with icon circles ═══ */}
-        <div style={{
-          backgroundColor: TEAL,
-          padding: '20px 36px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-        }}>
-          {/* Location */}
-          <div style={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+        {/* ═══ FOOTER — Red banner bar + Dark Teal ═══ */}
+        {/* Red separator line */}
+        <div style={{ height: '3px', background: '#cc3333' }} />
+
+        <div style={{ position: 'relative', backgroundColor: TEAL, paddingTop: '32px', paddingBottom: '14px', paddingLeft: '36px', paddingRight: '36px' }}>
+          {/* Red rounded banner bar */}
+          <div style={{
+            position: 'absolute',
+            top: '-16px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            height: '34px',
+            borderRadius: '20px',
+            overflow: 'hidden',
+            width: '80%',
+          }}>
+            {/* Left segment — bright red */}
+            <div style={{ flex: 1, height: '100%', background: '#cc3333' }} />
+            {/* Center segment — darker red */}
+            <div style={{ flex: 1, height: '100%', background: '#991f1f' }} />
+            {/* Right segment — bright red */}
+            <div style={{ flex: 1, height: '100%', background: '#cc3333' }} />
+          </div>
+
+          {/* Icon circles on the banner */}
+          <div style={{
+            position: 'absolute',
+            top: '-16px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80%',
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            height: '34px',
+            pointerEvents: 'none',
+          }}>
             <div style={{
-              width: '34px', height: '34px', borderRadius: '50%', background: RED_ICON,
+              width: '36px', height: '36px', borderRadius: '50%', background: '#cc3333',
+              border: '2px solid rgba(255,255,255,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <LocationIcon />
             </div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5', maxWidth: '180px' }}>
-              {settings.address || 'Shop Address'}
-            </div>
-          </div>
-
-          <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch', margin: '0 8px' }} />
-
-          {/* Phone */}
-          <div style={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
             <div style={{
-              width: '34px', height: '34px', borderRadius: '50%', background: RED_ICON,
+              width: '36px', height: '36px', borderRadius: '50%', background: '#b52a2a',
+              border: '2px solid rgba(255,255,255,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <PhoneIcon />
             </div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5' }}>
-              {settings.phone1 && <div>{settings.phone1}</div>}
-              {settings.phone2 && <div>{settings.phone2}</div>}
-              {!settings.phone1 && !settings.phone2 && 'Contact'}
-            </div>
-          </div>
-
-          <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch', margin: '0 8px' }} />
-
-          {/* Social */}
-          <div style={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
             <div style={{
-              width: '34px', height: '34px', borderRadius: '50%', background: RED_ICON,
+              width: '36px', height: '36px', borderRadius: '50%', background: '#cc3333',
+              border: '2px solid rgba(255,255,255,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <GlobeIcon />
             </div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5' }}>
+          </div>
+
+          {/* Text columns below icons */}
+          <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: '8px' }}>
+            <div style={{ flex: 1, fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5', maxWidth: '180px', margin: '0 auto' }}>
+              {settings.address || 'Shop Address'}
+            </div>
+            <div style={{ flex: 1, fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5', margin: '0 auto' }}>
+              {settings.phone1 && <div>{settings.phone1}</div>}
+              {settings.phone2 && <div>{settings.phone2}</div>}
+              {!settings.phone1 && !settings.phone2 && 'Contact'}
+            </div>
+            <div style={{ flex: 1, fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5', margin: '0 auto' }}>
               {settings.socialMedia || settings.website || 'Website Coming Soon'}
             </div>
           </div>
