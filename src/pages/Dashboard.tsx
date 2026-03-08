@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
@@ -34,6 +34,7 @@ import type { ActivityAction } from '@/types';
 import { QuickSellModal } from '@/components/dashboard/QuickSellModal';
 import { useCountUp } from '@/hooks/useCountUp';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+import { seedTestData, clearTestData } from '@/utils/testSeed';
 
 const activityIconMap: Record<string, React.ElementType> = {
   Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
@@ -82,7 +83,21 @@ export default function Dashboard() {
     recentActivity,
     isInitialized,
     appName,
+    refreshStats,
   } = useApp();
+  const [seeded, setSeeded] = useState(false);
+
+  const handleSeed = useCallback(async () => {
+    await seedTestData();
+    await refreshStats();
+    setSeeded(true);
+  }, [refreshStats]);
+
+  const handleClear = useCallback(async () => {
+    await clearTestData();
+    await refreshStats();
+    setSeeded(false);
+  }, [refreshStats]);
 
   if (!isInitialized) {
     return (
@@ -101,6 +116,18 @@ export default function Dashboard() {
       <Header title={appName} subtitle="Inventory & Sales Manager" />
 
       <div className="p-4 space-y-5">
+        {/* DEV: Test Data Buttons — remove after verification */}
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handleSeed} disabled={seeded} className="text-xs">
+            {seeded ? '✓ Test Data Added' : '🧪 Seed Test Data'}
+          </Button>
+          {seeded && (
+            <Button size="sm" variant="destructive" onClick={handleClear} className="text-xs">
+              🗑 Clear Test Data
+            </Button>
+          )}
+        </div>
+
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-2 gap-3">
           {KPI_CONFIG.map((kpi, i) => {
