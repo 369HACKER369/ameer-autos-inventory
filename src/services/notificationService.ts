@@ -126,8 +126,8 @@ export async function getNotifications(filter?: NotificationFilter): Promise<App
  * Get unread count
  */
 export async function getUnreadCount(): Promise<number> {
-  const items = await db.notifications.where('isRead').equals(0).toArray();
-  return items.filter(n => n.isFired).length;
+  const all = await db.notifications.toArray();
+  return all.filter(n => n.isFired && !n.isRead).length;
 }
 
 /**
@@ -141,7 +141,7 @@ export async function markAsRead(id: string): Promise<void> {
  * Mark all notifications as read
  */
 export async function markAllAsRead(): Promise<void> {
-  await db.notifications.where('isRead').equals(0).modify({ isRead: true });
+  await db.notifications.filter(n => !n.isRead).modify({ isRead: true });
 }
 
 /**
