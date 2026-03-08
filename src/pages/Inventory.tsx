@@ -45,7 +45,7 @@ import {
   Grid3X3, 
   List,
   Table2,
-  Filter,
+  SlidersHorizontal,
   X,
   ArrowUp,
   ArrowDown,
@@ -282,7 +282,7 @@ export default function Inventory() {
               className={cn('h-9 w-9', hasActiveFilters && 'text-primary')}
               onClick={() => setShowFilters(!showFilters)}
             >
-              <Filter className="h-5 w-5" />
+              <SlidersHorizontal className="h-5 w-5" />
             </Button>
           </div>
         }
@@ -367,7 +367,9 @@ export default function Inventory() {
         {/* Parts List/Grid/Table */}
         {filteredParts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+              <Package className="h-10 w-10 text-muted-foreground/40" />
+            </div>
             <p className="text-muted-foreground">
               {parts.length === 0 ? 'No parts yet' : 'No parts match your search'}
             </p>

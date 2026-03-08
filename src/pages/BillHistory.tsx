@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2, MessageCircle, Pencil } from 'lucide-react';
+import { FilePlus2, SwatchBook, MoreVertical, Camera, FileText, Share2, Trash2, MessageCircleMore, Pencil } from 'lucide-react';
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
@@ -153,10 +153,10 @@ export default function BillHistory() {
         {/* Two-button header */}
         <div className="flex gap-3">
           <Button className="flex-1 gap-2" onClick={() => navigate('/bills/create')}>
-            <Plus className="h-4 w-4" /> Create New Bill
+            <FilePlus2 className="h-4 w-4" /> Create New Bill
           </Button>
           <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate('/bills/settings')}>
-            <Palette className="h-4 w-4" /> Bill Designer
+            <SwatchBook className="h-4 w-4" /> Bill Designer
           </Button>
         </div>
 
@@ -164,8 +164,10 @@ export default function BillHistory() {
           <div className="text-center text-muted-foreground text-sm py-8">Loading...</div>
         ) : bills.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground text-sm">No bills yet</p>
+            <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-10 w-10 text-muted-foreground/40" />
+            </div>
+            <p className="text-muted-foreground text-sm font-medium">No bills yet</p>
             <p className="text-muted-foreground/60 text-xs mt-1">Create your first bill to get started</p>
           </div>
         ) : (
@@ -195,18 +197,18 @@ export default function BillHistory() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => navigate(`/bills/edit/${bill.id}`)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExportImage(bill)}><ImageIcon className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportImage(bill)}><Camera className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleExportPdf(bill)}><FileText className="h-4 w-4 mr-2" /> Export as PDF</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleShare(bill)}><Share2 className="h-4 w-4 mr-2" /> Share</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-4 w-4 mr-2" /> WhatsApp</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleWhatsApp(bill)}><MessageCircleMore className="h-4 w-4 mr-2" /> WhatsApp</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                   <div className="flex gap-2 mt-2 pt-2 border-t border-border">
-                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}><ImageIcon className="h-3 w-3" /> Image</Button>
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}><Camera className="h-3 w-3" /> Image</Button>
                     <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportPdf(bill)}><FileText className="h-3 w-3" /> PDF</Button>
-                    <Button size="sm" className="flex-1 h-7 text-xs gap-1 bg-[#25D366] hover:bg-[#1DA851] text-white" onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-3 w-3" /> WhatsApp</Button>
+                    <Button size="sm" className="flex-1 h-7 text-xs gap-1 bg-[#25D366] hover:bg-[#1DA851] text-white" onClick={() => handleWhatsApp(bill)}><MessageCircleMore className="h-3 w-3" /> WhatsApp</Button>
                   </div>
                 </CardContent>
               </Card>

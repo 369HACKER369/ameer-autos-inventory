@@ -23,12 +23,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/database';
 
 const typeIcons: Record<NotificationType, React.ReactNode> = {
-  low_stock: <Package className="h-4 w-4" />,
-  part_added: <Package className="h-4 w-4" />,
-  part_sold: <ShoppingCart className="h-4 w-4" />,
-  backup_complete: <HardDrive className="h-4 w-4" />,
-  sync: <RefreshCw className="h-4 w-4" />,
-  custom: <MessageSquare className="h-4 w-4" />,
+  low_stock: <Package className="h-4.5 w-4.5" />,
+  part_added: <Package className="h-4.5 w-4.5" />,
+  part_sold: <ShoppingCart className="h-4.5 w-4.5" />,
+  backup_complete: <HardDrive className="h-4.5 w-4.5" />,
+  sync: <RefreshCw className="h-4.5 w-4.5" />,
+  custom: <MessageSquare className="h-4.5 w-4.5" />,
 };
 
 const typeColors: Record<NotificationType, string> = {
@@ -142,7 +142,9 @@ export function NotificationCenter() {
             <div className="px-4 pb-4 space-y-2">
               {filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <BellOff className="h-10 w-10 mb-3 opacity-40" />
+                  <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
+                    <BellOff className="h-10 w-10 opacity-40" />
+                  </div>
                   <p className="text-sm font-medium">No notifications</p>
                   <p className="text-xs mt-1">You're all caught up!</p>
                 </div>

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Package, Plus, Pencil, Trash2, ShoppingCart } from 'lucide-react';
+import { Loader2, Package, Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react';
 import { persistFormValues } from '@/services/autocompleteService';
 import { cn } from '@/lib/utils';
 
@@ -274,7 +274,7 @@ export default function RecordSale() {
           <Card className="bg-card">
             <CardHeader className="pb-2 pt-4 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4 text-primary" />
+                <ShoppingBag className="h-4 w-4 text-primary" />
                 Cart ({cart.length} item{cart.length > 1 ? 's' : ''})
               </CardTitle>
             </CardHeader>

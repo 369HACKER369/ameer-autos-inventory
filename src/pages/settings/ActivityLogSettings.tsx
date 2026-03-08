@@ -24,7 +24,7 @@ import {
   Upload, 
   RefreshCw,
   Activity,
-  Filter
+  SlidersHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ActivityAction } from '@/types';
@@ -132,7 +132,7 @@ export default function ActivityLogSettings() {
         <Card className="bg-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Filter className="h-5 w-5 text-primary" />
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
               Filters
             </CardTitle>
           </CardHeader>
@@ -180,8 +180,10 @@ export default function ActivityLogSettings() {
         {/* Activity List */}
         {filteredLogs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Activity className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">No activities found</p>
+            <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mb-4 mx-auto">
+              <Activity className="h-10 w-10 text-muted-foreground/40" />
+            </div>
+            <p className="text-muted-foreground font-medium">No activities found</p>
             <p className="text-sm text-muted-foreground/70 mt-1">
               {actionFilter !== 'all' || dateFilter !== 'all' 
                 ? 'Try adjusting your filters' 

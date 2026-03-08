@@ -8,22 +8,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { 
   Search, 
-  Globe, 
-  Palette, 
-  Layout, 
-  Cloud, 
-  Database, 
-  Bell, 
+  Languages, 
+  Paintbrush, 
+  PanelLeftClose, 
+  CloudUpload, 
+  HardDrive, 
+  BellRing, 
   Activity,
   ChevronRight,
   Download,
   RefreshCw,
-  ImageIcon,
   Type,
-  Info,
-  Shield,
-  FileText,
-  Sparkles,
+  BadgeInfo,
+  ShieldCheck,
+  ScrollText,
+  Wand2,
   Package,
   Tags,
   AlertTriangle,
@@ -40,6 +39,8 @@ interface SettingItemProps {
   onClick?: () => void;
   rightElement?: React.ReactNode;
   showChevron?: boolean;
+  iconBg?: string;
+  iconColor?: string;
 }
 
 function SettingItem({ 
@@ -48,7 +49,9 @@ function SettingItem({
   description, 
   onClick, 
   rightElement,
-  showChevron = true 
+  showChevron = true,
+  iconBg,
+  iconColor,
 }: SettingItemProps) {
   return (
     <div
@@ -58,8 +61,8 @@ function SettingItem({
       )}
       onClick={onClick}
     >
-      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5 text-primary" />
+      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm", iconBg || "bg-primary/10")}>
+        <Icon className={cn("h-5 w-5", iconColor || "text-primary")} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium">{title}</p>
@@ -82,58 +85,74 @@ export default function Settings() {
 
   const brandingItems = [
     {
-      icon: ImageIcon,
+      icon: Store,
       title: 'Branding',
       description: 'App name, logo customization',
       path: '/settings/branding',
+      iconBg: 'bg-primary/10',
+      iconColor: 'text-primary',
     },
   ];
 
   const settingsItems = [
     {
-      icon: Globe,
+      icon: Languages,
       title: 'Language & Localization',
       description: 'Currency format, date format',
       path: '/settings/language',
+      iconBg: 'bg-blue-500/10',
+      iconColor: 'text-blue-500',
     },
     {
-      icon: Palette,
+      icon: Paintbrush,
       title: 'Theme & Appearance',
       description: 'Dark mode, AMOLED black',
       path: '/settings/theme',
+      iconBg: 'bg-purple-500/10',
+      iconColor: 'text-purple-500',
     },
     {
       icon: Type,
       title: 'Typography & Icon Size',
       description: 'Text scale, icon size controls',
       path: '/settings/typography',
+      iconBg: 'bg-indigo-500/10',
+      iconColor: 'text-indigo-500',
     },
     {
-      icon: Layout,
+      icon: PanelLeftClose,
       title: 'Navigation Layout',
       description: 'Bottom nav or sidebar drawer',
       path: '/settings/navigation',
+      iconBg: 'bg-teal-500/10',
+      iconColor: 'text-teal-500',
     },
     {
-      icon: Sparkles,
+      icon: Wand2,
       title: 'Smart Autocomplete',
       description: 'Manage saved form suggestions',
       path: '/settings/autocomplete',
+      iconBg: 'bg-amber-500/10',
+      iconColor: 'text-amber-500',
     },
   ];
 
   const syncItems = [
     {
-      icon: Cloud,
+      icon: CloudUpload,
       title: 'Google Drive Auto-Sync',
       description: 'Real-time backup in Excel, Sheets & JSON',
       path: '/settings/sync',
+      iconBg: 'bg-sky-500/10',
+      iconColor: 'text-sky-500',
     },
     {
-      icon: Database,
+      icon: HardDrive,
       title: 'Backup & Restore',
       description: 'Advanced backup and export operations',
       path: '/settings/backup',
+      iconBg: 'bg-emerald-500/10',
+      iconColor: 'text-emerald-500',
     },
   ];
 
@@ -163,9 +182,9 @@ export default function Settings() {
     : syncItems;
 
   const legalItems = [
-    { icon: Info, title: 'About', description: 'App info, features & tech stack', path: '/settings/about' },
-    { icon: Shield, title: 'Privacy Policy', description: 'How your data is handled', path: '/settings/privacy' },
-    { icon: FileText, title: 'Terms & Conditions', description: 'Usage terms and limitations', path: '/settings/terms' },
+    { icon: BadgeInfo, title: 'About', description: 'App info, features & tech stack', path: '/settings/about', iconBg: 'bg-slate-500/10', iconColor: 'text-slate-500' },
+    { icon: ShieldCheck, title: 'Privacy Policy', description: 'How your data is handled', path: '/settings/privacy', iconBg: 'bg-green-500/10', iconColor: 'text-green-500' },
+    { icon: ScrollText, title: 'Terms & Conditions', description: 'Usage terms and limitations', path: '/settings/terms', iconBg: 'bg-rose-500/10', iconColor: 'text-rose-500' },
   ];
 
   const filteredLegal = search
@@ -250,6 +269,8 @@ export default function Settings() {
                     title={item.title}
                     description={item.description}
                     onClick={() => navigate(item.path)}
+                    iconBg={item.iconBg}
+                    iconColor={item.iconColor}
                   />
                 ))}
               </CardContent>
@@ -270,6 +291,8 @@ export default function Settings() {
                     title={item.title}
                     description={item.description}
                     onClick={() => navigate(item.path)}
+                    iconBg={item.iconBg}
+                    iconColor={item.iconColor}
                   />
                 ))}
               </CardContent>
@@ -290,14 +313,18 @@ export default function Settings() {
                     title={item.title}
                     description={item.description}
                     onClick={() => navigate(item.path)}
+                    iconBg={item.iconBg}
+                    iconColor={item.iconColor}
                   />
                 ))}
                 {(!search || 'notifications'.includes(search.toLowerCase()) || 'low stock'.includes(search.toLowerCase()) || 'alerts'.includes(search.toLowerCase())) && (
                   <SettingItem
-                    icon={Bell}
+                    icon={BellRing}
                     title="Notifications"
                     description="Low stock and sync alerts"
                     onClick={handleNotificationsClick}
+                    iconBg="bg-orange-500/10"
+                    iconColor="text-orange-500"
                     rightElement={
                       <Switch
                         checked={notifications}
@@ -362,6 +389,8 @@ export default function Settings() {
                     title={item.title}
                     description={item.description}
                     onClick={() => navigate(item.path)}
+                    iconBg={item.iconBg}
+                    iconColor={item.iconColor}
                   />
                 ))}
               </CardContent>

@@ -14,20 +14,21 @@ import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import {
   Package,
-  TrendingUp,
+  ArrowUpRight,
   ShoppingCart,
   AlertTriangle,
   Zap,
-  Plus,
+  PackagePlus,
   Pencil,
   Trash2,
-  BarChart3,
+  ChartColumnBig,
   Download,
   Upload,
   RefreshCw,
   Activity,
   ChevronRight,
   Wallet,
+  HandCoins,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
@@ -37,7 +38,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 const activityIconMap: Record<string, React.ElementType> = {
-  Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
+  Plus: PackagePlus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
 };
 
 const ACTION_LABELS: Record<ActivityAction, string> = {
@@ -128,10 +129,10 @@ export default function Dashboard() {
         <section className="animate-fade-in" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
           <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2.5">Quick Actions</h2>
           <div className="grid grid-cols-4 gap-2">
-            <QuickAction icon={Plus} label="Add Part" onClick={() => navigate('/inventory/add')} />
-            <QuickAction icon={ShoppingCart} label="New Sale" onClick={() => navigate('/sale')} />
-            <QuickAction icon={BarChart3} label="Reports" onClick={() => navigate('/reports')} />
-            <QuickAction icon={Zap} label="QuickSell" onClick={() => setQuickSellOpen(true)} />
+            <QuickAction icon={PackagePlus} label="Add Part" onClick={() => navigate('/inventory/add')} accent="bg-blue-500/10 text-blue-500" />
+            <QuickAction icon={HandCoins} label="New Sale" onClick={() => navigate('/sale')} accent="bg-emerald-500/10 text-emerald-500" />
+            <QuickAction icon={ChartColumnBig} label="Reports" onClick={() => navigate('/reports')} accent="bg-purple-500/10 text-purple-500" />
+            <QuickAction icon={Zap} label="QuickSell" onClick={() => setQuickSellOpen(true)} accent="bg-amber-500/10 text-amber-500" />
           </div>
         </section>
 
@@ -144,8 +145,8 @@ export default function Dashboard() {
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Sales This Week</p>
                   <p className="text-lg font-bold mt-0.5 whitespace-nowrap">{formatFull(weeklyTotal)}</p>
                 </div>
-                <div className="h-9 w-9 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                <div className="h-9 w-9 rounded-xl bg-green-500/10 flex items-center justify-center shadow-sm">
+                  <ArrowUpRight className="h-4 w-4 text-green-500" />
                 </div>
               </div>
               <div className="h-[80px] -mx-1">
@@ -319,7 +320,9 @@ export default function Dashboard() {
             <CardContent className="p-0">
               {recentActivity.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground text-sm">
-                  <Activity className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                  <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                    <Activity className="h-10 w-10 opacity-40" />
+                  </div>
                   <p className="font-medium">No activity yet</p>
                   <p className="text-xs mt-1 text-muted-foreground/70">Start by adding your first part</p>
                 </div>
@@ -432,9 +435,10 @@ interface QuickActionProps {
   icon: React.ElementType;
   label: string;
   onClick: () => void;
+  accent?: string;
 }
 
-function QuickAction({ icon: Icon, label, onClick }: QuickActionProps) {
+function QuickAction({ icon: Icon, label, onClick, accent }: QuickActionProps) {
   return (
     <button
       onClick={onClick}
@@ -446,8 +450,8 @@ function QuickAction({ icon: Icon, label, onClick }: QuickActionProps) {
         'transition-all duration-200 touch-target',
       )}
     >
-      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-        <Icon className="h-4 w-4 text-primary" />
+      <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center shadow-sm", accent || "bg-primary/10 text-primary")}>
+        <Icon className="h-4 w-4" />
       </div>
       <span className="text-[10px] font-medium text-center leading-tight text-muted-foreground">{label}</span>
     </button>

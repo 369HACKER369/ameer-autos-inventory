@@ -403,8 +403,8 @@ export default function Reports() {
         {/* Empty State — show when no parts AND no sales */}
         {!loading && parts.length === 0 && sales.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-8 w-8 text-muted-foreground/40" />
+            <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+              <TrendingUp className="h-10 w-10 text-muted-foreground/40" />
             </div>
             <p className="text-sm font-semibold text-muted-foreground">No data yet</p>
             <p className="text-xs text-muted-foreground/50 mt-1 max-w-[220px] mx-auto">
