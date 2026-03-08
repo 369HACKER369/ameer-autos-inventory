@@ -97,7 +97,7 @@ export function Header({
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0 ml-2">
-            <AlertBell />
+            <NotificationCenter />
             {rightAction}
           </div>
         </div>
