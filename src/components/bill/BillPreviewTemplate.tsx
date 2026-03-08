@@ -140,7 +140,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
               }}>
                 INVOICE TO :
               </div>
-              <div style={{ borderTop: `3px solid ${GOLD}`, border: `1px solid ${BORDER}`, borderTop: `3px solid ${GOLD}`, padding: '14px 16px' }}>
+              <div style={{ border: `1px solid ${BORDER}`, borderTop: `3px solid ${GOLD}`, padding: '14px 16px' }}>
                 <div style={{ fontSize: '16px', fontWeight: 700, textTransform: 'uppercase', color: TEXT_DARK }}>
                   {bill.buyerName}
                 </div>
