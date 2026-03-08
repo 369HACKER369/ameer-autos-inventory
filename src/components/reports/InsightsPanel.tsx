@@ -37,7 +37,7 @@ export function InsightsPanel({
     {
       icon: BarChart3,
       label: 'Daily Avg',
-      value: `Rs ${formatCurrencyShort(avgDailySales).replace('Rs ', '')}`,
+      value: `Rs ${formatValue(avgDailySales)}`,
       color: 'text-blue-400',
       bgColor: 'bg-blue-400/10',
     },

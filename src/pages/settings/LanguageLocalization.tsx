@@ -10,10 +10,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { getSetting, updateSetting } from '@/db/database';
 import { toast } from 'sonner';
-import { Globe, Calendar, Banknote, Check } from 'lucide-react';
+import { Globe, Calendar, Banknote, Check, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatCurrencyAdaptive, type CurrencyDisplayMode } from '@/utils/currency';
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -33,10 +35,13 @@ const CURRENCY_FORMATS = [
   { value: 'PKR', label: 'PKR (PKR 1,000)' },
 ];
 
+const PREVIEW_AMOUNTS = [950, 9500, 95000, 1250000, 125000000];
+
 export default function LanguageLocalization() {
   const [language, setLanguage] = useState('en');
   const [dateFormat, setDateFormat] = useState('dd/MM/yyyy');
   const [currencyFormat, setCurrencyFormat] = useState('Rs');
+  const [displayMode, setDisplayMode] = useState<CurrencyDisplayMode>('compact');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -46,10 +51,12 @@ export default function LanguageLocalization() {
         const savedLanguage = await getSetting<string>('language');
         const savedDateFormat = await getSetting<string>('dateFormat');
         const savedCurrencyFormat = await getSetting<string>('currencyFormat');
+        const savedDisplayMode = await getSetting<CurrencyDisplayMode>('currencyDisplayMode');
         
         if (savedLanguage) setLanguage(savedLanguage);
         if (savedDateFormat) setDateFormat(savedDateFormat);
         if (savedCurrencyFormat) setCurrencyFormat(savedCurrencyFormat);
+        if (savedDisplayMode) setDisplayMode(savedDisplayMode);
       } catch (error) {
         console.error('Failed to load settings:', error);
       } finally {
@@ -67,6 +74,7 @@ export default function LanguageLocalization() {
         updateSetting('language', language),
         updateSetting('dateFormat', dateFormat),
         updateSetting('currencyFormat', currencyFormat),
+        updateSetting('currencyDisplayMode', displayMode),
       ]);
       toast.success('Settings saved successfully');
     } catch (error) {
@@ -150,12 +158,12 @@ export default function LanguageLocalization() {
           </CardContent>
         </Card>
 
-        {/* Currency Format */}
+        {/* Currency Symbol */}
         <Card className="bg-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Banknote className="h-5 w-5 text-primary" />
-              Currency Format
+              Currency Symbol
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -174,6 +182,57 @@ export default function LanguageLocalization() {
             <p className="text-sm text-muted-foreground mt-2">
               Pakistan Rupee (Rs) is used for all transactions
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Currency Display Mode */}
+        <Card className="bg-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Currency Display Mode
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <RadioGroup
+              value={displayMode}
+              onValueChange={(v) => setDisplayMode(v as CurrencyDisplayMode)}
+              className="space-y-3"
+            >
+              <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5 transition-colors">
+                <RadioGroupItem value="compact" id="mode-compact" className="mt-0.5" />
+                <Label htmlFor="mode-compact" className="cursor-pointer flex-1">
+                  <span className="font-semibold text-sm">Compact Units</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5">
+                    10K · 2.5 Lac · 1.2 Crore
+                  </span>
+                </Label>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5 transition-colors">
+                <RadioGroupItem value="numeric" id="mode-numeric" className="mt-0.5" />
+                <Label htmlFor="mode-numeric" className="cursor-pointer flex-1">
+                  <span className="font-semibold text-sm">Full Numbers</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5">
+                    10,000 · 2,50,000 · 1,20,00,000
+                  </span>
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {/* Live Preview */}
+            <div className="rounded-lg bg-muted/50 p-3 space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Preview</p>
+              <div className="flex flex-wrap gap-2">
+                {PREVIEW_AMOUNTS.map((amt) => (
+                  <span
+                    key={amt}
+                    className="text-xs font-medium px-2 py-1 rounded-md bg-card border border-border/30 whitespace-nowrap"
+                  >
+                    Rs {formatCurrencyAdaptive(amt, displayMode)}
+                  </span>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

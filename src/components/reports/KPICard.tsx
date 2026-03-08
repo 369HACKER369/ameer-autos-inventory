@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
-import { formatCurrencyShort } from '@/utils/currency';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCountUp } from '@/hooks/useCountUp';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface KPICardProps {
   title: string;
@@ -28,22 +28,19 @@ export function KPICard({
 }: KPICardProps) {
   const numericEnd = typeof value === 'number' ? value : 0;
   const animatedValue = useCountUp(loading ? 0 : numericEnd, 800);
+  const { formatValue } = useCurrencyFormat();
 
-  const formatValue = () => {
+  const formatted = (() => {
     if (isCurrency && typeof value === 'number') {
-      const v = animatedValue;
-      const abs = Math.abs(v);
-      const sign = v < 0 ? '-' : '';
-      if (abs >= 10000000) return `${sign}${(abs / 10000000).toFixed(2)} Cr`;
-      if (abs >= 100000) return `${sign}${(abs / 100000).toFixed(2)} Lac`;
-      if (abs >= 1000) return `${sign}${(abs / 1000).toFixed(1)}K`;
-      return formatCurrencyShort(v).replace('Rs ', '');
+      return formatValue(animatedValue);
     }
     if (typeof value === 'number') {
       return `${Math.round(animatedValue)}${suffix}`;
     }
     return `${value}${suffix}`;
-  };
+  })();
+
+  const textSize = formatted.length > 8 ? 'text-lg' : 'text-xl';
 
   return (
     <div
@@ -72,11 +69,11 @@ export function KPICard({
           {loading ? (
             <Skeleton className="h-7 w-20" />
           ) : (
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-1 whitespace-nowrap">
               {isCurrency && (
                 <span className="text-xs font-medium text-muted-foreground">Rs</span>
               )}
-              <p className="text-xl font-bold tracking-tight">{formatValue()}</p>
+              <p className={cn(textSize, 'font-bold tracking-tight')}>{formatted}</p>
             </div>
           )}
         </div>
