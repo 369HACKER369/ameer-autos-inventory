@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Camera, X } from 'lucide-react';
+import { Loader2, Camera, ImagePlus, X } from 'lucide-react';
 import type { UnitType } from '@/types';
 
 // Predefined categories
@@ -422,18 +422,30 @@ export default function AddEditPart() {
                     </div>
                   ))}
                   {images.length < 5 && (
-                    <label className="h-16 w-16 border-2 border-dashed border-border rounded-md flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
-                      <Camera className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-[10px] text-muted-foreground mt-1">Add</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        multiple
-                        className="hidden"
-                        onChange={handleImageCapture}
-                      />
-                    </label>
+                    <>
+                      <label className="h-16 w-16 border-2 border-dashed border-border rounded-md flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                        <Camera className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground mt-1">Camera</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="hidden"
+                          onChange={handleImageCapture}
+                        />
+                      </label>
+                      <label className="h-16 w-16 border-2 border-dashed border-border rounded-md flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                        <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground mt-1">Gallery</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleImageCapture}
+                        />
+                      </label>
+                    </>
                   )}
                 </div>
               </CardContent>
