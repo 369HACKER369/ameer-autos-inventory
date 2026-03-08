@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw as ResetZoom } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
 import type { BillSettings, WatermarkStyle, Bill, BillItem } from '@/types/bill';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
@@ -36,6 +36,39 @@ export default function BillSettingsPage() {
     { id: '1', billId: 'preview', partName: 'Engine Oil Filter', partCode: 'EOF-201', brand: 'CAT', quantity: 2, price: 3500, total: 7000 },
     { id: '2', billId: 'preview', partName: 'Hydraulic Pump Seal', partCode: 'HPS-105', brand: 'Komatsu', quantity: 1, price: 8500, total: 8500 },
   ], []);
+
+  // Zoom state for live preview
+  const [zoom, setZoom] = useState(0.48);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const lastTouchDist = useRef<number | null>(null);
+
+  const handleZoomIn = useCallback(() => setZoom(z => Math.min(z + 0.1, 1.2)), []);
+  const handleZoomOut = useCallback(() => setZoom(z => Math.max(z - 0.1, 0.25)), []);
+  const handleZoomReset = useCallback(() => setZoom(0.48), []);
+
+  // Pinch-to-zoom handler
+  useEffect(() => {
+    const el = previewContainerRef.current;
+    if (!el || !showPreview) return;
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2) { lastTouchDist.current = null; return; }
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (lastTouchDist.current !== null) {
+        const delta = (dist - lastTouchDist.current) * 0.003;
+        setZoom(z => Math.min(Math.max(z + delta, 0.25), 1.2));
+      }
+      lastTouchDist.current = dist;
+      e.preventDefault();
+    };
+    const onTouchEnd = () => { lastTouchDist.current = null; };
+
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    return () => { el.removeEventListener('touchmove', onTouchMove); el.removeEventListener('touchend', onTouchEnd); };
+  }, [showPreview]);
 
   useEffect(() => { getBillSettings().then(setSettings); }, []);
 
@@ -314,16 +347,34 @@ export default function BillSettingsPage() {
         {/* Live Bill Preview */}
         {showPreview && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
-              <span className="text-[10px] text-muted-foreground">(Updates as you edit)</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
+                <span className="text-[10px] text-muted-foreground">({Math.round(zoom * 100)}%)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} disabled={zoom <= 0.25}>
+                  <ZoomOut className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomReset}>
+                  <ResetZoom className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn} disabled={zoom >= 1.2}>
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
-            <div className="border border-border rounded-lg overflow-hidden" style={{ height: '540px' }}>
+            <div
+              ref={previewContainerRef}
+              className="border border-border rounded-lg overflow-auto bg-muted/30 touch-pan-x touch-pan-y"
+              style={{ height: '540px', WebkitOverflowScrolling: 'touch' }}
+            >
               <div style={{
-                transform: 'scale(0.48)',
+                transform: `scale(${zoom})`,
                 transformOrigin: 'top left',
                 width: '794px',
+                minHeight: `${1123 * zoom}px`,
               }}>
                 <BillPreviewTemplate
                   settings={settings}
@@ -332,6 +383,7 @@ export default function BillSettingsPage() {
                 />
               </div>
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">Pinch to zoom on mobile • Scroll to explore</p>
           </div>
         )}
       </div>
