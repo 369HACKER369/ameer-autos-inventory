@@ -114,7 +114,7 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
                   boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                   padding: '8px 12px',
                 }}
-                formatter={(value: number, name: string) => [formatCurrency(value), name]}
+                formatter={(value: number, name: string) => [formatFull(value), name]}
                 labelStyle={{ color: textColor, fontSize: '10px', marginBottom: '4px' }}
               />
               {showSales && (

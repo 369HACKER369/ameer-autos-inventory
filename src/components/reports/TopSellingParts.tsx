@@ -80,10 +80,10 @@ export function TopSellingParts({ data, title = "Top Sellers" }: TopSellingParts
 
                   {/* Revenue */}
                   <div className="text-right shrink-0">
-                    <p className="text-xs font-bold">{formatCurrency(part.totalRevenue)}</p>
-                    <p className="text-[10px] text-emerald-500 flex items-center justify-end gap-0.5">
+                    <p className="text-xs font-bold whitespace-nowrap">{formatFull(part.totalRevenue)}</p>
+                    <p className="text-[10px] text-emerald-500 flex items-center justify-end gap-0.5 whitespace-nowrap">
                       <TrendingUp className="h-2.5 w-2.5" />
-                      {formatCurrency(part.totalProfit)}
+                      {formatFull(part.totalProfit)}
                     </p>
                   </div>
                 </div>

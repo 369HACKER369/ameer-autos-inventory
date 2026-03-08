@@ -180,7 +180,7 @@ export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHe
                       key={dayIdx}
                       className="w-3 h-3 rounded-sm transition-colors duration-150 hover:ring-1 hover:ring-primary/40 cursor-pointer"
                       style={{ backgroundColor: getColorIntensity(day.value) }}
-                      title={`${day.date.toLocaleDateString('en-GB')}: Rs ${day.value.toLocaleString()}`}
+                      title={`${day.date.toLocaleDateString('en-GB')}: ${formatFull(day.value)}`}
                     />
                   ))}
                 </div>

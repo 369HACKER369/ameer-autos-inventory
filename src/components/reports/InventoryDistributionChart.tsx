@@ -198,7 +198,7 @@ export function InventoryDistributionChart({
                         fontSize: '12px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
-                      formatter={(value: number) => [formatCurrency(value), 'Value']}
+                      formatter={(value: number) => [formatFull(value), 'Value']}
                     />
                     <Bar 
                       dataKey="value" 
