@@ -203,6 +203,7 @@ export default function BillHistory() {
                         <DropdownMenuItem onClick={() => handleExportImage(bill)}><ImageIcon className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleExportPdf(bill)}><FileText className="h-4 w-4 mr-2" /> Export as PDF</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleShare(bill)}><Share2 className="h-4 w-4 mr-2" /> Share</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-4 w-4 mr-2" /> WhatsApp</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -210,7 +211,7 @@ export default function BillHistory() {
                   <div className="flex gap-2 mt-2 pt-2 border-t border-border">
                     <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}><ImageIcon className="h-3 w-3" /> Image</Button>
                     <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportPdf(bill)}><FileText className="h-3 w-3" /> PDF</Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleShare(bill)}><Share2 className="h-3 w-3" /> Share</Button>
+                    <Button size="sm" className="flex-1 h-7 text-xs gap-1 bg-[#25D366] hover:bg-[#1DA851] text-white" onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-3 w-3" /> WhatsApp</Button>
                   </div>
                 </CardContent>
               </Card>
