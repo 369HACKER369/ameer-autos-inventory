@@ -39,6 +39,8 @@ interface SettingItemProps {
   onClick?: () => void;
   rightElement?: React.ReactNode;
   showChevron?: boolean;
+  iconBg?: string;
+  iconColor?: string;
 }
 
 function SettingItem({ 
