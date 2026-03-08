@@ -66,6 +66,38 @@ function drawGlobeIcon(doc: jsPDF, cx: number, cy: number, r: number) {
   doc.line(cx, cy - gr, cx, cy + gr);
 }
 
+/* ── Dynamic font size for shop name in PDF ── */
+function getShopNamePdfSize(name: string): number {
+  if (name.length <= 16) return 20;
+  if (name.length <= 24) return 16;
+  return 13;
+}
+
+/* ── Draw watermark pattern on PDF ── */
+function drawWatermark(doc: jsPDF, settings: BillSettings) {
+  if (!settings.watermarkEnabled) return;
+  const text = (settings.watermarkText || settings.shopName).toUpperCase();
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  // Use very light gray to simulate low opacity
+  const gray = Math.round(255 - (255 * settings.watermarkOpacity * 3));
+  doc.setTextColor(gray, gray, gray);
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  // Draw diagonal watermark grid
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 3; col++) {
+      const x = 20 + col * (pw / 3);
+      const y = 80 + row * 100;
+      if (y < ph - 40) {
+        doc.text(text, x, y, { angle: 30 });
+      }
+    }
+  }
+  // Reset text color
+  doc.setTextColor(0, 0, 0);
+}
+
 export function generateBillPdf(
   settings: BillSettings,
   bill: Bill,
