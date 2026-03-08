@@ -450,8 +450,8 @@ function QuickAction({ icon: Icon, label, onClick, accent }: QuickActionProps) {
         'transition-all duration-200 touch-target',
       )}
     >
-      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-        <Icon className="h-4 w-4 text-primary" />
+      <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center shadow-sm", accent || "bg-primary/10 text-primary")}>
+        <Icon className="h-4 w-4" />
       </div>
       <span className="text-[10px] font-medium text-center leading-tight text-muted-foreground">{label}</span>
     </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutGrid, Boxes, ChartColumnBig, Settings, X, Menu, FileText } from 'lucide-react';
+import { LayoutGrid, Boxes, ChartColumnBig, Settings, X, Menu, FileText, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSafe } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
