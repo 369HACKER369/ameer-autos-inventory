@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
-import { db } from '@/db/database';
+import { db, getSetting, updateSetting } from '@/db/database';
 import { getSalesSummary, getTopSellingParts } from '@/services/salesService';
 import { getInventoryValue } from '@/services/inventoryService';
 import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
@@ -46,6 +46,17 @@ import { startOfDay, endOfDay, subMonths } from 'date-fns';
 export default function Reports() {
   const dateRanges = useMemo(() => getDateRanges(), []);
   const [selectedRangeIndex, setSelectedRangeIndex] = useState(5);
+  const [rangeLoaded, setRangeLoaded] = useState(false);
+
+  // Load persisted time range on mount
+  useEffect(() => {
+    getSetting<number>('reportsTimeRangeIndex').then(saved => {
+      if (saved !== undefined && saved >= 0 && saved < dateRanges.length) {
+        setSelectedRangeIndex(saved);
+      }
+      setRangeLoaded(true);
+    }).catch(() => setRangeLoaded(true));
+  }, [dateRanges.length]);
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
   const [summary, setSummary] = useState<ReportSummary | null>(null);
@@ -305,6 +316,7 @@ export default function Reports() {
     setSelectedRangeIndex(index);
     setCustomStartDate(undefined);
     setCustomEndDate(undefined);
+    updateSetting('reportsTimeRangeIndex', index);
   }, []);
 
   // Exports

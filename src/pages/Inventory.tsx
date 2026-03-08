@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { getSetting, updateSetting } from '@/db/database';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { db } from '@/db/database';
@@ -83,6 +84,21 @@ export default function Inventory() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Load persisted preferences on mount
+  useEffect(() => {
+    Promise.all([
+      getSetting<ViewMode>('inventoryViewMode'),
+      getSetting<SortColumn>('inventorySortColumn'),
+      getSetting<SortDirection>('inventorySortDirection'),
+    ]).then(([vm, sc, sd]) => {
+      if (vm) setViewMode(vm);
+      if (sc) setSortColumn(sc);
+      if (sd) setSortDirection(sd);
+      setPrefsLoaded(true);
+    }).catch(() => setPrefsLoaded(true));
+  }, []);
 
   // Live queries
   const parts = useLiveQuery(() => db.parts.toArray(), []) ?? [];
@@ -166,15 +182,21 @@ export default function Inventory() {
   const cycleViewMode = () => {
     const currentIndex = VIEW_CYCLE.indexOf(viewMode);
     const nextIndex = (currentIndex + 1) % VIEW_CYCLE.length;
-    setViewMode(VIEW_CYCLE[nextIndex]);
+    const next = VIEW_CYCLE[nextIndex];
+    setViewMode(next);
+    updateSetting('inventoryViewMode', next);
   };
 
   const toggleSort = (column: SortColumn) => {
     if (sortColumn === column) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      const newDir = sortDirection === 'asc' ? 'desc' : 'asc';
+      setSortDirection(newDir);
+      updateSetting('inventorySortDirection', newDir);
     } else {
       setSortColumn(column);
       setSortDirection('asc');
+      updateSetting('inventorySortColumn', column);
+      updateSetting('inventorySortDirection', 'asc');
     }
   };
 
