@@ -22,7 +22,8 @@ import {
   Type,
   Info,
   Shield,
-  FileText
+  FileText,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -107,6 +108,12 @@ export default function Settings() {
       title: 'Navigation Layout',
       description: 'Bottom nav or sidebar drawer',
       path: '/settings/navigation',
+    },
+    {
+      icon: Sparkles,
+      title: 'Smart Autocomplete',
+      description: 'Manage saved form suggestions',
+      path: '/settings/autocomplete',
     },
   ];
 

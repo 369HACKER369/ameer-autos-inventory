@@ -34,6 +34,7 @@ import TypographySettings from "./pages/settings/TypographySettings";
 import About from "./pages/settings/About";
 import PrivacyPolicy from "./pages/settings/PrivacyPolicy";
 import TermsConditions from "./pages/settings/TermsConditions";
+import AutocompleteSettings from "./pages/settings/AutocompleteSettings";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
               <Route path="/settings/about" element={<About />} />
               <Route path="/settings/privacy" element={<PrivacyPolicy />} />
               <Route path="/settings/terms" element={<TermsConditions />} />
+              <Route path="/settings/autocomplete" element={<AutocompleteSettings />} />
               <Route path="/bills" element={<BillHistory />} />
               <Route path="/bills/create" element={<BillCreate />} />
               <Route path="/bills/edit/:id" element={<BillCreate />} />

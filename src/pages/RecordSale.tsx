@@ -8,6 +8,7 @@ import { recordMultiSale } from '@/services/salesService';
 import { formatCurrency, calculateProfit } from '@/utils/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Package, Plus, Pencil, Trash2, ShoppingCart } from 'lucide-react';
+import { persistFormValues } from '@/services/autocompleteService';
 import { cn } from '@/lib/utils';
 
 interface CartItem {
@@ -172,6 +174,7 @@ export default function RecordSale() {
         return;
       }
 
+      await persistFormValues({ customerName: customerName.trim(), customerPhone: customerPhone.trim() });
       toast.success(`Sale completed • ${cart.length} item(s)`);
       navigate('/');
     } catch (error) {
@@ -337,11 +340,11 @@ export default function RecordSale() {
             <p className="text-xs font-medium text-muted-foreground">Customer Info (Optional)</p>
             <div>
               <Label className="text-xs">Customer Name</Label>
-              <Input placeholder="Enter name" value={customerName} onChange={e => setCustomerName(e.target.value)} className="mt-1" />
+              <AutocompleteInput field="customerName" placeholder="Enter name" value={customerName} onChange={setCustomerName} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Phone Number</Label>
-              <Input type="tel" placeholder="03XX XXXXXXX" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="mt-1" />
+              <AutocompleteInput field="customerPhone" placeholder="03XX XXXXXXX" value={customerPhone} onChange={setCustomerPhone} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Notes</Label>

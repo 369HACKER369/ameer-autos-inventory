@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
+import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +15,7 @@ import { toSafeNumber, toSafeQuantity, calculateTotalSafe, calculateProfitSafe }
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { persistFormValues } from '@/services/autocompleteService';
 
 interface QuickSellModalProps {
   open: boolean;
@@ -99,6 +101,12 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
         },
       });
 
+      await persistFormValues({
+        customerName: buyerName.trim(),
+        customerPhone: buyerPhone.trim(),
+        brand: brand.trim(),
+      });
+
       await refreshStats();
       toast.success('Quick sale recorded successfully!');
       resetForm();
@@ -130,7 +138,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="qs-brand">Brand</Label>
-          <Input id="qs-brand" value={brand} onChange={e => setBrand(e.target.value)} placeholder="e.g. Toyota" />
+          <AutocompleteInput field="brand" value={brand} onChange={setBrand} placeholder="e.g. Toyota" />
         </div>
         <div>
           <Label htmlFor="qs-quantity">Quantity *</Label>
@@ -180,11 +188,11 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="qs-buyer">Buyer Name</Label>
-          <Input id="qs-buyer" value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder="Optional" />
+          <AutocompleteInput field="customerName" value={buyerName} onChange={setBuyerName} placeholder="Optional" />
         </div>
         <div>
           <Label htmlFor="qs-phone">Buyer Phone</Label>
-          <Input id="qs-phone" value={buyerPhone} onChange={e => setBuyerPhone(e.target.value)} placeholder="Optional" />
+          <AutocompleteInput field="customerPhone" value={buyerPhone} onChange={setBuyerPhone} placeholder="Optional" />
         </div>
       </div>
 

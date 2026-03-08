@@ -4,12 +4,14 @@ import { Header } from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, FileText, CreditCard, ScrollText } from 'lucide-react';
+import { persistFormValues } from '@/services/autocompleteService';
 import { createBill, updateBill, getNextBillNumber, getBillSettings, getBillById, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import type { BillFormItem, PaymentInfo } from '@/types/bill';
@@ -140,6 +142,11 @@ export default function BillCreate() {
         toast({ title: `Bill ${billNumber} updated successfully` });
       } else {
         const bill = await createBill(buyerName.trim(), buyerPhone.trim(), new Date(date), validItems, discount, notes.trim(), opts);
+        await persistFormValues({ customerName: buyerName.trim(), customerPhone: buyerPhone.trim() });
+        // Persist brand values from items
+        for (const item of validItems) {
+          if (item.brand.trim()) await persistFormValues({ brand: item.brand.trim() });
+        }
         toast({ title: `Bill ${bill.billNumber} saved successfully` });
       }
       navigate('/bills');
@@ -179,11 +186,11 @@ export default function BillCreate() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Buyer Name *</Label>
-                <Input value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder="Customer name" className="text-sm" />
+                <AutocompleteInput field="customerName" value={buyerName} onChange={setBuyerName} placeholder="Customer name" className="text-sm" />
               </div>
               <div>
                 <Label className="text-xs">Phone</Label>
-                <Input value={buyerPhone} onChange={e => setBuyerPhone(e.target.value)} placeholder="Phone number" className="text-sm" />
+                <AutocompleteInput field="customerPhone" value={buyerPhone} onChange={setBuyerPhone} placeholder="Phone number" className="text-sm" />
               </div>
             </div>
           </CardContent>
@@ -222,7 +229,7 @@ export default function BillCreate() {
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <Label className="text-[10px]">Brand</Label>
-                      <Input value={item.brand} onChange={e => updateItem(idx, 'brand', e.target.value)} placeholder="Brand" className="text-sm h-8" />
+                      <AutocompleteInput field="brand" value={item.brand} onChange={v => updateItem(idx, 'brand', v)} placeholder="Brand" className="text-sm h-8" />
                     </div>
                     <div>
                       <Label className="text-[10px]">Qty *</Label>
