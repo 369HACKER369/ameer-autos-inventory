@@ -116,6 +116,20 @@ export interface BackupRecord {
   createdAt: Date;
 }
 
+// Weekly sale day for mini chart
+export interface WeeklySaleDay {
+  date: string;
+  sales: number;
+  profit: number;
+}
+
+// Stock distribution for inventory status bar
+export interface StockDistribution {
+  inStock: number;
+  lowStock: number;
+  outOfStock: number;
+}
+
 // Dashboard Summary Stats
 export interface DashboardStats {
   totalParts: number;
@@ -124,6 +138,8 @@ export interface DashboardStats {
   todayProfit: number;
   monthlyProfit: number;
   lowStockCount: number;
+  weeklySales: WeeklySaleDay[];
+  stockDistribution: StockDistribution;
 }
 
 // Report Date Range
