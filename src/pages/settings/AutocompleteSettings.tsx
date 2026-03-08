@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, type AutocompleteField } from '@/services/autocompleteService';
 import type { AutocompleteEntry } from '@/types';
 import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X } from 'lucide-react';
@@ -41,6 +51,7 @@ export default function AutocompleteSettings() {
     category: '',
   });
   const [editing, setEditing] = useState<EditState | null>(null);
+  const [clearConfirm, setClearConfirm] = useState<{ field: AutocompleteField; label: string } | null>(null);
 
   const loadAll = async () => {
     const results = await Promise.all(
@@ -63,11 +74,13 @@ export default function AutocompleteSettings() {
     toast.success('Entry removed');
   };
 
-  const handleClearAll = async (field: AutocompleteField, label: string) => {
-    await clearAllEntries(field);
+  const handleClearAll = async () => {
+    if (!clearConfirm) return;
+    await clearAllEntries(clearConfirm.field);
     setEditing(null);
+    setClearConfirm(null);
     await loadAll();
-    toast.success(`All ${label.toLowerCase()} cleared`);
+    toast.success(`All ${clearConfirm.label.toLowerCase()} cleared`);
   };
 
   const handleAddCustomerPair = async () => {
@@ -184,7 +197,7 @@ export default function AutocompleteSettings() {
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs text-destructive hover:text-destructive"
-                      onClick={() => handleClearAll(field, label)}
+                      onClick={() => setClearConfirm({ field, label })}
                     >
                       Clear All
                     </Button>
@@ -296,6 +309,26 @@ export default function AutocompleteSettings() {
           );
         })}
       </div>
+
+      <AlertDialog open={!!clearConfirm} onOpenChange={(open) => { if (!open) setClearConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all {clearConfirm?.label.toLowerCase()}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all saved {clearConfirm?.label.toLowerCase()}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
