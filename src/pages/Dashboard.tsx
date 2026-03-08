@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
-import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
+import { formatCurrency } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { getRelativeDate, formatTime } from '@/utils/dateUtils';
 import { getActivityIcon, getActivityColor } from '@/services/activityLogService';
 import { toSafeQuantity } from '@/utils/safeNumber';
@@ -75,6 +76,7 @@ const KPI_CONFIG = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const [quickSellOpen, setQuickSellOpen] = useState(false);
+  const { formatValue, formatFull } = useCurrencyFormat();
   const {
     stats,
     isLoadingStats,
@@ -140,7 +142,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Sales This Week</p>
-                  <p className="text-lg font-bold mt-0.5">{formatCurrencyShort(weeklyTotal)}</p>
+                  <p className="text-lg font-bold mt-0.5 whitespace-nowrap">{formatFull(weeklyTotal)}</p>
                 </div>
                 <div className="h-9 w-9 rounded-xl bg-green-500/10 flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-green-500" />
@@ -288,11 +290,11 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Profit</p>
-                  <p className="text-lg font-bold text-primary mt-0.5">{formatCurrencyShort(stats.monthlyProfit)}</p>
+                  <p className="text-lg font-bold text-primary mt-0.5 whitespace-nowrap">{formatFull(stats.monthlyProfit)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground">Today's Profit</p>
-                  <p className="text-lg font-bold text-green-500 mt-0.5">{formatCurrency(stats.todayProfit)}</p>
+                  <p className="text-lg font-bold text-green-500 mt-0.5 whitespace-nowrap">{formatFull(stats.todayProfit)}</p>
                 </div>
               </div>
             </CardContent>
@@ -376,19 +378,15 @@ interface KPICardProps {
 
 function KPICard({ title, value, icon: Icon, accentColor, isCurrency, loading, highlight, style }: KPICardProps) {
   const animatedValue = useCountUp(loading ? 0 : value, 800);
+  const { formatValue: fmtVal } = useCurrencyFormat();
 
-  const formatValue = () => {
-    if (isCurrency) {
-      const v = animatedValue;
-      const abs = Math.abs(v);
-      const sign = v < 0 ? '-' : '';
-      if (abs >= 10000000) return `${sign}${(abs / 10000000).toFixed(2)} Cr`;
-      if (abs >= 100000) return `${sign}${(abs / 100000).toFixed(2)} Lac`;
-      if (abs >= 1000) return `${sign}${(abs / 1000).toFixed(1)}K`;
-      return formatCurrencyShort(v).replace('Rs ', '');
-    }
+  const formatted = (() => {
+    if (isCurrency) return fmtVal(animatedValue);
     return `${Math.round(animatedValue)}`;
-  };
+  })();
+
+  // Scale down font if formatted value is long (e.g. "92.40 Crore")
+  const textSize = formatted.length > 8 ? 'text-lg' : 'text-xl';
 
   return (
     <div
@@ -411,9 +409,9 @@ function KPICard({ title, value, icon: Icon, accentColor, isCurrency, loading, h
           {loading ? (
             <Skeleton className="h-7 w-20" />
           ) : (
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-1 whitespace-nowrap">
               {isCurrency && <span className="text-xs font-medium text-muted-foreground">Rs</span>}
-              <p className="text-xl font-bold tracking-tight">{formatValue()}</p>
+              <p className={cn(textSize, 'font-bold tracking-tight')}>{formatted}</p>
             </div>
           )}
         </div>
@@ -429,7 +427,6 @@ function KPICard({ title, value, icon: Icon, accentColor, isCurrency, loading, h
     </div>
   );
 }
-
 // ─── Quick Action ────────────────────────────────────────
 interface QuickActionProps {
   icon: React.ElementType;
