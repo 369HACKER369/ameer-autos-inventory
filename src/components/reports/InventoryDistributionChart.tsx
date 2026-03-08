@@ -181,7 +181,7 @@ export function InventoryDistributionChart({
                       type="number"
                       tick={{ fontSize: 10, fill: textColor }}
                       axisLine={{ stroke: gridColor }}
-                      tickFormatter={(v) => formatCurrencyShort(v)}
+                      tickFormatter={(v) => formatValue(v)}
                     />
                     <YAxis
                       dataKey="name"
