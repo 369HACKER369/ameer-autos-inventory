@@ -45,8 +45,9 @@ import { toast } from 'sonner';
 import { startOfDay, endOfDay, subMonths } from 'date-fns';
 
 export default function Reports() {
+  const { appName } = useApp();
   const dateRanges = useMemo(() => getDateRanges(), []);
-  const [selectedRangeIndex, setSelectedRangeIndex] = useState(5);
+  const [selectedRangeIndex, setSelectedRangeIndex] = useState(() => Math.min(5, getDateRanges().length - 1));
   const [rangeLoaded, setRangeLoaded] = useState(false);
 
   // Load persisted time range on mount
