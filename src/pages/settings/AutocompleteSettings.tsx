@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, type AutocompleteField } from '@/services/autocompleteService';
 import type { AutocompleteEntry } from '@/types';
 import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X } from 'lucide-react';
