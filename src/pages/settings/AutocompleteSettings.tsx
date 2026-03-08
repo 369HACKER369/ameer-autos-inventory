@@ -196,7 +196,7 @@ export default function AutocompleteSettings() {
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs text-destructive hover:text-destructive"
-                      onClick={() => handleClearAll(field, label)}
+                      onClick={() => setClearConfirm({ field, label })}
                     >
                       Clear All
                     </Button>
