@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
-import { db } from '@/db/database';
+import { db, getSetting, updateSetting } from '@/db/database';
 import { getSalesSummary, getTopSellingParts } from '@/services/salesService';
 import { getInventoryValue } from '@/services/inventoryService';
 import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
