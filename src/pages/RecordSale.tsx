@@ -339,11 +339,11 @@ export default function RecordSale() {
             <p className="text-xs font-medium text-muted-foreground">Customer Info (Optional)</p>
             <div>
               <Label className="text-xs">Customer Name</Label>
-              <Input placeholder="Enter name" value={customerName} onChange={e => setCustomerName(e.target.value)} className="mt-1" />
+              <AutocompleteInput field="customerName" placeholder="Enter name" value={customerName} onChange={setCustomerName} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Phone Number</Label>
-              <Input type="tel" placeholder="03XX XXXXXXX" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="mt-1" />
+              <AutocompleteInput field="customerPhone" placeholder="03XX XXXXXXX" value={customerPhone} onChange={setCustomerPhone} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Notes</Label>
