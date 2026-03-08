@@ -34,6 +34,7 @@ import TypographySettings from "./pages/settings/TypographySettings";
 import About from "./pages/settings/About";
 import PrivacyPolicy from "./pages/settings/PrivacyPolicy";
 import TermsConditions from "./pages/settings/TermsConditions";
+import AutocompleteSettings from "./pages/settings/AutocompleteSettings";
 
 const queryClient = new QueryClient();
 
