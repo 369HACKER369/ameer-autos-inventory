@@ -80,26 +80,54 @@ export function generateBillPdf(
   const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   // ═══════════════════════════════════════
-  // HEADER — Dark Teal background
+  // HEADER — Premium Side-by-Side with Decorative Border
   // ═══════════════════════════════════════
-  const headerH = 32;
+  const headerH = 38;
+
+  // Top gold ornamental line (gradient approximation)
+  doc.setFillColor(...GOLD);
+  doc.rect(pw * 0.15, 0, pw * 0.7, 1, 'F');
+
+  // Teal background
   doc.setFillColor(...TEAL);
-  doc.rect(0, 0, pw, headerH, 'F');
+  doc.rect(0, 1, pw, headerH, 'F');
 
-  const logoR = 11;
-  const logoX = mx + logoR + 4;
-  const logoY = headerH / 2;
+  // Bottom gold ornamental line
+  doc.setFillColor(...GOLD);
+  doc.rect(pw * 0.15, headerH + 1, pw * 0.7, 1, 'F');
 
-  // White circle for logo
+  const logoR = 13;
+  const logoX = mx + logoR + 6;
+  const logoY = 1 + headerH / 2;
+
+  // Outer decorative ring
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.6);
+  doc.circle(logoX, logoY, logoR + 2, 'S');
+
+  // Corner accents (small L-shapes)
+  const cLen = 4;
+  const cOff = logoR + 4;
+  doc.setLineWidth(0.6);
+  // Top-left
+  doc.line(logoX - cOff, logoY - cOff, logoX - cOff + cLen, logoY - cOff);
+  doc.line(logoX - cOff, logoY - cOff, logoX - cOff, logoY - cOff + cLen);
+  // Top-right
+  doc.line(logoX + cOff, logoY - cOff, logoX + cOff - cLen, logoY - cOff);
+  doc.line(logoX + cOff, logoY - cOff, logoX + cOff, logoY - cOff + cLen);
+  // Bottom-left
+  doc.line(logoX - cOff, logoY + cOff, logoX - cOff + cLen, logoY + cOff);
+  doc.line(logoX - cOff, logoY + cOff, logoX - cOff, logoY + cOff - cLen);
+  // Bottom-right
+  doc.line(logoX + cOff, logoY + cOff, logoX + cOff - cLen, logoY + cOff);
+  doc.line(logoX + cOff, logoY + cOff, logoX + cOff, logoY + cOff - cLen);
+
+  // Inner badge circle - white fill + gold border
   doc.setFillColor(...WHITE);
   doc.circle(logoX, logoY, logoR, 'F');
-  // Gold border
   doc.setDrawColor(...GOLD);
-  doc.setLineWidth(1.2);
+  doc.setLineWidth(0.8);
   doc.circle(logoX, logoY, logoR, 'S');
-  // Outer subtle gold ring
-  doc.setLineWidth(0.3);
-  doc.circle(logoX, logoY, logoR + 2, 'S');
 
   let logoRendered = false;
   if (settings.logoPath) {
@@ -118,35 +146,56 @@ export function generateBillPdf(
   if (!logoRendered) {
     doc.setFillColor(...TEAL);
     doc.circle(logoX, logoY, logoR - 2, 'F');
-    doc.setFontSize(12);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...WHITE);
-    doc.text(initials, logoX, logoY + 1.5, { align: 'center' });
+    doc.text(initials, logoX, logoY + 2, { align: 'center' });
   }
 
-  // Shop name (white on teal)
-  const textX = logoX + logoR + 8;
-  doc.setFontSize(22);
+  // Vertical gold divider
+  const divX = logoX + logoR + 8;
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.5);
+  doc.line(divX, logoY - logoR + 2, divX, logoY + logoR - 2);
+
+  // Shop name
+  const textX = divX + 6;
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...WHITE);
-  doc.text(settings.shopName, textX, logoY - 1);
+  doc.text(settings.shopName.toUpperCase(), textX, logoY - 3);
+
+  // Gold ornamental divider under name (line + diamond + line)
+  const ornY = logoY + 2;
+  const ornStartX = textX;
+  const ornEndX = pw - mx - 10;
+  const ornMidX = (ornStartX + ornEndX) / 2;
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.4);
+  doc.line(ornStartX, ornY, ornMidX - 6, ornY);
+  doc.line(ornMidX + 6, ornY, ornEndX, ornY);
+  // Diamond
+  doc.setFillColor(...GOLD);
+  const ds = 2;
+  doc.triangle(ornMidX - ds, ornY, ornMidX, ornY - ds, ornMidX, ornY + ds, 'F');
+  doc.triangle(ornMidX + ds, ornY, ornMidX, ornY - ds, ornMidX, ornY + ds, 'F');
 
   // Tagline
   if (settings.tagline) {
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(255, 255, 255);
-    doc.text(settings.tagline, textX, logoY + 6);
+    doc.text(settings.tagline.toUpperCase(), textX, ornY + 6);
   }
 
-  y = headerH;
+  y = headerH + 2;
 
   // ═══════════════════════════════════════
   // Gold Accent Bar
   // ═══════════════════════════════════════
   doc.setFillColor(...GOLD);
-  doc.rect(0, y, pw, 3, 'F');
-  y += 3;
+  doc.rect(0, y, pw, 2.5, 'F');
+  y += 2.5;
 
   // ═══════════════════════════════════════
   // "Invoice From" line
