@@ -435,9 +435,10 @@ interface QuickActionProps {
   icon: React.ElementType;
   label: string;
   onClick: () => void;
+  accent?: string;
 }
 
-function QuickAction({ icon: Icon, label, onClick }: QuickActionProps) {
+function QuickAction({ icon: Icon, label, onClick, accent }: QuickActionProps) {
   return (
     <button
       onClick={onClick}
