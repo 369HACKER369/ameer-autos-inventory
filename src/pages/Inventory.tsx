@@ -361,94 +361,146 @@ export default function Inventory() {
           </div>
         ) : viewMode === 'table' ? (
           /* ── Table View ── */
-          <Card className="bg-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs"
-                      onClick={() => toggleSort('name')}
-                    >
-                      <span className="flex items-center gap-1">
-                        Name <SortIcon column="name" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs"
-                      onClick={() => toggleSort('sku')}
-                    >
-                      <span className="flex items-center gap-1">
-                        SKU <SortIcon column="sku" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs"
-                      onClick={() => toggleSort('brand')}
-                    >
-                      <span className="flex items-center gap-1">
-                        Brand <SortIcon column="brand" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
-                      onClick={() => toggleSort('quantity')}
-                    >
-                      <span className="flex items-center justify-end gap-1">
-                        Qty <SortIcon column="quantity" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
-                      onClick={() => toggleSort('price')}
-                    >
-                      <span className="flex items-center justify-end gap-1">
-                        Price <SortIcon column="price" />
-                      </span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredParts.map((part) => {
-                    const qty = toSafeQuantity(part.quantity, 0);
-                    const minStock = toSafeQuantity(part.minStockLevel, 0);
-                    const low = isLowStock(qty, minStock);
+          <div className="space-y-2">
+            {/* Bulk Action Bar */}
+            {selectedIds.size > 0 && (
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                <span className="text-xs font-medium text-primary">
+                  {selectedIds.size} selected
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setSelectedIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            )}
 
-                    return (
-                      <TableRow 
-                        key={part.id}
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/inventory/${part.id}`)}
+            <Card className="bg-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-10 px-2">
+                        <Checkbox
+                          checked={filteredParts.length > 0 && selectedIds.size === filteredParts.length}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs"
+                        onClick={() => toggleSort('name')}
                       >
-                        <TableCell className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
-                          <span className="flex items-center gap-1.5">
-                            {part.name}
-                            {low && <EmergencyIndicator size="sm" />}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                          {part.sku}
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                          {getBrandName(part.brandId)}
-                        </TableCell>
-                        <TableCell className={cn(
-                          "py-2.5 px-3 text-sm text-right whitespace-nowrap font-medium",
-                          qty === 0 && 'text-destructive',
-                          qty > 0 && low && 'text-warning'
-                        )}>
-                          {qty}
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-sm text-right whitespace-nowrap font-semibold text-primary">
-                          {formatCurrency(part.sellingPrice)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </Card>
+                        <span className="flex items-center gap-1">
+                          Name <SortIcon column="name" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs"
+                        onClick={() => toggleSort('sku')}
+                      >
+                        <span className="flex items-center gap-1">
+                          SKU <SortIcon column="sku" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs"
+                        onClick={() => toggleSort('brand')}
+                      >
+                        <span className="flex items-center gap-1">
+                          Brand <SortIcon column="brand" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
+                        onClick={() => toggleSort('quantity')}
+                      >
+                        <span className="flex items-center justify-end gap-1">
+                          Qty <SortIcon column="quantity" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
+                        onClick={() => toggleSort('price')}
+                      >
+                        <span className="flex items-center justify-end gap-1">
+                          Price <SortIcon column="price" />
+                        </span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredParts.map((part) => {
+                      const qty = toSafeQuantity(part.quantity, 0);
+                      const minStock = toSafeQuantity(part.minStockLevel, 0);
+                      const low = isLowStock(qty, minStock);
+                      const isSelected = selectedIds.has(part.id);
+
+                      return (
+                        <TableRow 
+                          key={part.id}
+                          className={cn("cursor-pointer", isSelected && "bg-primary/5")}
+                          onClick={() => navigate(`/inventory/${part.id}`)}
+                        >
+                          <TableCell className="py-2.5 px-2 w-10" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => {
+                                setSelectedIds(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(part.id)) next.delete(part.id);
+                                  else next.add(part.id);
+                                  return next;
+                                });
+                              }}
+                              aria-label={`Select ${part.name}`}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
+                            <span className="flex items-center gap-1.5">
+                              {part.name}
+                              {low && <EmergencyIndicator size="sm" />}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                            {part.sku}
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                            {getBrandName(part.brandId)}
+                          </TableCell>
+                          <TableCell className={cn(
+                            "py-2.5 px-3 text-sm text-right whitespace-nowrap font-medium",
+                            qty === 0 && 'text-destructive',
+                            qty > 0 && low && 'text-warning'
+                          )}>
+                            {qty}
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-sm text-right whitespace-nowrap font-semibold text-primary">
+                            {formatCurrency(part.sellingPrice)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </div>
         ) : viewMode === 'list' ? (
           <div className="space-y-2">
             {filteredParts.map((part) => (
