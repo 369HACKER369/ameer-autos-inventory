@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
 import { useMemo } from 'react';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface SalesHeatmapData {
   date: string; // YYYY-MM-DD format
