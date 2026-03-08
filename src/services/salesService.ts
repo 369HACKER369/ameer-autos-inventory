@@ -90,6 +90,18 @@ export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sa
     metadata: { saleIds: sales.map(s => s.id), totalAmount: grandTotal, totalProfit: grandProfit },
   });
 
+  // Fire sale notifications (non-blocking)
+  import('@/services/notificationService').then(async (ns) => {
+    for (const sale of sales) {
+      await ns.notifyPartSold(sale.partName, sale.quantity, sale.totalAmount);
+      // Check low stock after sale
+      const part = await db.parts.get(sale.partId);
+      if (part && part.quantity <= part.minStockLevel) {
+        await ns.notifyLowStock(part.name, part.quantity);
+      }
+    }
+  }).catch(() => {});
+
   return { sales };
 }
 
