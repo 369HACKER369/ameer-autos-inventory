@@ -11,7 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
-import type { BillSettings } from '@/types/bill';
+import type { BillSettings, WatermarkStyle } from '@/types/bill';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
