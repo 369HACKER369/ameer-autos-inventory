@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
-import type { BillSettings, WatermarkStyle } from '@/types/bill';
+import type { BillSettings, WatermarkStyle, Bill, BillItem } from '@/types/bill';
+import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -21,6 +22,20 @@ export default function BillSettingsPage() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<BillSettings | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Dummy bill data for live preview
+  const previewBill = useMemo<Bill>(() => ({
+    id: 'preview', billNumber: 'AMT-0001', buyerName: 'Sample Customer',
+    buyerPhone: '0300-1234567', date: new Date(), subtotal: 15500,
+    discount: 500, finalTotal: 15000, notes: '',
+    createdAt: new Date(),
+  }), []);
+
+  const previewItems = useMemo<BillItem[]>(() => [
+    { id: '1', billId: 'preview', partName: 'Engine Oil Filter', partCode: 'EOF-201', brand: 'CAT', quantity: 2, price: 3500, total: 7000 },
+    { id: '2', billId: 'preview', partName: 'Hydraulic Pump Seal', partCode: 'HPS-105', brand: 'Komatsu', quantity: 1, price: 8500, total: 8500 },
+  ], []);
 
   useEffect(() => { getBillSettings().then(setSettings); }, []);
 
@@ -282,9 +297,43 @@ export default function BillSettingsPage() {
           </CardContent>
         </Card>
 
-        <Button className="w-full gap-2" onClick={handleSave}>
-          <Save className="h-4 w-4" /> Save Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button className="flex-1 gap-2" onClick={handleSave}>
+            <Save className="h-4 w-4" /> Save Settings
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPreview ? 'Hide' : 'Preview'}
+          </Button>
+        </div>
+
+        {/* Live Bill Preview */}
+        {showPreview && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
+              <span className="text-[10px] text-muted-foreground">(Updates as you edit)</span>
+            </div>
+            <div className="border border-border rounded-lg overflow-hidden" style={{ height: '540px' }}>
+              <div style={{
+                transform: 'scale(0.48)',
+                transformOrigin: 'top left',
+                width: '794px',
+              }}>
+                <BillPreviewTemplate
+                  settings={settings}
+                  bill={previewBill}
+                  items={previewItems}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
