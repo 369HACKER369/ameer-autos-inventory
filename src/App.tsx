@@ -63,6 +63,7 @@ const App = () => (
               <Route path="/settings/typography" element={<TypographySettings />} />
               <Route path="/bills" element={<BillHistory />} />
               <Route path="/bills/create" element={<BillCreate />} />
+              <Route path="/bills/edit/:id" element={<BillCreate />} />
               <Route path="/bills/settings" element={<BillSettingsPage />} />
               <Route path="/activity-log" element={<ActivityLog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

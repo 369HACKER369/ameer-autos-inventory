@@ -108,6 +108,42 @@ export async function getBillItems(billId: string): Promise<BillItem[]> {
   return db.table('billItems').where('billId').equals(billId).toArray();
 }
 
+export async function updateBill(
+  id: string, buyerName: string, buyerPhone: string, date: Date,
+  items: BillFormItem[], discount: number, notes: string,
+  options?: { showPaymentInfo?: boolean; paymentInfo?: PaymentInfo; showTerms?: boolean; termsConditions?: string[]; },
+): Promise<Bill> {
+  const existing = await db.table('bills').get(id) as Bill;
+  if (!existing) throw new Error('Bill not found');
+
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  const finalTotal = subtotal - discount;
+
+  const updated: Bill = {
+    ...existing, buyerName, buyerPhone, date, subtotal, discount, finalTotal, notes,
+    showPaymentInfo: options?.showPaymentInfo, paymentInfo: options?.paymentInfo,
+    showTerms: options?.showTerms, termsConditions: options?.termsConditions,
+  };
+
+  const billItems: BillItem[] = items.map(item => ({
+    id: uuidv4(), billId: id, partName: item.partName, partCode: item.partCode,
+    brand: item.brand, quantity: item.quantity, price: item.price, total: item.quantity * item.price,
+  }));
+
+  await db.transaction('rw', [db.table('bills'), db.table('billItems')], async () => {
+    await db.table('bills').put(updated);
+    await db.table('billItems').where('billId').equals(id).delete();
+    await db.table('billItems').bulkAdd(billItems);
+  });
+
+  await logActivity({
+    action: 'update', entityType: 'sale', entityId: id,
+    description: `Bill ${existing.billNumber} updated – Rs ${finalTotal.toLocaleString()}`,
+  });
+
+  return updated;
+}
+
 export async function deleteBill(id: string): Promise<boolean> {
   const bill = await db.table('bills').get(id) as Bill | undefined;
   if (!bill) return false;
