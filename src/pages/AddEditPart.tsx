@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useForm } from 'react-hook-form';
@@ -102,16 +102,16 @@ export default function AddEditPart() {
   const savedBrands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
   const savedCategories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
 
-  // Combine predefined with user-added (avoiding duplicates)
-  const allBrands = [
+  // Combine predefined with user-added (avoiding duplicates) — memoized to prevent infinite re-renders
+  const allBrands = useMemo(() => [
     ...PREDEFINED_BRANDS.map(name => ({ id: `predefined-${name}`, name, isPredefined: true })),
     ...savedBrands.filter(b => !PREDEFINED_BRANDS.includes(b.name)).map(b => ({ ...b, isPredefined: false })),
-  ];
+  ], [savedBrands]);
   
-  const allCategories = [
+  const allCategories = useMemo(() => [
     ...PREDEFINED_CATEGORIES.map(name => ({ id: `predefined-${name}`, name, isPredefined: true })),
     ...savedCategories.filter(c => !PREDEFINED_CATEGORIES.includes(c.name)).map(c => ({ ...c, isPredefined: false })),
-  ];
+  ], [savedCategories]);
 
   const form = useForm<PartFormValues>({
     resolver: zodResolver(partSchema),
@@ -131,9 +131,13 @@ export default function AddEditPart() {
     },
   });
 
+  // Guard to prevent re-running edit initialization
+  const hasSetInitialValues = useRef(false);
+
   // Update form when existing part loads
   useEffect(() => {
-    if (existingPart) {
+    if (existingPart && !hasSetInitialValues.current) {
+      hasSetInitialValues.current = true;
       form.reset({
         name: existingPart.name,
         sku: existingPart.sku,
@@ -150,9 +154,9 @@ export default function AddEditPart() {
       });
       setImages(existingPart.images || []);
       
-      // Set selections based on existing part
-      const existingBrand = allBrands.find(b => b.id === existingPart.brandId || b.name === existingPart.brandId);
-      const existingCategory = allCategories.find(c => c.id === existingPart.categoryId || c.name === existingPart.categoryId);
+      // Set selections based on existing part — match by ID only
+      const existingBrand = allBrands.find(b => b.id === existingPart.brandId);
+      const existingCategory = allCategories.find(c => c.id === existingPart.categoryId);
       
       if (existingBrand) {
         setBrandSelection(existingBrand.id);
@@ -161,7 +165,7 @@ export default function AddEditPart() {
         setCategorySelection(existingCategory.id);
       }
     }
-  }, [existingPart, savedBrands, savedCategories]);
+  }, [existingPart, allBrands, allCategories]);
 
   // Handle brand selection change
   const handleBrandChange = async (value: string) => {
@@ -347,10 +351,34 @@ export default function AddEditPart() {
     }
 
     Array.from(files).forEach(file => {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`Image "${file.name}" exceeds 5MB limit`);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        setImages(prev => [...prev, result]);
+        // Compress image via canvas
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_DIM = 1200;
+          let { width, height } = img;
+          if (width > MAX_DIM || height > MAX_DIM) {
+            const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.8);
+          setImages(prev => [...prev, compressed]);
+        };
+        img.src = result;
       };
       reader.readAsDataURL(file);
     });

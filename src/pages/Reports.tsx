@@ -33,6 +33,7 @@ import {
   Receipt,
   Boxes,
 } from 'lucide-react';
+import { useApp } from '@/contexts/AppContext';
 import type { DateRange, ReportSummary } from '@/types';
 import {
   exportReportToPDF,
@@ -44,8 +45,9 @@ import { toast } from 'sonner';
 import { startOfDay, endOfDay, subMonths } from 'date-fns';
 
 export default function Reports() {
+  const { appName } = useApp();
   const dateRanges = useMemo(() => getDateRanges(), []);
-  const [selectedRangeIndex, setSelectedRangeIndex] = useState(5);
+  const [selectedRangeIndex, setSelectedRangeIndex] = useState(() => Math.min(5, getDateRanges().length - 1));
   const [rangeLoaded, setRangeLoaded] = useState(false);
 
   // Load persisted time range on mount
@@ -327,7 +329,7 @@ export default function Reports() {
       await exportReportToPDF(
         selectedRange, summary, topParts, salesByDate, parts,
         lowStockItems.map(i => ({ name: i.name, quantity: i.quantity, minStock: i.minStock })),
-        inventoryByCategory, inventoryByBrand, visuals,
+        inventoryByCategory, inventoryByBrand, visuals, appName,
       );
       toast.success('PDF exported');
     } catch (error) {

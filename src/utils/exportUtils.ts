@@ -42,8 +42,10 @@ export async function exportReportToPDF(
   lowStockItems?: { name: string; quantity: number; minStock: number }[],
   inventoryByCategory?: { name: string; value: number }[],
   inventoryByBrand?: { name: string; value: number }[],
-  visuals?: Array<{ title: string; dataUrl: string }>
+  visuals?: Array<{ title: string; dataUrl: string }>,
+  appName?: string
 ): Promise<void> {
+  const shopName = appName || 'Ameer Autos';
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -65,13 +67,13 @@ export async function exportReportToPDF(
     return 22;
   };
 
-  // Header with branding
-  doc.setFillColor(22, 101, 52); // Green-800
+  // Header with branding — Teal theme matching app palette
+  doc.setFillColor(15, 118, 110); // Teal-700
   doc.rect(0, 0, pageWidth, 35, 'F');
   
   doc.setFontSize(22);
   doc.setTextColor(255, 255, 255);
-  doc.text('Ameer Autos', 14, 18);
+  doc.text(shopName, 14, 18);
 
   doc.setFontSize(11);
   doc.text('Inventory & Sales Manager', 14, 26);
@@ -79,8 +81,7 @@ export async function exportReportToPDF(
   // Report title section
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
-  // Title requirement: Shop Name + Selected Time Range
-  doc.text(`Ameer Autos - ${range.label}`, 14, 50);
+  doc.text(`${shopName} - ${range.label}`, 14, 50);
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
@@ -108,7 +109,7 @@ export async function exportReportToPDF(
       body: summaryData,
       theme: 'grid',
       headStyles: { 
-        fillColor: [22, 101, 52],
+        fillColor: [15, 118, 110],
         textColor: 255,
         fontStyle: 'bold'
       },
@@ -188,7 +189,7 @@ export async function exportReportToPDF(
       body: topPartsData,
       theme: 'striped',
       headStyles: { 
-        fillColor: [22, 101, 52],
+        fillColor: [15, 118, 110],
         textColor: 255
       },
       styles: { fontSize: 9 },
@@ -224,7 +225,7 @@ export async function exportReportToPDF(
       body: salesData,
       theme: 'striped',
       headStyles: { 
-        fillColor: [22, 101, 52],
+        fillColor: [15, 118, 110],
         textColor: 255
       },
       styles: { fontSize: 9 },
@@ -324,14 +325,14 @@ export async function exportReportToPDF(
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(
-      `Page ${i} of ${pageCount} • Ameer Autos Inventory & Sales Manager`,
+      `Page ${i} of ${pageCount} • ${shopName} Inventory & Sales Manager`,
       pageWidth / 2,
       pageHeight - 10,
       { align: 'center' }
     );
   }
 
-  const filename = `ameer-autos-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+  const filename = `${shopName.toLowerCase().replace(/\s+/g, '-')}-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(filename);
 }
 

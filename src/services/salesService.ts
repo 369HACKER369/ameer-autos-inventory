@@ -73,11 +73,11 @@ export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sa
     grandProfit += profit;
   }
 
-  // Atomic transaction
+  // Atomic transaction (skipLog on updateStock to avoid N+1 activity entries)
   await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
     for (const sale of sales) {
       await db.sales.add(sale);
-      await updateStock(sale.partId, -sale.quantity, 'Sale');
+      await updateStock(sale.partId, -sale.quantity, 'Sale', true);
     }
   });
 
@@ -201,9 +201,9 @@ export async function getSalesByPart(partId: string): Promise<Sale[]> {
  * Get today's sales
  */
 export async function getTodaySales(): Promise<Sale[]> {
-  const today = new Date();
-  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
   
   const sales = await db.sales.toArray();
   return sales.filter(s => {
@@ -314,15 +314,25 @@ export async function deleteSale(id: string): Promise<boolean> {
   const sale = await db.sales.get(id);
   if (!sale) return false;
   
-  await db.sales.delete(id);
+  // Restore stock and delete sale atomically
+  await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
+    await db.sales.delete(id);
+    // Restore stock quantity
+    const part = await db.parts.get(sale.partId);
+    if (part) {
+      await db.parts.update(sale.partId, {
+        quantity: part.quantity + sale.quantity,
+        updatedAt: new Date(),
+      });
+    }
+  });
   
-  // Note: This doesn't restore stock - manual adjustment needed
   await logActivity({
     action: 'delete',
     entityType: 'sale',
     entityId: id,
-    description: `Deleted sale: ${sale.quantity}x ${sale.partName}`,
-    metadata: { amount: sale.totalAmount },
+    description: `Deleted sale: ${sale.quantity}x ${sale.partName} (stock restored)`,
+    metadata: { amount: sale.totalAmount, quantityRestored: sale.quantity },
   });
   
   return true;
