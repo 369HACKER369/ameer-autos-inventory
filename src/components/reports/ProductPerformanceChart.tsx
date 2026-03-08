@@ -41,6 +41,7 @@ export function ProductPerformanceChart({
   title = "Product Performance",
 }: ProductPerformanceChartProps) {
   const { formatFull } = useCurrencyFormat();
+
   if (data.length === 0) return null;
 
   const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
