@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { BarChart3 } from 'lucide-react';
 import {
   ResponsiveContainer,
