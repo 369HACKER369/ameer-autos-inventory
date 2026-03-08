@@ -129,10 +129,10 @@ export default function Dashboard() {
         <section className="animate-fade-in" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
           <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2.5">Quick Actions</h2>
           <div className="grid grid-cols-4 gap-2">
-            <QuickAction icon={Plus} label="Add Part" onClick={() => navigate('/inventory/add')} />
-            <QuickAction icon={ShoppingCart} label="New Sale" onClick={() => navigate('/sale')} />
-            <QuickAction icon={BarChart3} label="Reports" onClick={() => navigate('/reports')} />
-            <QuickAction icon={Zap} label="QuickSell" onClick={() => setQuickSellOpen(true)} />
+            <QuickAction icon={PackagePlus} label="Add Part" onClick={() => navigate('/inventory/add')} accent="bg-blue-500/10 text-blue-500" />
+            <QuickAction icon={HandCoins} label="New Sale" onClick={() => navigate('/sale')} accent="bg-emerald-500/10 text-emerald-500" />
+            <QuickAction icon={ChartColumnBig} label="Reports" onClick={() => navigate('/reports')} accent="bg-purple-500/10 text-purple-500" />
+            <QuickAction icon={Zap} label="QuickSell" onClick={() => setQuickSellOpen(true)} accent="bg-amber-500/10 text-amber-500" />
           </div>
         </section>
 
