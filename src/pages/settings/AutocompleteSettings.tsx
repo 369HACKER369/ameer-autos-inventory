@@ -50,6 +50,7 @@ export default function AutocompleteSettings() {
     brand: '',
     category: '',
   });
+  const [editing, setEditing] = useState<EditState | null>(null);
   const [clearConfirm, setClearConfirm] = useState<{ field: AutocompleteField; label: string } | null>(null);
 
   const loadAll = async () => {
