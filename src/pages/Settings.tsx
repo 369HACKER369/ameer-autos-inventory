@@ -23,8 +23,13 @@ import {
   Info,
   Shield,
   FileText,
-  Sparkles
+  Sparkles,
+  Package,
+  Tags,
+  AlertTriangle,
+  Store
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
