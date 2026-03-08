@@ -80,8 +80,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         await initializeDatabase();
         
-        // Seed demo data on first launch only
-        await seedDemoDataIfNeeded();
+        // Clear any existing demo data
+        await clearAllDemoData();
         // Load settings
         const savedTheme = await getSetting<'dark' | 'light' | 'system'>('theme');
         const savedNotifications = await getSetting<boolean>('notifications');

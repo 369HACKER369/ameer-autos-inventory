@@ -1,75 +1,40 @@
 import { db, getSetting, updateSetting } from '@/db/database';
-import { DEMO_PARTS, DEMO_CATEGORIES, DEMO_BRANDS } from '@/data/demoParts';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Seed demo data only on first launch when database is empty.
- * Sets demoDataInserted flag to prevent re-seeding.
+ * Clear all demo data from the database.
+ * Runs once on startup to purge any previously seeded demo data.
  */
-export async function seedDemoDataIfNeeded(): Promise<boolean> {
+export async function clearAllDemoData(): Promise<void> {
   try {
-    // Check if demo data was already inserted
-    const alreadyInserted = await getSetting<boolean>('demoDataInserted');
-    if (alreadyInserted) {
-      // Verify data actually exists
-      const existingParts = await db.parts.count();
-      if (existingParts > 0) return false;
-      // Flag was set but no data — re-seed
+    const alreadyCleared = await getSetting<boolean>('demoDataCleared');
+    if (alreadyCleared) return;
+
+    // Delete all demo parts
+    const demoParts = await db.parts.filter(p => p.isDemo === true).toArray();
+    if (demoParts.length > 0) {
+      await db.parts.bulkDelete(demoParts.map(p => p.id));
     }
 
-    // Check if database already has parts (user data exists)
-    const existingParts = await db.parts.count();
-    if (existingParts > 0) {
-      await updateSetting('demoDataInserted', true);
-      return false;
+    // Clean up orphaned brands (no parts reference them)
+    const allParts = await db.parts.toArray();
+    const usedBrandIds = new Set(allParts.map(p => p.brandId));
+    const allBrands = await db.brands.toArray();
+    const orphanBrandIds = allBrands.filter(b => !usedBrandIds.has(b.id)).map(b => b.id);
+    if (orphanBrandIds.length > 0) {
+      await db.brands.bulkDelete(orphanBrandIds);
     }
 
-  const now = new Date();
+    // Clean up orphaned categories
+    const usedCatIds = new Set(allParts.map(p => p.categoryId));
+    const allCats = await db.categories.toArray();
+    const orphanCatIds = allCats.filter(c => !usedCatIds.has(c.id)).map(c => c.id);
+    if (orphanCatIds.length > 0) {
+      await db.categories.bulkDelete(orphanCatIds);
+    }
 
-  // Create categories
-  const categoryMap: Record<string, string> = {};
-  for (const catName of DEMO_CATEGORIES) {
-    const id = uuidv4();
-    categoryMap[catName] = id;
-    await db.categories.add({ id, name: catName, createdAt: now });
-  }
-
-  // Create brands
-  const brandMap: Record<string, string> = {};
-  for (const brandName of DEMO_BRANDS) {
-    const id = uuidv4();
-    brandMap[brandName] = id;
-    await db.brands.add({ id, name: brandName, createdAt: now });
-  }
-
-  // Create parts
-  const parts = DEMO_PARTS.map(p => ({
-    id: uuidv4(),
-    name: p.name,
-    sku: p.sku,
-    brandId: brandMap[p.brand] || '',
-    categoryId: categoryMap[p.category] || '',
-    unitType: 'piece' as const,
-    quantity: p.quantity,
-    minStockLevel: p.minStockLevel,
-    buyingPrice: p.buyingPrice,
-    sellingPrice: p.sellingPrice,
-    location: p.location,
-    notes: p.notes,
-    images: [],
-    isDemo: true,
-    createdAt: now,
-    updatedAt: now,
-  }));
-
-  await db.parts.bulkAdd(parts);
-
-    // Set flag to prevent re-seeding
-    await updateSetting('demoDataInserted', true);
-    console.log(`[DemoSeed] Seeded ${parts.length} demo parts, ${Object.keys(brandMap).length} brands, ${Object.keys(categoryMap).length} categories`);
-    return true;
+    await updateSetting('demoDataCleared', true);
+    console.log(`[DemoCleanup] Removed ${demoParts.length} demo parts, ${orphanBrandIds.length} orphan brands, ${orphanCatIds.length} orphan categories`);
   } catch (error) {
-    console.error('[DemoSeed] Failed to seed demo data:', error);
-    return false;
+    console.error('[DemoCleanup] Failed to clear demo data:', error);
   }
 }

@@ -19,7 +19,7 @@ export type BackupType = 'local' | 'gdrive';
 export type StockStatus = 'all' | 'in-stock' | 'low-stock' | 'out-of-stock';
 
 // View mode for inventory
-export type ViewMode = 'list' | 'grid';
+export type ViewMode = 'list' | 'grid' | 'table';
 
 // Theme modes
 export type ThemeMode = 'light' | 'dark' | 'system';
