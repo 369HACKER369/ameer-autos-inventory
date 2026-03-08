@@ -113,8 +113,9 @@ describe('Backup Validation', () => {
     });
 
     it('throws on oversized input', () => {
-      const bigString = 'x'.repeat(200 * 1024 * 1024);
-      expect(() => safeJsonParse(bigString, 100 * 1024 * 1024)).toThrow('too large');
+      // Use a smaller string but a very small max size to test the limit
+      const smallString = '{"test": true}';
+      expect(() => safeJsonParse(smallString, 5)).toThrow('too large');
     });
   });
 
