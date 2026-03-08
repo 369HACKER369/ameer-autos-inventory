@@ -54,6 +54,7 @@ export function InventoryDistributionChart({
   brandData,
   title = "Inventory Value Distribution" 
 }: InventoryDistributionChartProps) {
+  const { formatFull, formatValue } = useCurrencyFormat();
   if (categoryData.length === 0 && brandData.length === 0) return null;
 
   const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
