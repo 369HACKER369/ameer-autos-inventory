@@ -316,6 +316,7 @@ export default function Reports() {
     setSelectedRangeIndex(index);
     setCustomStartDate(undefined);
     setCustomEndDate(undefined);
+    updateSetting('reportsTimeRangeIndex', index);
   }, []);
 
   // Exports

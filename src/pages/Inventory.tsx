@@ -182,15 +182,21 @@ export default function Inventory() {
   const cycleViewMode = () => {
     const currentIndex = VIEW_CYCLE.indexOf(viewMode);
     const nextIndex = (currentIndex + 1) % VIEW_CYCLE.length;
-    setViewMode(VIEW_CYCLE[nextIndex]);
+    const next = VIEW_CYCLE[nextIndex];
+    setViewMode(next);
+    updateSetting('inventoryViewMode', next);
   };
 
   const toggleSort = (column: SortColumn) => {
     if (sortColumn === column) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      const newDir = sortDirection === 'asc' ? 'desc' : 'asc';
+      setSortDirection(newDir);
+      updateSetting('inventorySortDirection', newDir);
     } else {
       setSortColumn(column);
       setSortDirection('asc');
+      updateSetting('inventorySortColumn', column);
+      updateSetting('inventorySortDirection', 'asc');
     }
   };
 
