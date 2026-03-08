@@ -217,8 +217,11 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           </p>
         </div>
 
+        {/* ═══ Watermark ═══ */}
+        {watermarkText && <WatermarkOverlay text={watermarkText} opacity={settings.watermarkOpacity} />}
+
         {/* ═══ INVOICE BODY ═══ */}
-        <div style={{ padding: '20px 36px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px 36px 24px', flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
 
           {/* ── Invoice To Block ── */}
           <div style={{

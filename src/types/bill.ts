@@ -27,6 +27,9 @@ export interface BillSettings {
   paymentInfo: PaymentInfo;
   showTerms: boolean;
   termsConditions: string[];
+  watermarkEnabled: boolean;
+  watermarkText: string;
+  watermarkOpacity: number;
   updatedAt: Date;
 }
 

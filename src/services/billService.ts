@@ -28,6 +28,9 @@ const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
   paymentInfo: DEFAULT_PAYMENT_INFO,
   showTerms: false,
   termsConditions: ['Payment due within 7 days', 'No refund after installation', 'Warranty only on manufacturing fault'],
+  watermarkEnabled: false,
+  watermarkText: '',
+  watermarkOpacity: 0.05,
 };
 
 export async function getBillSettings(): Promise<BillSettings> {
