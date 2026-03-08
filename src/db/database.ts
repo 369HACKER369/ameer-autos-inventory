@@ -6,7 +6,8 @@ import type {
   Sale, 
   ActivityLog, 
   AppSettings, 
-  BackupRecord 
+  BackupRecord,
+  AutocompleteEntry 
 } from '@/types';
 
 // Ameer Autos Database - Dexie.js (IndexedDB) Setup
