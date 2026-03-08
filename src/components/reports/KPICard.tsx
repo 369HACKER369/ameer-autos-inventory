@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { formatCurrencyShort } from '@/utils/currency';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCountUp } from '@/hooks/useCountUp';
 
 interface KPICardProps {
   title: string;
