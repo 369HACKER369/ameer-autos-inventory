@@ -417,7 +417,7 @@ export default function Reports() {
         </div>
 
         {/* Month-over-Month Comparison */}
-        {sales.length > 0 && <MonthComparison sales={sales} />}
+        <MonthComparison sales={sales} />
 
         {/* Quick Insights */}
         {summary && (
