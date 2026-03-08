@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, Settings, FileText } from 'lucide-react';
+import { LayoutGrid, Boxes, ChartColumnBig, Settings, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSafe } from '@/contexts/AppContext';
 
