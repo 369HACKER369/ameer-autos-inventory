@@ -7,17 +7,17 @@ interface BillPreviewTemplateProps {
   items: BillItem[];
 }
 
-/* ── Premium Color Palette ── */
-const TEAL = '#0a5c5c';
-const TEAL_DARK = '#073f3f';
-const GOLD = '#c9952a';
-const GOLD_LIGHT = '#dbb042';
-const LIGHT_BG = '#f7f6f2';
+/* ── Exact color palette from reference design ── */
+const TEAL = '#1B3D3D';
+const TEAL_INNER = '#142E2E';
+const GOLD = '#C9A020';
+const RED_PILL = '#CC2E2E';
 const WHITE = '#ffffff';
 const TEXT_DARK = '#1a1a1a';
-const TEXT_MED = '#555555';
-const TEXT_LIGHT = '#888888';
-const BORDER = '#e2e0da';
+const TEXT_MED = '#333333';
+const TEXT_LIGHT = '#444444';
+const BORDER = '#cccccc';
+const BORDER_LIGHT = '#dddddd';
 
 const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>(
   ({ settings, bill, items }, ref) => {
@@ -36,284 +36,301 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           minHeight: '1123px',
           background: WHITE,
           color: TEXT_DARK,
-          fontFamily: "'Segoe UI', Helvetica, Arial, sans-serif",
-          fontSize: '13px',
+          fontFamily: "'Poppins', 'Segoe UI', Helvetica, Arial, sans-serif",
+          fontSize: '14px',
           lineHeight: '1.5',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
         }}
       >
-        {/* ═══ HEADER ═══ Dark teal banner */}
+        {/* ═══ HEADER ═══ */}
         <div style={{
-          background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)`,
-          padding: '30px 40px',
+          backgroundColor: TEAL,
+          padding: '22px 28px',
           display: 'flex',
           alignItems: 'center',
-          gap: '22px',
+          gap: '20px',
         }}>
-          {/* Logo */}
+          {/* Logo Circle */}
           {settings.logoPath ? (
-            <img
-              src={settings.logoPath}
-              alt="Logo"
-              style={{
-                height: '78px', width: '78px', objectFit: 'contain',
-                borderRadius: '50%', border: `3px solid ${GOLD}`,
-                background: WHITE, padding: '3px',
-              }}
-              crossOrigin="anonymous"
-            />
+            <div style={{
+              width: '90px', height: '90px', borderRadius: '50%',
+              border: `4px solid ${GOLD}`, background: TEAL,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, overflow: 'hidden',
+            }}>
+              <img
+                src={settings.logoPath}
+                alt="Logo"
+                style={{
+                  width: '78px', height: '78px', objectFit: 'cover',
+                  borderRadius: '50%', border: `3px solid ${GOLD}`,
+                }}
+                crossOrigin="anonymous"
+              />
+            </div>
           ) : (
             <div style={{
-              height: '78px', width: '78px', borderRadius: '50%',
-              background: `linear-gradient(135deg, ${GOLD}, ${GOLD_LIGHT})`,
+              width: '90px', height: '90px', borderRadius: '50%',
+              border: `4px solid ${GOLD}`, background: TEAL,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '26px', fontWeight: 800, color: WHITE,
-              border: `3px solid rgba(255,255,255,0.25)`,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              flexShrink: 0,
             }}>
-              {initials}
+              <div style={{
+                width: '78px', height: '78px', borderRadius: '50%',
+                background: TEAL_INNER, border: `3px solid ${GOLD}`,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: '2px',
+              }}>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: GOLD, letterSpacing: '0.5px' }}>
+                  {initials}
+                </div>
+                <div style={{ fontSize: '6px', fontWeight: 600, color: WHITE, letterSpacing: '0.3px' }}>
+                  ⚙ AUTO PARTS ⚙
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Shop Name + Tagline */}
-          <div style={{ flex: 1 }}>
+          {/* Company Name + Subtitle */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{
-              fontSize: '30px', fontWeight: 800, color: WHITE,
-              letterSpacing: '1.5px', textTransform: 'uppercase',
+              fontSize: '40px', fontWeight: 800, color: WHITE,
+              lineHeight: '1.1', letterSpacing: '0.5px',
             }}>
               {settings.shopName}
             </div>
             {settings.tagline && (
               <div style={{
-                fontSize: '13px', color: 'rgba(255,255,255,0.7)',
-                marginTop: '4px', letterSpacing: '0.5px',
+                fontSize: '20px', fontWeight: 400, color: '#d0d0d0',
+                marginTop: '2px', letterSpacing: '0.3px',
               }}>
                 {settings.tagline}
               </div>
             )}
           </div>
-
-          {/* Right side contact */}
-          <div style={{ textAlign: 'right', color: 'rgba(255,255,255,0.75)', fontSize: '11px', lineHeight: '1.9' }}>
-            {settings.phone1 && <div>☎ {settings.phone1}</div>}
-            {settings.address && <div style={{ maxWidth: '180px', marginLeft: 'auto' }}>⌂ {settings.address}</div>}
-          </div>
         </div>
 
-        {/* ═══ GOLD ACCENT BAR ═══ */}
+        {/* ═══ GOLD INVOICE FROM BANNER ═══ */}
         <div style={{
-          height: '5px',
-          background: `linear-gradient(90deg, ${GOLD}, ${GOLD_LIGHT}, ${GOLD})`,
-        }} />
-
-        {/* ═══ INVOICE FROM STRIP ═══ */}
-        <div style={{
-          background: LIGHT_BG, padding: '10px 40px',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderBottom: `1px solid ${BORDER}`,
+          backgroundColor: GOLD,
+          padding: '10px 28px',
         }}>
-          <div style={{ fontSize: '13px' }}>
-            <span style={{ color: TEXT_LIGHT }}>Invoice From : </span>
-            <span style={{ fontWeight: 700, color: TEXT_DARK, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {settings.shopName}
-            </span>
-          </div>
-          {settings.ownerName && (
-            <span style={{ fontSize: '11px', color: TEXT_LIGHT }}>
-              Owner: {settings.ownerName}
-            </span>
-          )}
+          <p style={{ fontSize: '16px', fontWeight: 500, color: TEAL, margin: 0 }}>
+            Invoice From : <strong style={{ fontWeight: 800, color: TEAL }}>{settings.shopName.toUpperCase()}</strong>
+          </p>
         </div>
 
-        {/* ═══ CONTENT AREA ═══ */}
-        <div style={{ flex: 1, padding: '0 40px', display: 'flex', flexDirection: 'column' }}>
+        {/* ═══ INVOICE BODY ═══ */}
+        <div style={{ padding: '18px 28px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-          {/* ── Buyer + Invoice Info ── */}
-          <div style={{ display: 'flex', marginTop: '22px', gap: '0' }}>
-            {/* Left: Invoice To */}
-            <div style={{ flex: 1 }}>
-              <div style={{
-                background: TEAL, color: WHITE, padding: '9px 16px',
-                fontWeight: 700, fontSize: '12px', letterSpacing: '0.5px',
-              }}>
-                INVOICE TO :
-              </div>
-              <div style={{ border: `1px solid ${BORDER}`, borderTop: `3px solid ${GOLD}`, padding: '14px 16px' }}>
-                <div style={{ fontSize: '16px', fontWeight: 700, textTransform: 'uppercase', color: TEXT_DARK }}>
-                  {bill.buyerName}
+          {/* ── Invoice To Block ── */}
+          <div style={{
+            border: `1.5px solid ${BORDER}`,
+            borderRadius: '4px',
+            overflow: 'hidden',
+            marginBottom: '14px',
+          }}>
+            {/* Header bar */}
+            <div style={{
+              backgroundColor: TEAL,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '10px 16px',
+            }}>
+              <span style={{ fontSize: '16px', fontWeight: 700, color: WHITE }}>Invoice To :</span>
+              <span style={{ fontSize: '15px', fontWeight: 400, color: WHITE }}>
+                Invoice No : <strong style={{ fontWeight: 700 }}>{bill.billNumber}</strong>
+              </span>
+            </div>
+            {/* Body */}
+            <div style={{
+              padding: '12px 16px 14px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+            }}>
+              <div>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: TEXT_DARK, marginBottom: '4px' }}>
+                  {bill.buyerName.toUpperCase()}
                 </div>
                 {bill.buyerPhone && (
-                  <div style={{ fontSize: '12px', color: TEXT_MED, marginTop: '5px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 400, color: TEXT_MED }}>
                     Phone: {bill.buyerPhone}
                   </div>
                 )}
               </div>
-            </div>
-            {/* Right: Invoice No + Date */}
-            <div style={{ flex: 1 }}>
-              <div style={{
-                background: TEAL, color: WHITE, padding: '9px 16px',
-                fontWeight: 700, fontSize: '12px', textAlign: 'right', letterSpacing: '0.5px',
-              }}>
-                INVOICE NO : <span style={{ color: GOLD_LIGHT, fontWeight: 800 }}>{bill.billNumber}</span>
-              </div>
-              <div style={{ border: `1px solid ${BORDER}`, borderTop: `3px solid ${GOLD}`, borderLeft: 'none', padding: '14px 16px', textAlign: 'right' }}>
-                <div style={{ fontSize: '14px', color: TEXT_DARK }}>
-                  Date : {new Date(bill.date).toLocaleDateString('en-PK')}
-                </div>
-                {bill.notes && (
-                  <div style={{ fontSize: '11px', color: TEXT_LIGHT, marginTop: '5px', fontStyle: 'italic' }}>
-                    Notes: {bill.notes}
-                  </div>
-                )}
+              <div style={{ fontSize: '15px', fontWeight: 400, color: TEXT_MED, textAlign: 'right' }}>
+                Date : {new Date(bill.date).toLocaleDateString('en-PK')}
               </div>
             </div>
           </div>
 
           {/* ── ITEMS TABLE ── */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginTop: '24px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6px' }}>
             <thead>
-              <tr style={{ background: TEAL }}>
-                <th style={{ ...thStyle, width: '36px' }}>#</th>
-                <th style={{ ...thStyle, textAlign: 'left' }}>Part Name</th>
-                <th style={thStyle}>Code</th>
-                <th style={thStyle}>Brand</th>
-                <th style={{ ...thStyle, width: '50px' }}>QTY</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Price (RS)</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Total (RS)</th>
+              <tr style={{ backgroundColor: TEAL }}>
+                <th style={{ ...thStyle, width: '40px' }}>#</th>
+                <th style={{ ...thStyle, width: '160px', textAlign: 'left' }}>Part Name</th>
+                <th style={{ ...thStyle, width: '105px' }}>Code</th>
+                <th style={{ ...thStyle, width: '110px' }}>Brand</th>
+                <th style={{ ...thStyle, width: '55px' }}>QTY</th>
+                <th style={{ ...thStyle, width: '100px' }}>Price (RS)</th>
+                <th style={{ ...thStyle, width: '100px' }}>Total (RS)</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item, i) => (
-                <tr key={item.id} style={{
-                  borderBottom: `1px solid ${BORDER}`,
-                  background: i % 2 === 0 ? WHITE : LIGHT_BG,
-                }}>
-                  <td style={tdStyle}>{i + 1}</td>
-                  <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600, color: TEXT_DARK }}>{item.partName}</td>
-                  <td style={{ ...tdStyle, color: TEXT_MED }}>{item.partCode || '-'}</td>
-                  <td style={{ ...tdStyle, color: TEXT_MED }}>{item.brand || '-'}</td>
-                  <td style={tdStyle}>{item.quantity}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>{item.price.toLocaleString()}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: TEXT_DARK }}>{item.total.toLocaleString()}</td>
+                <tr key={item.id} style={{ borderBottom: `1px solid ${BORDER_LIGHT}`, background: WHITE }}>
+                  <td style={{ ...tdStyle, color: TEXT_LIGHT }}>{i + 1}</td>
+                  <td style={{ ...tdStyle, textAlign: 'left' }}>{item.partName}</td>
+                  <td style={tdStyle}>{item.partCode || '-'}</td>
+                  <td style={tdStyle}>{item.brand || '-'}</td>
+                  <td style={{ ...tdStyle, fontWeight: 500 }}>{item.quantity}</td>
+                  <td style={tdStyle}>{item.price.toLocaleString()}</td>
+                  <td style={{ ...tdStyle, fontWeight: 500 }}>{item.total.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* ── TOTALS ── */}
-          <div style={{ marginTop: '6px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', borderBottom: `1px solid ${BORDER}` }}>
-              <div style={{ padding: '9px 16px', fontSize: '13px', fontWeight: 700, width: '160px', textAlign: 'right', color: TEXT_MED }}>Subtotal :</div>
-              <div style={{ padding: '9px 16px', fontSize: '13px', width: '140px', textAlign: 'right', color: TEXT_DARK }}>Rs {bill.subtotal.toLocaleString()}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '6px 4px 0', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: TEXT_MED, textAlign: 'right', minWidth: '100px' }}>Subtotal :</span>
+              <span style={{ fontSize: '15px', fontWeight: 700, color: TEXT_DARK, textAlign: 'right', minWidth: '90px' }}>Rs {bill.subtotal.toLocaleString()}</span>
             </div>
+            <div style={{ width: '240px', height: '1px', background: BORDER }} />
             {bill.discount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', borderBottom: `1px solid ${BORDER}` }}>
-                <div style={{ padding: '9px 16px', fontSize: '13px', fontWeight: 700, width: '160px', textAlign: 'right', color: TEXT_MED }}>Discount :</div>
-                <div style={{ padding: '9px 16px', fontSize: '13px', width: '140px', textAlign: 'right', color: '#c0392b', fontWeight: 600 }}>- {bill.discount.toLocaleString()}</div>
+              <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: TEXT_MED, textAlign: 'right', minWidth: '100px' }}>Discount</span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: TEXT_DARK, textAlign: 'right', minWidth: '90px' }}>{bill.discount.toLocaleString()}</span>
               </div>
             )}
-            {/* Grand Total bar */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
-              <div style={{ display: 'flex', overflow: 'hidden', borderRadius: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
-                <div style={{
-                  background: `linear-gradient(135deg, ${GOLD}, ${GOLD_LIGHT})`,
-                  padding: '14px 24px', fontWeight: 800, fontSize: '15px',
-                  color: TEXT_DARK, display: 'flex', alignItems: 'center',
-                  letterSpacing: '1px',
-                }}>
-                  GRAND TOTAL :
-                </div>
-                <div style={{
-                  background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`,
-                  padding: '14px 28px', fontWeight: 800, fontSize: '15px',
-                  color: WHITE, display: 'flex', alignItems: 'center',
-                }}>
-                  Rs {bill.finalTotal.toLocaleString()}
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* ── TERMS & PAYMENT ── */}
-          {(showTerms || showPayment) && (
-            <div style={{ display: 'flex', gap: '24px', marginTop: '36px', fontSize: '12px' }}>
-              {showTerms && terms && terms.length > 0 && (
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontWeight: 700, color: TEAL, fontSize: '13px', marginBottom: '10px',
-                    textTransform: 'uppercase', borderBottom: `2px solid ${GOLD}`, paddingBottom: '6px',
-                    letterSpacing: '0.5px',
-                  }}>
-                    Terms & Conditions
-                  </div>
-                  <ul style={{ margin: 0, paddingLeft: '18px', color: TEXT_MED, lineHeight: '2.2' }}>
-                    {terms.map((t, i) => <li key={i}>{t}</li>)}
-                  </ul>
-                </div>
-              )}
-              {showPayment && paymentInfo && (
-                <div style={{
-                  flex: 1, border: `2px solid ${TEAL}`, borderRadius: '8px',
-                  padding: '16px 20px', background: 'rgba(10,92,92,0.02)',
-                }}>
-                  <div style={{
-                    fontWeight: 700, color: TEAL, fontSize: '13px', marginBottom: '10px',
-                    textTransform: 'uppercase', borderBottom: `2px solid ${GOLD}`, paddingBottom: '6px',
-                    letterSpacing: '0.5px',
-                  }}>
-                    Payment Information
-                  </div>
-                  <div style={{ color: TEXT_MED, lineHeight: '2.2' }}>
-                    {paymentInfo.bankName && <div>• Bank Name: {paymentInfo.bankName}</div>}
-                    {paymentInfo.accountTitle && <div>• Account Name: {paymentInfo.accountTitle}</div>}
-                    {paymentInfo.accountNumber && <div>• Account No: {paymentInfo.accountNumber}</div>}
-                    {paymentInfo.iban && <div>• IBAN: {paymentInfo.iban}</div>}
-                    {paymentInfo.easypaisaNumber && <div>• EasyPaisa: {paymentInfo.easypaisaNumber}</div>}
-                    {paymentInfo.jazzcashNumber && <div>• JazzCash: {paymentInfo.jazzcashNumber}</div>}
-                  </div>
-                </div>
-              )}
+          {/* ── GRAND TOTAL BAR ── */}
+          <div style={{
+            display: 'flex', marginTop: '10px', width: '100%',
+            borderRadius: '2px', overflow: 'hidden',
+          }}>
+            <div style={{ backgroundColor: GOLD, flex: 1, minHeight: '52px' }} />
+            <div style={{
+              backgroundColor: TEAL,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '0 20px', minWidth: '320px', gap: '20px',
+            }}>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: WHITE, letterSpacing: '0.5px' }}>GRAND TOTAL :</span>
+              <span style={{ fontSize: '22px', fontWeight: 800, color: WHITE, letterSpacing: '0.5px' }}>Rs {bill.finalTotal.toLocaleString()}</span>
             </div>
-          )}
+          </div>
 
           <div style={{ flex: 1 }} />
         </div>
 
+        {/* ═══ TERMS & PAYMENT ═══ */}
+        {(showTerms || showPayment) && (
+          <div style={{ display: 'flex', gap: '24px', padding: '24px 28px 20px' }}>
+            {showTerms && terms && terms.length > 0 && (
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '16px', fontWeight: 800, color: TEXT_DARK,
+                  marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.3px',
+                }}>
+                  Terms & Conditions
+                </div>
+                <ul style={{ listStyle: 'disc', paddingLeft: '18px', margin: 0 }}>
+                  {terms.map((t, i) => (
+                    <li key={i} style={{ fontSize: '13px', color: TEXT_MED, lineHeight: '1.7', fontWeight: 400 }}>{t}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {showPayment && paymentInfo && (
+              <div style={{
+                flex: 1, border: '2px dashed #999999',
+                borderRadius: '6px', padding: '14px 18px',
+              }}>
+                <div style={{
+                  fontSize: '16px', fontWeight: 800, color: TEXT_DARK,
+                  marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.3px',
+                }}>
+                  Payment Information
+                </div>
+                <ul style={{ listStyle: 'disc', paddingLeft: '18px', margin: 0 }}>
+                  {paymentInfo.bankName && <li style={paymentLiStyle}>Bank Name: {paymentInfo.bankName}</li>}
+                  {paymentInfo.accountTitle && <li style={paymentLiStyle}>Account Name: {paymentInfo.accountTitle}</li>}
+                  {paymentInfo.accountNumber && <li style={paymentLiStyle}>Account No: {paymentInfo.accountNumber}</li>}
+                  {paymentInfo.iban && <li style={paymentLiStyle}>IBAN: {paymentInfo.iban}</li>}
+                  {paymentInfo.easypaisaNumber && <li style={paymentLiStyle}>EasyPaisa: {paymentInfo.easypaisaNumber}</li>}
+                  {paymentInfo.jazzcashNumber && <li style={paymentLiStyle}>JazzCash: {paymentInfo.jazzcashNumber}</li>}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ═══ FOOTER ═══ */}
-        <div style={{ marginTop: '20px' }}>
-          {/* 3-column icon strip */}
-          <div style={{ display: 'flex', background: TEAL }}>
-            {/* Location */}
-            <div style={{ flex: 1, padding: '14px 16px', textAlign: 'center', borderRight: `1px solid rgba(255,255,255,0.15)` }}>
-              <div style={{ fontSize: '18px', marginBottom: '4px' }}>📍</div>
-              <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '10px', lineHeight: '1.6', fontWeight: 500 }}>
-                {settings.address || 'Shop Address'}
-              </div>
+        <div style={{
+          backgroundColor: TEAL,
+          padding: '18px 28px 20px',
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'flex-start',
+          gap: '20px',
+        }}>
+          {/* Location */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', flex: 1 }}>
+            <div style={{
+              backgroundColor: RED_PILL, borderRadius: '50px',
+              width: '64px', height: '36px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#fff"/>
+              </svg>
             </div>
-            {/* Contact */}
-            <div style={{ flex: 1, padding: '14px 16px', textAlign: 'center', borderRight: `1px solid rgba(255,255,255,0.15)` }}>
-              <div style={{ fontSize: '18px', marginBottom: '4px' }}>📞</div>
-              <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '10px', lineHeight: '1.6', fontWeight: 500 }}>
-                {settings.phone1 && <div>{settings.phone1}</div>}
-                {settings.phone2 && <div>{settings.phone2}</div>}
-              </div>
-            </div>
-            {/* Social */}
-            <div style={{ flex: 1, padding: '14px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', marginBottom: '4px' }}>🌐</div>
-              <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '10px', lineHeight: '1.6', fontWeight: 500 }}>
-                {settings.socialMedia || settings.website || 'Social Media'}
-              </div>
+            <div style={{ fontSize: '12.5px', color: WHITE, textAlign: 'center', lineHeight: '1.7', fontWeight: 400 }}>
+              {settings.address || 'Shop Address'}
             </div>
           </div>
-          {/* Bottom gold accent */}
-          <div style={{
-            height: '4px',
-            background: `linear-gradient(90deg, ${GOLD}, ${GOLD_LIGHT}, ${GOLD})`,
-          }} />
+
+          {/* Phone */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', flex: 1 }}>
+            <div style={{
+              backgroundColor: RED_PILL, borderRadius: '50px',
+              width: '64px', height: '36px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.47 11.47 0 003.59.57 1 1 0 011 1V20a1 1 0 01-1 1C9.61 21 3 14.39 3 6.5a1 1 0 011-1h3.5a1 1 0 011 1 11.47 11.47 0 00.57 3.59 1 1 0 01-.25 1.01l-2.2 2.19z" fill="#fff"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: '12.5px', color: WHITE, textAlign: 'center', lineHeight: '1.7', fontWeight: 400 }}>
+              {settings.phone1 && <div>{settings.phone1}</div>}
+              {settings.phone2 && <div>{settings.phone2}</div>}
+              {!settings.phone1 && !settings.phone2 && 'Contact'}
+            </div>
+          </div>
+
+          {/* Social / Website */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', flex: 1 }}>
+            <div style={{
+              backgroundColor: RED_PILL, borderRadius: '50px',
+              width: '64px', height: '36px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm-1 17.93V18a1 1 0 00-1-1H8l-4.88-4.88A8.01 8.01 0 014.07 7h1.43l3 3V11a1 1 0 001 1h4a1 1 0 001-1V9.59l2.41-2.41A7.96 7.96 0 0120 12c0 4.06-3.05 7.44-7 7.93z" fill="#fff"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: '12.5px', color: WHITE, textAlign: 'center', lineHeight: '1.7', fontWeight: 400 }}>
+              {settings.socialMedia || settings.website || 'Website Coming Soon'}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -321,19 +338,27 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
 );
 
 const thStyle: React.CSSProperties = {
-  padding: '11px 10px',
-  textAlign: 'center',
-  fontWeight: 700,
-  fontSize: '11px',
   color: '#ffffff',
-  letterSpacing: '0.8px',
-  textTransform: 'uppercase',
+  fontSize: '14px',
+  fontWeight: 700,
+  padding: '12px 10px',
+  textAlign: 'center',
+  border: 'none',
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: '10px 10px',
+  padding: '11px 10px',
+  fontSize: '14px',
+  color: '#222222',
   textAlign: 'center',
-  fontSize: '12px',
+  verticalAlign: 'middle',
+};
+
+const paymentLiStyle: React.CSSProperties = {
+  fontSize: '13px',
+  color: '#333333',
+  lineHeight: '1.8',
+  fontWeight: 400,
 };
 
 BillPreviewTemplate.displayName = 'BillPreviewTemplate';
