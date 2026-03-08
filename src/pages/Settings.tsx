@@ -61,8 +61,8 @@ function SettingItem({
       )}
       onClick={onClick}
     >
-      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm", "bg-primary/10")}>
-        <Icon className="h-5 w-5 text-primary" />
+      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm", iconBg || "bg-primary/10")}>
+        <Icon className={cn("h-5 w-5", iconColor || "text-primary")} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium">{title}</p>

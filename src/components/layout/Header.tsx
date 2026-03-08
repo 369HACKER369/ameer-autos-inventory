@@ -65,7 +65,7 @@ export function Header({
                 className="h-9 w-9 shrink-0 -ml-2"
                 onClick={handleBack}
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ArrowLeft className="h-5 w-5" />
                 <span className="sr-only">Back</span>
               </Button>
             ) : useSidebar && isInitialized ? (

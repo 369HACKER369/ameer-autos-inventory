@@ -206,9 +206,9 @@ export default function BillHistory() {
                     </DropdownMenu>
                   </div>
                   <div className="flex gap-2 mt-2 pt-2 border-t border-border">
-                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}><ImageIcon className="h-3 w-3" /> Image</Button>
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}><Camera className="h-3 w-3" /> Image</Button>
                     <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportPdf(bill)}><FileText className="h-3 w-3" /> PDF</Button>
-                    <Button size="sm" className="flex-1 h-7 text-xs gap-1 bg-[#25D366] hover:bg-[#1DA851] text-white" onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-3 w-3" /> WhatsApp</Button>
+                    <Button size="sm" className="flex-1 h-7 text-xs gap-1 bg-[#25D366] hover:bg-[#1DA851] text-white" onClick={() => handleWhatsApp(bill)}><MessageCircleMore className="h-3 w-3" /> WhatsApp</Button>
                   </div>
                 </CardContent>
               </Card>

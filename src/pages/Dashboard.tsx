@@ -320,7 +320,9 @@ export default function Dashboard() {
             <CardContent className="p-0">
               {recentActivity.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground text-sm">
-                  <Activity className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                  <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                    <Activity className="h-10 w-10 opacity-40" />
+                  </div>
                   <p className="font-medium">No activity yet</p>
                   <p className="text-xs mt-1 text-muted-foreground/70">Start by adding your first part</p>
                 </div>

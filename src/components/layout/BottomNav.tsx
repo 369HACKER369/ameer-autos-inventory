@@ -48,12 +48,16 @@ export const BottomNav = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElemen
                   navCompactMode && "px-1"
                 )}
               >
+                {active && (
+                  <div className="absolute inset-x-2 top-1 bottom-1 rounded-xl bg-primary/8" />
+                )}
                 <Icon 
                   className={cn(
-                    'h-5 w-5 transition-transform',
+                    'h-5 w-5 transition-all relative z-10',
                     !navCompactMode && "mb-0.5",
                     active && 'scale-110'
-                  )} 
+                  )}
+                  strokeWidth={active ? 2.5 : 2}
                 />
                 {navShowLabels && (
                   <span

@@ -137,13 +137,18 @@ export function SidebarNav({ isOpen, onClose }: SidebarNavProps) {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 touch-target',
+                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 touch-target',
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'text-foreground hover:bg-muted/50'
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <div className={cn(
+                  'h-9 w-9 rounded-lg flex items-center justify-center shrink-0',
+                  active ? 'bg-primary-foreground/20' : item.accent
+                )}>
+                  <Icon className="h-5 w-5" />
+                </div>
                 <span className="font-medium">{item.label}</span>
               </NavLink>
             );
