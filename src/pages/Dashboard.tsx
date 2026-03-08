@@ -82,21 +82,7 @@ export default function Dashboard() {
     recentActivity,
     isInitialized,
     appName,
-    refreshStats,
   } = useApp();
-  const [seeded, setSeeded] = useState(false);
-
-  const handleSeed = useCallback(async () => {
-    await seedTestData();
-    await refreshStats();
-    setSeeded(true);
-  }, [refreshStats]);
-
-  const handleClear = useCallback(async () => {
-    await clearTestData();
-    await refreshStats();
-    setSeeded(false);
-  }, [refreshStats]);
 
   if (!isInitialized) {
     return (
