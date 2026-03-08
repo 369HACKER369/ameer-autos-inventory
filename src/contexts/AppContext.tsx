@@ -66,6 +66,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     todayProfit: 0,
     monthlyProfit: 0,
     lowStockCount: 0,
+    weeklySales: [],
+    stockDistribution: { inStock: 0, lowStock: 0, outOfStock: 0 },
   });
   const [theme, setThemeState] = useState<'dark' | 'light' | 'system'>('dark');
   const [notifications, setNotificationsState] = useState(true);
