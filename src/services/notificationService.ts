@@ -141,7 +141,7 @@ export async function markAsRead(id: string): Promise<void> {
  * Mark all notifications as read
  */
 export async function markAllAsRead(): Promise<void> {
-  await db.notifications.where('isRead').equals(0).modify({ isRead: true });
+  await db.notifications.filter(n => !n.isRead).modify({ isRead: true });
 }
 
 /**

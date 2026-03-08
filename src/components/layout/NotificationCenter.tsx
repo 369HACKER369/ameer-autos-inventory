@@ -1,19 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Bell, BellOff, Check, CheckCheck, Trash2, Package, 
+  Bell, BellOff, CheckCheck, Trash2, Package, 
   ShoppingCart, HardDrive, RefreshCw, MessageSquare, 
-  Clock, ExternalLink, Filter
+  Clock, ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { 
-  getNotifications, 
-  getUnreadCount, 
   markAsRead, 
   markAllAsRead, 
   deleteNotification, 
@@ -47,9 +45,14 @@ export function NotificationCenter() {
   const [tab, setTab] = useState('all');
   const navigate = useNavigate();
 
-  // Live query for real-time updates
+  // Live query with error safety
   const allNotifications = useLiveQuery(
-    () => db.notifications.orderBy('createdAt').reverse().toArray().then(n => n.filter(x => x.isFired)),
+    () => db.notifications
+      .orderBy('createdAt')
+      .reverse()
+      .toArray()
+      .then(n => n.filter(x => x.isFired))
+      .catch(() => [] as AppNotification[]),
     []
   ) ?? [];
 
@@ -87,6 +90,7 @@ export function NotificationCenter() {
           variant="ghost"
           size="icon"
           className={cn('relative h-9 w-9', showBadge && 'text-destructive')}
+          aria-label="Notifications"
         >
           <Bell className={cn('h-5 w-5', showBadge && 'animate-pulse')} />
           {showBadge && (
@@ -187,7 +191,7 @@ function NotificationItem({
   return (
     <div
       className={cn(
-        'rounded-lg border p-3 transition-colors cursor-pointer',
+        'group rounded-lg border p-3 transition-colors cursor-pointer',
         n.isRead
           ? 'bg-card border-border opacity-70'
           : 'bg-card border-primary/20',
@@ -223,7 +227,7 @@ function NotificationItem({
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100"
+          className="h-6 w-6 shrink-0 opacity-50 group-hover:opacity-100"
           onClick={(e) => { e.stopPropagation(); onDelete(n.id); }}
         >
           <Trash2 className="h-3 w-3 text-muted-foreground" />
