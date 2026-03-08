@@ -314,15 +314,25 @@ export async function deleteSale(id: string): Promise<boolean> {
   const sale = await db.sales.get(id);
   if (!sale) return false;
   
-  await db.sales.delete(id);
+  // Restore stock and delete sale atomically
+  await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
+    await db.sales.delete(id);
+    // Restore stock quantity
+    const part = await db.parts.get(sale.partId);
+    if (part) {
+      await db.parts.update(sale.partId, {
+        quantity: part.quantity + sale.quantity,
+        updatedAt: new Date(),
+      });
+    }
+  });
   
-  // Note: This doesn't restore stock - manual adjustment needed
   await logActivity({
     action: 'delete',
     entityType: 'sale',
     entityId: id,
-    description: `Deleted sale: ${sale.quantity}x ${sale.partName}`,
-    metadata: { amount: sale.totalAmount },
+    description: `Deleted sale: ${sale.quantity}x ${sale.partName} (stock restored)`,
+    metadata: { amount: sale.totalAmount, quantityRestored: sale.quantity },
   });
   
   return true;
