@@ -62,6 +62,8 @@ export default function BillHistory() {
           toast({ title: 'Image downloaded' });
         } else if (action === 'share') {
           await shareFile(dataUrl, billData.bill, 'png');
+        } else if (action === 'whatsapp') {
+          await shareViaWhatsApp(dataUrl, billData.bill);
         }
       } catch (err) {
         console.error('Image export error:', err);
