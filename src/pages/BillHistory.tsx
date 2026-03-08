@@ -153,10 +153,10 @@ export default function BillHistory() {
         {/* Two-button header */}
         <div className="flex gap-3">
           <Button className="flex-1 gap-2" onClick={() => navigate('/bills/create')}>
-            <Plus className="h-4 w-4" /> Create New Bill
+            <FilePlus2 className="h-4 w-4" /> Create New Bill
           </Button>
           <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate('/bills/settings')}>
-            <Palette className="h-4 w-4" /> Bill Designer
+            <SwatchBook className="h-4 w-4" /> Bill Designer
           </Button>
         </div>
 
