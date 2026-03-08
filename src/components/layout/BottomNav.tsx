@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils';
 import { useAppSafe } from '@/contexts/AppContext';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/inventory', label: 'Inventory', icon: Package },
+  { path: '/', label: 'Dashboard', icon: LayoutGrid },
+  { path: '/inventory', label: 'Inventory', icon: Boxes },
   { path: '/bills', label: 'Bills', icon: FileText },
-  { path: '/reports', label: 'Reports', icon: BarChart3 },
+  { path: '/reports', label: 'Reports', icon: ChartColumnBig },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
