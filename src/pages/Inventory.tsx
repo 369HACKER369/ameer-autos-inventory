@@ -282,7 +282,7 @@ export default function Inventory() {
               className={cn('h-9 w-9', hasActiveFilters && 'text-primary')}
               onClick={() => setShowFilters(!showFilters)}
             >
-              <Filter className="h-5 w-5" />
+              <SlidersHorizontal className="h-5 w-5" />
             </Button>
           </div>
         }
