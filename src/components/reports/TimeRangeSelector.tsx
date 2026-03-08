@@ -112,7 +112,7 @@ export function TimeRangeSelector({
 
       {/* Custom date pickers */}
       {isCustom && onCustomStartChange && onCustomEndChange && (
-        <div className="flex gap-2 items-end p-3 rounded-xl bg-muted/30 border border-border/30">
+        <div className="flex gap-2 items-end p-3 rounded-xl bg-muted/30 border border-border/30 animate-fade-in">
           <div className="flex-1 space-y-1">
             <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
               From
