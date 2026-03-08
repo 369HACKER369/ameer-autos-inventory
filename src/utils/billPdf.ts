@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { BillSettings, Bill, BillItem } from '@/types/bill';
+import type { BillSettings, Bill, BillItem, WatermarkStyle } from '@/types/bill';
 
 /* ── Premium Color Palette (RGB tuples) ── */
 const TEAL: [number, number, number] = [27, 77, 77];
