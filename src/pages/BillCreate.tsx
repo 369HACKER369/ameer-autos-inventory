@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, FileText, CreditCard, ScrollText } from 'lucide-react';
+import { persistFormValues } from '@/services/autocompleteService';
 import { createBill, updateBill, getNextBillNumber, getBillSettings, getBillById, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import type { BillFormItem, PaymentInfo } from '@/types/bill';
