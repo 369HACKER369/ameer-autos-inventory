@@ -315,6 +315,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAppName,
   };
 
+  // Mount notification scheduler
+  useNotificationScheduler();
+
   return (
     <AppContext.Provider value={value}>
       {children}
