@@ -1,15 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { db } from '@/db/database';
+import { deletePart } from '@/services/inventoryService';
 import { formatCurrency } from '@/utils/currency';
 import { toSafeQuantity } from '@/utils/safeNumber';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -25,6 +27,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   Search, 
   Plus, 
@@ -36,10 +48,12 @@ import {
   X,
   ArrowUp,
   ArrowDown,
-  ArrowUpDown
+  ArrowUpDown,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
+import { toast } from 'sonner';
 import type { StockStatus, ViewMode, Part } from '@/types';
 
 type SortColumn = 'name' | 'sku' | 'brand' | 'quantity' | 'price';
@@ -66,6 +80,9 @@ export default function Inventory() {
   );
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Live queries
   const parts = useLiveQuery(() => db.parts.toArray(), []) ?? [];
@@ -161,6 +178,42 @@ export default function Inventory() {
     }
   };
 
+  // Bulk selection
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === filteredParts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredParts.map(p => p.id)));
+    }
+  }, [filteredParts, selectedIds.size]);
+
+  const toggleSelectOne = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      const ids = Array.from(selectedIds);
+      for (const id of ids) {
+        await deletePart(id);
+      }
+      toast.success(`Deleted ${ids.length} part${ids.length > 1 ? 's' : ''}`);
+      setSelectedIds(new Set());
+      setShowDeleteDialog(false);
+    } catch (error) {
+      toast.error('Failed to delete parts');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [selectedIds]);
+
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
     return sortDirection === 'asc' 
@@ -196,7 +249,7 @@ export default function Inventory() {
               variant="ghost"
               size="icon"
               className="h-9 w-9"
-              onClick={cycleViewMode}
+              onClick={() => { setSelectedIds(new Set()); cycleViewMode(); }}
               title={`Switch to ${VIEW_CYCLE[nextViewIndex]} view`}
             >
               <NextViewIcon className="h-5 w-5" />
@@ -308,94 +361,146 @@ export default function Inventory() {
           </div>
         ) : viewMode === 'table' ? (
           /* ── Table View ── */
-          <Card className="bg-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs"
-                      onClick={() => toggleSort('name')}
-                    >
-                      <span className="flex items-center gap-1">
-                        Name <SortIcon column="name" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs"
-                      onClick={() => toggleSort('sku')}
-                    >
-                      <span className="flex items-center gap-1">
-                        SKU <SortIcon column="sku" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs"
-                      onClick={() => toggleSort('brand')}
-                    >
-                      <span className="flex items-center gap-1">
-                        Brand <SortIcon column="brand" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
-                      onClick={() => toggleSort('quantity')}
-                    >
-                      <span className="flex items-center justify-end gap-1">
-                        Qty <SortIcon column="quantity" />
-                      </span>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
-                      onClick={() => toggleSort('price')}
-                    >
-                      <span className="flex items-center justify-end gap-1">
-                        Price <SortIcon column="price" />
-                      </span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredParts.map((part) => {
-                    const qty = toSafeQuantity(part.quantity, 0);
-                    const minStock = toSafeQuantity(part.minStockLevel, 0);
-                    const low = isLowStock(qty, minStock);
+          <div className="space-y-2">
+            {/* Bulk Action Bar */}
+            {selectedIds.size > 0 && (
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                <span className="text-xs font-medium text-primary">
+                  {selectedIds.size} selected
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setSelectedIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            )}
 
-                    return (
-                      <TableRow 
-                        key={part.id}
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/inventory/${part.id}`)}
+            <Card className="bg-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-10 px-2">
+                        <Checkbox
+                          checked={filteredParts.length > 0 && selectedIds.size === filteredParts.length}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs"
+                        onClick={() => toggleSort('name')}
                       >
-                        <TableCell className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
-                          <span className="flex items-center gap-1.5">
-                            {part.name}
-                            {low && <EmergencyIndicator size="sm" />}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                          {part.sku}
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                          {getBrandName(part.brandId)}
-                        </TableCell>
-                        <TableCell className={cn(
-                          "py-2.5 px-3 text-sm text-right whitespace-nowrap font-medium",
-                          qty === 0 && 'text-destructive',
-                          qty > 0 && low && 'text-warning'
-                        )}>
-                          {qty}
-                        </TableCell>
-                        <TableCell className="py-2.5 px-3 text-sm text-right whitespace-nowrap font-semibold text-primary">
-                          {formatCurrency(part.sellingPrice)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </Card>
+                        <span className="flex items-center gap-1">
+                          Name <SortIcon column="name" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs"
+                        onClick={() => toggleSort('sku')}
+                      >
+                        <span className="flex items-center gap-1">
+                          SKU <SortIcon column="sku" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs"
+                        onClick={() => toggleSort('brand')}
+                      >
+                        <span className="flex items-center gap-1">
+                          Brand <SortIcon column="brand" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
+                        onClick={() => toggleSort('quantity')}
+                      >
+                        <span className="flex items-center justify-end gap-1">
+                          Qty <SortIcon column="quantity" />
+                        </span>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
+                        onClick={() => toggleSort('price')}
+                      >
+                        <span className="flex items-center justify-end gap-1">
+                          Price <SortIcon column="price" />
+                        </span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredParts.map((part) => {
+                      const qty = toSafeQuantity(part.quantity, 0);
+                      const minStock = toSafeQuantity(part.minStockLevel, 0);
+                      const low = isLowStock(qty, minStock);
+                      const isSelected = selectedIds.has(part.id);
+
+                      return (
+                        <TableRow 
+                          key={part.id}
+                          className={cn("cursor-pointer", isSelected && "bg-primary/5")}
+                          onClick={() => navigate(`/inventory/${part.id}`)}
+                        >
+                          <TableCell className="py-2.5 px-2 w-10" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => {
+                                setSelectedIds(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(part.id)) next.delete(part.id);
+                                  else next.add(part.id);
+                                  return next;
+                                });
+                              }}
+                              aria-label={`Select ${part.name}`}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
+                            <span className="flex items-center gap-1.5">
+                              {part.name}
+                              {low && <EmergencyIndicator size="sm" />}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                            {part.sku}
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                            {getBrandName(part.brandId)}
+                          </TableCell>
+                          <TableCell className={cn(
+                            "py-2.5 px-3 text-sm text-right whitespace-nowrap font-medium",
+                            qty === 0 && 'text-destructive',
+                            qty > 0 && low && 'text-warning'
+                          )}>
+                            {qty}
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 text-sm text-right whitespace-nowrap font-semibold text-primary">
+                            {formatCurrency(part.sellingPrice)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </div>
         ) : viewMode === 'list' ? (
           <div className="space-y-2">
             {filteredParts.map((part) => (
@@ -505,6 +610,28 @@ export default function Inventory() {
         <Plus className="h-6 w-6" />
         <span className="sr-only">Add Part</span>
       </Button>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} part{selectedIds.size > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The selected parts will be permanently removed from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
