@@ -1,5 +1,5 @@
 import { db } from '@/db/database';
-import type { BillSettings, Bill, BillItem, BillFormItem, PaymentInfo } from '@/types/bill';
+import type { BillSettings, Bill, BillItem, BillFormItem, PaymentInfo, WatermarkStyle } from '@/types/bill';
 import { v4 as uuidv4 } from 'uuid';
 import { logActivity } from './activityLogService';
 
