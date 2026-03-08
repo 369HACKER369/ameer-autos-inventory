@@ -23,12 +23,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/database';
 
 const typeIcons: Record<NotificationType, React.ReactNode> = {
-  low_stock: <Package className="h-4 w-4" />,
-  part_added: <Package className="h-4 w-4" />,
-  part_sold: <ShoppingCart className="h-4 w-4" />,
-  backup_complete: <HardDrive className="h-4 w-4" />,
-  sync: <RefreshCw className="h-4 w-4" />,
-  custom: <MessageSquare className="h-4 w-4" />,
+  low_stock: <Package className="h-4.5 w-4.5" />,
+  part_added: <Package className="h-4.5 w-4.5" />,
+  part_sold: <ShoppingCart className="h-4.5 w-4.5" />,
+  backup_complete: <HardDrive className="h-4.5 w-4.5" />,
+  sync: <RefreshCw className="h-4.5 w-4.5" />,
+  custom: <MessageSquare className="h-4.5 w-4.5" />,
 };
 
 const typeColors: Record<NotificationType, string> = {
