@@ -131,9 +131,13 @@ export default function AddEditPart() {
     },
   });
 
+  // Guard to prevent re-running edit initialization
+  const hasSetInitialValues = useRef(false);
+
   // Update form when existing part loads
   useEffect(() => {
-    if (existingPart) {
+    if (existingPart && !hasSetInitialValues.current) {
+      hasSetInitialValues.current = true;
       form.reset({
         name: existingPart.name,
         sku: existingPart.sku,
@@ -150,9 +154,9 @@ export default function AddEditPart() {
       });
       setImages(existingPart.images || []);
       
-      // Set selections based on existing part
-      const existingBrand = allBrands.find(b => b.id === existingPart.brandId || b.name === existingPart.brandId);
-      const existingCategory = allCategories.find(c => c.id === existingPart.categoryId || c.name === existingPart.categoryId);
+      // Set selections based on existing part — match by ID only
+      const existingBrand = allBrands.find(b => b.id === existingPart.brandId);
+      const existingCategory = allCategories.find(c => c.id === existingPart.categoryId);
       
       if (existingBrand) {
         setBrandSelection(existingBrand.id);
@@ -161,7 +165,7 @@ export default function AddEditPart() {
         setCategorySelection(existingCategory.id);
       }
     }
-  }, [existingPart, savedBrands, savedCategories]);
+  }, [existingPart, allBrands, allCategories]);
 
   // Handle brand selection change
   const handleBrandChange = async (value: string) => {
