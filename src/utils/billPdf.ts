@@ -190,12 +190,13 @@ export function generateBillPdf(
   doc.setLineWidth(0.5);
   doc.line(divX, logoY - logoR + 2, divX, logoY + logoR - 2);
 
-  // Shop name
+  // Shop name with dynamic sizing
   const textX = divX + 6;
-  doc.setFontSize(20);
+  doc.setFontSize(getShopNamePdfSize(settings.shopName));
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...WHITE);
-  doc.text(settings.shopName.toUpperCase(), textX, logoY - 3);
+  const shopNameLines = doc.splitTextToSize(settings.shopName.toUpperCase(), pw - textX - mx - 10);
+  doc.text(shopNameLines, textX, logoY - (shopNameLines.length > 1 ? 5 : 3));
 
   // Gold ornamental divider under name (line + diamond + line)
   const ornY = logoY + 2;
