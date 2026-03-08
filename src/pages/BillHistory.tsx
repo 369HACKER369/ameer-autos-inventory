@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2, MessageCircle } from 'lucide-react';
+import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2, MessageCircle, Pencil } from 'lucide-react';
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
@@ -200,6 +200,7 @@ export default function BillHistory() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => navigate(`/bills/edit/${bill.id}`)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleExportImage(bill)}><ImageIcon className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleExportPdf(bill)}><FileText className="h-4 w-4 mr-2" /> Export as PDF</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleShare(bill)}><Share2 className="h-4 w-4 mr-2" /> Share</DropdownMenuItem>

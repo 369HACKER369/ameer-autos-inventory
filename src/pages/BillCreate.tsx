@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, FileText, CreditCard, ScrollText } from 'lucide-react';
-import { createBill, getNextBillNumber, getBillSettings } from '@/services/billService';
+import { createBill, updateBill, getNextBillNumber, getBillSettings, getBillById, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import type { BillFormItem, PaymentInfo } from '@/types/bill';
 
@@ -33,6 +33,8 @@ const emptyPayment = (): PaymentInfo => ({
 
 export default function BillCreate() {
   const navigate = useNavigate();
+  const { id: editId } = useParams<{ id: string }>();
+  const isEditMode = !!editId;
   const { toast } = useToast();
   const [billNumber, setBillNumber] = useState('');
   const [buyerName, setBuyerName] = useState('');
@@ -42,6 +44,7 @@ export default function BillCreate() {
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Advanced optional sections
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
@@ -50,15 +53,44 @@ export default function BillCreate() {
   const [termsConditions, setTermsConditions] = useState<string[]>([]);
 
   useEffect(() => {
-    getNextBillNumber().then(setBillNumber);
-    // Load defaults from settings
-    getBillSettings().then(s => {
-      setShowPaymentInfo(s.showPaymentInfo);
-      setPaymentInfo(s.paymentInfo || emptyPayment());
-      setShowTerms(s.showTerms);
-      setTermsConditions(s.termsConditions || []);
-    });
-  }, []);
+    if (isEditMode) {
+      // Load existing bill for editing
+      setLoading(true);
+      Promise.all([getBillById(editId!), getBillItems(editId!), getBillSettings()]).then(([bill, billItems, settings]) => {
+        if (!bill) {
+          toast({ title: 'Bill not found', variant: 'destructive' });
+          navigate('/bills');
+          return;
+        }
+        setBillNumber(bill.billNumber);
+        setBuyerName(bill.buyerName);
+        setBuyerPhone(bill.buyerPhone);
+        setDate(new Date(bill.date).toISOString().split('T')[0]);
+        setDiscount(bill.discount);
+        setNotes(bill.notes || '');
+        setItems(billItems.map(i => ({
+          partName: i.partName,
+          partCode: i.partCode,
+          brand: i.brand,
+          quantity: i.quantity,
+          price: i.price,
+        })));
+        setShowPaymentInfo(bill.showPaymentInfo ?? settings.showPaymentInfo);
+        setPaymentInfo(bill.paymentInfo ?? settings.paymentInfo ?? emptyPayment());
+        setShowTerms(bill.showTerms ?? settings.showTerms);
+        setTermsConditions(bill.termsConditions ?? settings.termsConditions ?? []);
+        setLoading(false);
+      });
+    } else {
+      getNextBillNumber().then(setBillNumber);
+      getBillSettings().then(s => {
+        setShowPaymentInfo(s.showPaymentInfo);
+        setPaymentInfo(s.paymentInfo || emptyPayment());
+        setShowTerms(s.showTerms);
+        setTermsConditions(s.termsConditions || []);
+      });
+    }
+  }, [editId]);
 
   const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.quantity * i.price, 0), [items]);
   const finalTotal = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
@@ -96,28 +128,40 @@ export default function BillCreate() {
 
     setSaving(true);
     try {
-      const bill = await createBill(
-        buyerName.trim(), buyerPhone.trim(), new Date(date), validItems, discount, notes.trim(),
-        {
-          showPaymentInfo,
-          paymentInfo: showPaymentInfo ? paymentInfo : undefined,
-          showTerms,
-          termsConditions: showTerms ? termsConditions.filter(t => t.trim()) : undefined,
-        }
-      );
+      const opts = {
+        showPaymentInfo,
+        paymentInfo: showPaymentInfo ? paymentInfo : undefined,
+        showTerms,
+        termsConditions: showTerms ? termsConditions.filter(t => t.trim()) : undefined,
+      };
 
-      toast({ title: `Bill ${bill.billNumber} saved successfully` });
+      if (isEditMode) {
+        await updateBill(editId!, buyerName.trim(), buyerPhone.trim(), new Date(date), validItems, discount, notes.trim(), opts);
+        toast({ title: `Bill ${billNumber} updated successfully` });
+      } else {
+        const bill = await createBill(buyerName.trim(), buyerPhone.trim(), new Date(date), validItems, discount, notes.trim(), opts);
+        toast({ title: `Bill ${bill.billNumber} saved successfully` });
+      }
       navigate('/bills');
     } catch (e) {
-      toast({ title: 'Failed to create bill', variant: 'destructive' });
+      toast({ title: `Failed to ${isEditMode ? 'update' : 'create'} bill`, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <AppLayout>
+        <Header title={isEditMode ? 'Edit Bill' : 'Create Bill'} showBack />
+        <div className="p-4 text-center text-muted-foreground text-sm py-8">Loading...</div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
-      <Header title="Create Bill" showBack />
+      <Header title={isEditMode ? 'Edit Bill' : 'Create Bill'} showBack />
       <div className="p-4 space-y-4 pb-24">
         {/* Bill Info */}
         <Card className="bg-card">
@@ -307,7 +351,7 @@ export default function BillCreate() {
           <Button variant="outline" className="flex-1" onClick={() => navigate('/bills')}>Cancel</Button>
           <Button className="flex-1 gap-1" onClick={handleSave} disabled={saving}>
             <FileText className="h-4 w-4" />
-            {saving ? 'Saving...' : 'Generate Bill'}
+            {saving ? 'Saving...' : isEditMode ? 'Update Bill' : 'Generate Bill'}
           </Button>
         </div>
       </div>
