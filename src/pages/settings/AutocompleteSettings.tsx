@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, exportAutocompleteData, importAutocompleteData, type AutocompleteField } from '@/services/autocompleteService';
 import type { AutocompleteEntry } from '@/types';
-import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X } from 'lucide-react';
+import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 const FIELD_CONFIG: { field: AutocompleteField; label: string; icon: React.ElementType; placeholder: string }[] = [
