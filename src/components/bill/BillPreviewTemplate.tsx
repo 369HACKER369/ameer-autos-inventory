@@ -159,7 +159,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
               }}>
                 INVOICE NO : <span style={{ color: GOLD_LIGHT, fontWeight: 800 }}>{bill.billNumber}</span>
               </div>
-              <div style={{ borderTop: `3px solid ${GOLD}`, border: `1px solid ${BORDER}`, borderLeft: 'none', borderTop: `3px solid ${GOLD}`, padding: '14px 16px', textAlign: 'right' }}>
+              <div style={{ border: `1px solid ${BORDER}`, borderTop: `3px solid ${GOLD}`, borderLeft: 'none', padding: '14px 16px', textAlign: 'right' }}>
                 <div style={{ fontSize: '14px', color: TEXT_DARK }}>
                   Date : {new Date(bill.date).toLocaleDateString('en-PK')}
                 </div>
