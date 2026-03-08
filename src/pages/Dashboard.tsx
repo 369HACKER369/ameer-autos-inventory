@@ -293,7 +293,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground">Today's Profit</p>
-                  <p className="text-lg font-bold text-green-500 mt-0.5">{formatCurrency(stats.todayProfit)}</p>
+                  <p className="text-lg font-bold text-green-500 mt-0.5 whitespace-nowrap">{formatFull(stats.todayProfit)}</p>
                 </div>
               </div>
             </CardContent>
