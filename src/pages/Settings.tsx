@@ -191,6 +191,49 @@ export default function Settings() {
           />
         </div>
 
+        {/* Profile Card */}
+        {!search && (
+          <Card className="bg-card overflow-hidden">
+            <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+              <Avatar className="h-20 w-20">
+                {customLogo ? (
+                  <AvatarImage src={customLogo} alt={appName} />
+                ) : null}
+                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                  <Store className="h-8 w-8" />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-xl font-bold">{appName}</h2>
+                <p className="text-sm text-muted-foreground">Inventory & Sales Manager</p>
+              </div>
+              <div className="flex gap-3 w-full justify-center">
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                  <Package className="h-4 w-4 text-primary" />
+                  <div className="text-left">
+                    <p className="text-sm font-semibold">{totalParts}</p>
+                    <p className="text-[10px] text-muted-foreground">Parts</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                  <Tags className="h-4 w-4 text-primary" />
+                  <div className="text-left">
+                    <p className="text-sm font-semibold">{totalBrands}</p>
+                    <p className="text-[10px] text-muted-foreground">Brands</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <div className="text-left">
+                    <p className="text-sm font-semibold">{stats.lowStockCount}</p>
+                    <p className="text-[10px] text-muted-foreground">Low Stock</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Branding */}
         {filteredBranding.length > 0 && (
           <div className="space-y-1.5">
