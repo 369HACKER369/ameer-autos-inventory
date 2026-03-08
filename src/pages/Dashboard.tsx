@@ -34,6 +34,7 @@ import type { ActivityAction } from '@/types';
 import { QuickSellModal } from '@/components/dashboard/QuickSellModal';
 import { useCountUp } from '@/hooks/useCountUp';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+import { seedTestData, clearTestData } from '@/utils/testSeed';
 
 const activityIconMap: Record<string, React.ElementType> = {
   Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
