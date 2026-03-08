@@ -385,6 +385,8 @@ export default function Settings() {
                     title={item.title}
                     description={item.description}
                     onClick={() => navigate(item.path)}
+                    iconBg={item.iconBg}
+                    iconColor={item.iconColor}
                   />
                 ))}
               </CardContent>
