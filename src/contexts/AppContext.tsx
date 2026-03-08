@@ -3,8 +3,8 @@ import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { db, initializeDatabase, getSetting, updateSetting } from '@/db/database';
 import { clearAllDemoData } from '@/services/demoSeedService';
 import { useLiveQuery } from 'dexie-react-hooks';
-import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category } from '@/types';
-import { startOfDay, endOfDay, startOfMonth, subDays } from 'date-fns';
+import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category, WeeklySaleDay, StockDistribution } from '@/types';
+import { startOfDay, endOfDay, startOfMonth, subDays, format } from 'date-fns';
 import { toSafeNumber, toSafeQuantity, safeAdd } from '@/utils/safeNumber';
 
 type NavigationLayout = 'bottom' | 'sidebar';
@@ -66,6 +66,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     todayProfit: 0,
     monthlyProfit: 0,
     lowStockCount: 0,
+    weeklySales: [],
+    stockDistribution: { inStock: 0, lowStock: 0, outOfStock: 0 },
   });
   const [theme, setThemeState] = useState<'dark' | 'light' | 'system'>('dark');
   const [notifications, setNotificationsState] = useState(true);
@@ -217,6 +219,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return safeAdd(sum, toSafeNumber(s.profit, 0));
       }, 0);
 
+      // Weekly sales (last 7 days)
+      const weeklySales: WeeklySaleDay[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const day = subDays(today, i);
+        const dayStart = startOfDay(day);
+        const dayEnd = endOfDay(day);
+        const daySales = allSales.filter(s => {
+          const d = new Date(s.createdAt);
+          return d >= dayStart && d <= dayEnd;
+        });
+        weeklySales.push({
+          date: format(day, 'EEE'),
+          sales: daySales.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.totalAmount, 0)), 0),
+          profit: daySales.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.profit, 0)), 0),
+        });
+      }
+
+      // Stock distribution
+      const outOfStock = allParts.filter(p => toSafeQuantity(p.quantity, 0) === 0).length;
+      const stockDistribution: StockDistribution = {
+        inStock: totalParts - lowStockCount - outOfStock,
+        lowStock: lowStockCount - outOfStock,
+        outOfStock,
+      };
+
       setStats({
         totalParts,
         inventoryValue,
@@ -224,10 +251,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         todayProfit,
         monthlyProfit,
         lowStockCount,
+        weeklySales,
+        stockDistribution,
       });
     } catch (error) {
       console.error('Failed to refresh stats:', error);
-      // Set safe defaults on error
       setStats({
         totalParts: 0,
         inventoryValue: 0,
@@ -235,6 +263,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         todayProfit: 0,
         monthlyProfit: 0,
         lowStockCount: 0,
+        weeklySales: [],
+        stockDistribution: { inStock: 0, lowStock: 0, outOfStock: 0 },
       });
     } finally {
       setIsLoadingStats(false);
