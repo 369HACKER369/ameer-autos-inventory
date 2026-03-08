@@ -181,11 +181,11 @@ export default function BillCreate() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Buyer Name *</Label>
-                <Input value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder="Customer name" className="text-sm" />
+                <AutocompleteInput field="customerName" value={buyerName} onChange={setBuyerName} placeholder="Customer name" className="text-sm" />
               </div>
               <div>
                 <Label className="text-xs">Phone</Label>
-                <Input value={buyerPhone} onChange={e => setBuyerPhone(e.target.value)} placeholder="Phone number" className="text-sm" />
+                <AutocompleteInput field="customerPhone" value={buyerPhone} onChange={setBuyerPhone} placeholder="Phone number" className="text-sm" />
               </div>
             </div>
           </CardContent>
