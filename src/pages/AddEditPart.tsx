@@ -84,6 +84,7 @@ export default function AddEditPart() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   
   // Custom brand/category states
   const [brandSelection, setBrandSelection] = useState<string>('');
