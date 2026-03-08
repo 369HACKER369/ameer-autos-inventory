@@ -1,97 +1,87 @@
 
 
-# End-to-End Verification Report
+# Currency Formatting & Dashboard Layout Fix
 
-## Methodology
-Since the browser automation service was unavailable, I performed a comprehensive **code-level trace** of every critical user flow, examining all service functions, UI handlers, database operations, and error paths.
+## Problem
+1. Dashboard KPI cards allow currency text to wrap ("Rs 6.00" on line 1, "Lac" on line 2)
+2. No settings-driven currency display mode (numeric vs compact)
+3. `formatCurrencyShort` is hardcoded — not reactive to user settings
 
-## Flow-by-Flow Verification
+## Plan
 
-### 1. Add Part ✅
-- **Route**: `/inventory/add` → `AddEditPart.tsx`
-- **Validation**: Zod schema enforces required fields, min lengths, non-negative prices/quantities
-- **SKU uniqueness**: Checked via `isSkuUnique()` before save
-- **Custom brands/categories**: Properly created on-the-fly with duplicate detection
-- **Image handling**: Max 5 images, 5MB limit, compressed to 1200px JPEG
-- **Save**: Calls `createPart()` → writes to IndexedDB → logs activity → fires notification
-- **Navigation**: Returns to `/inventory` on success
-- **No issues found**
+### 1. Upgrade `src/utils/currency.ts` — Add display mode support
 
-### 2. Edit Part ✅
-- Loads existing data via `useLiveQuery`, pre-fills form
-- SKU uniqueness check excludes current part ID
-- Calls `updatePart()` with correct merge logic
-- **No issues found**
+Add a new `CurrencyDisplayMode` type (`'numeric' | 'compact'`) and a new formatter function `formatCurrencyAdaptive(amount, mode)`:
 
-### 3. Delete Part ✅
-- Hard deletes from DB, logs activity
-- **No issues found**
+- **numeric mode**: Full number with Pakistani locale commas (e.g., `Rs 1,00,000`)
+- **compact mode** (default): Uses K / Lac / Crore units with clean rounding
 
-### 4. Record Sale (Multi-item) ✅
-- Cart system with stock availability validation per-part
-- Aggregates quantities across cart for same part
-- `recordMultiSale()` runs in `db.transaction('rw')` — atomic
-- Stock decrement via `updateStock()` inside transaction
-- Activity log written after transaction (acceptable — non-critical side effect)
-- Navigates to dashboard on success
-- **No issues found**
+Update `formatCurrencyShort` to use "Crore" instead of "Cr" for consistency.
 
-### 5. QuickSell ✅ (Previously fixed)
-- Now wrapped in `db.transaction` — atomic
-- Uses `partId: ''` for non-inventory items
-- Validation: required fields, positive numbers
-- Profit calculation displayed in real-time
-- **Fix already applied**
+Thresholds for compact mode:
+- `≥ 1,00,00,000` → `X.XX Crore`
+- `≥ 1,00,000` → `X.XX Lac`  
+- `≥ 1,000` → `X.XK`
+- Below → plain number
 
-### 6. Delete Sale ✅ (Previously fixed)
-- Guards stock restoration: only restores if `partId` is non-empty AND part exists
-- Atomic transaction wrapping delete + stock restore
-- **Fix already applied**
+### 2. Create `src/hooks/useCurrencyFormat.ts` — Settings-reactive hook
 
-### 7. Generate Bill ✅
-- `BillCreate.tsx`: Multi-item form with auto-incrementing bill number
-- Edit mode loads existing bill + items correctly
-- `createBill()` runs in transaction (bills + billItems + settings counter)
-- Discount applied correctly: `finalTotal = subtotal - discount`
-- **No issues found**
+A lightweight hook that reads `currencyDisplayMode` from the DB (via `getSetting`) and exposes:
+- `displayMode: 'numeric' | 'compact'`
+- `formatValue(amount): string` — returns formatted string without "Rs" prefix
+- `formatFull(amount): string` — returns with "Rs" prefix
 
-### 8. Dashboard ✅
-- KPI cards sourced from `AppContext.refreshStats()`
-- Weekly sales chart: queries last 7 days from sales table
-- Stock distribution: computed from parts array (in-stock/low/out counts)
-- Low stock alerts: filtered by `quantity <= minStockLevel`
-- Recent activity: live query, filtered by `!isDeleted`, limited to 10
-- `useCountUp` hook for animated values
-- **No issues found**
+This hook will be used by KPI cards and anywhere else that needs settings-reactive formatting. Uses `useLiveQuery` or a simple state + effect to stay in sync.
 
-### 9. Backup & Restore ✅
-- `exportDatabase()`: exports all 6 tables + timestamp
-- `importDatabase()`: clears all tables → bulk imports in transaction → sets `demoDataCleared` flag
-- Backup validation exists in `backupValidation.ts`
-- **No issues found**
+### 3. Fix Dashboard KPI Card layout — `src/pages/Dashboard.tsx`
 
-### 10. Data Persistence ✅
-- All data stored via Dexie.js (IndexedDB) — survives refresh
-- `useLiveQuery` provides reactive updates without manual refresh
-- `AppContext.refreshStats()` recalculates all dashboard metrics
+In the inline `KPICard` component (line 377–431):
+- Add `whitespace-nowrap` to the value container
+- Use the `useCurrencyFormat` hook for formatting
+- Apply responsive text sizing: use `text-xl` normally, scale down to `text-lg` for values with units (Lac/Crore) via a simple length check
+- Keep the existing `[Rs] [value]` structure but ensure nowrap
 
-## Issues Found During Audit
+### 4. Fix standalone `src/components/reports/KPICard.tsx`
 
-**All previously identified bugs have already been fixed:**
-1. ~~QuickSellModal not atomic~~ → Fixed (wrapped in transaction)
-2. ~~deleteSale restoring stock for QuickSell~~ → Fixed (guard added)
+Same nowrap and responsive sizing fix. Use the `useCurrencyFormat` hook.
 
-**No new bugs found.** The application is in a stable, production-ready state.
+### 5. Upgrade `src/pages/settings/LanguageLocalization.tsx`
 
-## Recommendation
+Replace the current "Currency Format" card (which only changes the symbol Rs/₨/PKR — currently unused elsewhere) with an **Advanced Currency Display** card:
 
-The app passes code-level verification. To complete end-to-end testing, I recommend you manually test the following in the preview:
+- **Currency Symbol**: Rs / ₨ / PKR (existing)
+- **Display Mode**: New setting
+  - `Compact Units` — "10K, 2.5 Lac, 1.2 Crore" (default)
+  - `Full Numbers` — "10,000 / 1,00,000 / 1,20,00,000"
 
-1. Go to Inventory → Add Part (fill all fields) → Save
-2. Go to Record Sale → select the part → complete sale
-3. Return to Dashboard → verify KPI cards updated (stock decreased, today's sales increased)
-4. Go to Bills → Create New Bill → save and verify in Bill History
-5. Go to Settings → Backup → export → then restore
+Save as `currencyDisplayMode` in DB settings.
 
-All code paths are correct and all fixes from the previous phase are properly applied.
+### 6. Update all currency display call sites
+
+Files that use `formatCurrencyShort` or `formatCurrency` for display:
+- `src/pages/Dashboard.tsx` (KPI cards, weekly total, monthly overview)
+- `src/components/reports/KPICard.tsx`
+- `src/components/reports/InsightsPanel.tsx`
+- `src/components/reports/TopSellingParts.tsx`
+- `src/components/reports/InventoryDistributionChart.tsx`
+- `src/pages/RecordSale.tsx`
+- `src/pages/BillHistory.tsx`
+
+For chart tooltips and detailed views (RecordSale line items, bill amounts), keep `formatCurrency` (full number) since those need precision. For summary/KPI displays, switch to the adaptive formatter.
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/utils/currency.ts` | Add `formatCurrencyAdaptive`, update `formatCurrencyShort` |
+| `src/hooks/useCurrencyFormat.ts` | **New** — settings-reactive currency hook |
+| `src/pages/Dashboard.tsx` | Nowrap fix, use hook, responsive text |
+| `src/components/reports/KPICard.tsx` | Nowrap fix, use hook |
+| `src/components/reports/InsightsPanel.tsx` | Use adaptive formatter |
+| `src/pages/settings/LanguageLocalization.tsx` | Add display mode setting |
+
+### What stays unchanged
+- Database schema / stored values (all amounts remain raw numbers)
+- Inventory / sales data logic
+- Dashboard UI structure / layout / design
+- `formatCurrency` for detailed views (bills, sale line items)
 
