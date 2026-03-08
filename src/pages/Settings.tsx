@@ -174,7 +174,7 @@ export default function Settings() {
     <AppLayout>
       <Header title="Settings" />
 
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-6">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -188,130 +188,134 @@ export default function Settings() {
 
         {/* Branding */}
         {filteredBranding.length > 0 && (
-          <Card className="bg-card overflow-hidden">
-            <CardContent className="p-0 divide-y divide-border">
-              {filteredBranding.map((item) => (
-                <SettingItem
-                  key={item.path}
-                  icon={item.icon}
-                  title={item.title}
-                  description={item.description}
-                  onClick={() => navigate(item.path)}
-                />
-              ))}
-            </CardContent>
-          </Card>
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Branding</p>
+            <Card className="bg-card overflow-hidden">
+              <CardContent className="p-0 divide-y divide-border">
+                {filteredBranding.map((item) => (
+                  <SettingItem
+                    key={item.path}
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                    onClick={() => navigate(item.path)}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* General Settings */}
         {filteredSettings.length > 0 && (
-          <Card className="bg-card overflow-hidden">
-            <CardContent className="p-0 divide-y divide-border">
-              {filteredSettings.map((item) => (
-                <SettingItem
-                  key={item.path}
-                  icon={item.icon}
-                  title={item.title}
-                  description={item.description}
-                  onClick={() => navigate(item.path)}
-                />
-              ))}
-            </CardContent>
-          </Card>
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">General</p>
+            <Card className="bg-card overflow-hidden">
+              <CardContent className="p-0 divide-y divide-border">
+                {filteredSettings.map((item) => (
+                  <SettingItem
+                    key={item.path}
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                    onClick={() => navigate(item.path)}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        {/* Sync & Backup */}
-        {filteredSync.length > 0 && (
-          <Card className="bg-card overflow-hidden">
-            <CardContent className="p-0 divide-y divide-border">
-              {filteredSync.map((item) => (
-                <SettingItem
-                  key={item.path}
-                  icon={item.icon}
-                  title={item.title}
-                  description={item.description}
-                  onClick={() => navigate(item.path)}
-                />
-              ))}
-            </CardContent>
-          </Card>
+        {/* Data & Sync */}
+        {(filteredSync.length > 0 || !search || 'notifications'.includes(search.toLowerCase())) && (
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Data & Sync</p>
+            <Card className="bg-card overflow-hidden">
+              <CardContent className="p-0 divide-y divide-border">
+                {filteredSync.map((item) => (
+                  <SettingItem
+                    key={item.path}
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                    onClick={() => navigate(item.path)}
+                  />
+                ))}
+                {(!search || 'notifications'.includes(search.toLowerCase()) || 'low stock'.includes(search.toLowerCase()) || 'alerts'.includes(search.toLowerCase())) && (
+                  <SettingItem
+                    icon={Bell}
+                    title="Notifications"
+                    description="Low stock and sync alerts"
+                    onClick={handleNotificationsClick}
+                    rightElement={
+                      <Switch
+                        checked={notifications}
+                        onCheckedChange={(checked) => {
+                          setNotifications(checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    }
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        {/* Notifications */}
-        <Card className="bg-card overflow-hidden">
-          <CardContent className="p-0">
-            <SettingItem
-              icon={Bell}
-              title="Notifications"
-              description="Low stock and sync alerts"
-              onClick={handleNotificationsClick}
-              rightElement={
-                <Switch
-                  checked={notifications}
-                  onCheckedChange={(checked) => {
-                    setNotifications(checked);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
+        {/* Activity & Logs */}
+        {(!search || 'activity log backup sync'.includes(search.toLowerCase())) && (
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Activity & Logs</p>
+            <Card className="bg-card overflow-hidden">
+              <CardContent className="p-0">
+                <SettingItem
+                  icon={Activity}
+                  title="Activity Log"
+                  description="View all app activities"
+                  onClick={() => navigate('/settings/activity-log')}
                 />
-              }
-            />
-          </CardContent>
-        </Card>
-
-        {/* Activity Log */}
-        <Card className="bg-card overflow-hidden">
-          <CardContent className="p-0">
-            <div className="p-4">
-              <div 
-                className="flex items-center gap-3 mb-4 cursor-pointer"
-                onClick={() => navigate('/settings/activity-log')}
-              >
-                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                  <Activity className="h-5 w-5 text-primary" />
+                <div className="flex gap-2 px-4 pb-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate('/settings/backup')}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Backup
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate('/settings/sync')}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Sync
+                  </Button>
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">Activity Log</p>
-                  <p className="text-sm text-muted-foreground">View all app activities</p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => navigate('/settings/backup')}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Backup
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => navigate('/settings/sync')}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Sync
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Legal & Info */}
         {filteredLegal.length > 0 && (
-          <Card className="bg-card overflow-hidden">
-            <CardContent className="p-0 divide-y divide-border">
-              {filteredLegal.map((item) => (
-                <SettingItem
-                  key={item.path}
-                  icon={item.icon}
-                  title={item.title}
-                  description={item.description}
-                  onClick={() => navigate(item.path)}
-                />
-              ))}
-            </CardContent>
-          </Card>
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Legal & Info</p>
+            <Card className="bg-card overflow-hidden">
+              <CardContent className="p-0 divide-y divide-border">
+                {filteredLegal.map((item) => (
+                  <SettingItem
+                    key={item.path}
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                    onClick={() => navigate(item.path)}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* App Info */}
