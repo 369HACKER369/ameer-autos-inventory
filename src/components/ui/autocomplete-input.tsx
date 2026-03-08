@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { getSuggestions, addEntry, type AutocompleteField } from '@/services/autocompleteService';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,7 +22,31 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+    const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+    // Merge forwarded ref with local ref
+    const setRefs = useCallback(
+      (node: HTMLInputElement | null) => {
+        inputRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
+      },
+      [ref],
+    );
+
+    const updateDropdownPosition = useCallback(() => {
+      if (!inputRef.current) return;
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 9999,
+      });
+    }, []);
 
     const fetchSuggestions = useCallback(async (query: string) => {
       if (!query.trim()) {
@@ -30,7 +55,6 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
         return;
       }
       const results = await getSuggestions(field, query);
-      // Don't show if the only suggestion is an exact match
       const filtered = results.filter(r => r.value.toLowerCase() !== query.toLowerCase());
       setSuggestions(filtered);
       setOpen(filtered.length > 0);
@@ -52,7 +76,6 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
     };
 
     const handleBlur = async () => {
-      // Delay to allow click on suggestion
       setTimeout(() => setOpen(false), 200);
       if (persistOnBlur && value.trim()) {
         await addEntry(field, value.trim());
@@ -75,6 +98,11 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
       }
     };
 
+    // Update position when open
+    useLayoutEffect(() => {
+      if (open) updateDropdownPosition();
+    }, [open, updateDropdownPosition]);
+
     // Close on outside click
     useEffect(() => {
       const handler = (e: MouseEvent) => {
@@ -85,6 +113,16 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
       document.addEventListener('mousedown', handler);
       return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    // Close on scroll of any ancestor
+    useEffect(() => {
+      if (!open) return;
+      const handleScroll = () => {
+        updateDropdownPosition();
+      };
+      window.addEventListener('scroll', handleScroll, true);
+      return () => window.removeEventListener('scroll', handleScroll, true);
+    }, [open, updateDropdownPosition]);
 
     useEffect(() => () => clearTimeout(debounceRef.current), []);
 
@@ -100,10 +138,39 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
       );
     };
 
+    const dropdown = open && suggestions.length > 0 ? createPortal(
+      <div style={dropdownStyle} className="rounded-md border border-border bg-popover shadow-md overflow-hidden">
+        <ScrollArea className="max-h-40">
+          {suggestions.map((s, i) => (
+            <div
+              key={s.id}
+              className={cn(
+                'px-3 py-2 text-sm cursor-pointer transition-colors',
+                i === activeIndex
+                  ? 'bg-accent text-accent-foreground'
+                  : 'hover:bg-muted'
+              )}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(s);
+              }}
+              onMouseEnter={() => setActiveIndex(i)}
+            >
+              <span>{highlightMatch(s.value, value)}</span>
+              {s.linkedPhone && field === 'customerName' && (
+                <span className="ml-2 text-xs text-muted-foreground">📞 {s.linkedPhone}</span>
+              )}
+            </div>
+          ))}
+        </ScrollArea>
+      </div>,
+      document.body,
+    ) : null;
+
     return (
       <div ref={containerRef} className="relative">
         <input
-          ref={ref}
+          ref={setRefs}
           type="text"
           value={value}
           onChange={handleChange}
@@ -117,33 +184,7 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
           autoComplete="off"
           {...props}
         />
-        {open && suggestions.length > 0 && (
-          <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md overflow-hidden">
-            <ScrollArea className="max-h-40">
-              {suggestions.map((s, i) => (
-                <div
-                  key={s.id}
-                  className={cn(
-                    'px-3 py-2 text-sm cursor-pointer transition-colors',
-                    i === activeIndex
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-muted'
-                  )}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleSelect(s);
-                  }}
-                  onMouseEnter={() => setActiveIndex(i)}
-                >
-                  <span>{highlightMatch(s.value, value)}</span>
-                  {s.linkedPhone && field === 'customerName' && (
-                    <span className="ml-2 text-xs text-muted-foreground">📞 {s.linkedPhone}</span>
-                  )}
-                </div>
-              ))}
-            </ScrollArea>
-          </div>
-        )}
+        {dropdown}
       </div>
     );
   }
