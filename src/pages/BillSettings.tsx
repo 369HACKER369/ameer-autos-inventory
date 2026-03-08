@@ -297,9 +297,44 @@ export default function BillSettingsPage() {
           </CardContent>
         </Card>
 
-        <Button className="w-full gap-2" onClick={handleSave}>
-          <Save className="h-4 w-4" /> Save Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button className="flex-1 gap-2" onClick={handleSave}>
+            <Save className="h-4 w-4" /> Save Settings
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPreview ? 'Hide' : 'Preview'}
+          </Button>
+        </div>
+
+        {/* Live Bill Preview */}
+        {showPreview && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
+              <span className="text-[10px] text-muted-foreground">(Updates as you edit)</span>
+            </div>
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div style={{
+                transform: 'scale(0.48)',
+                transformOrigin: 'top left',
+                width: '794px',
+                height: 'auto',
+              }}>
+                <BillPreviewTemplate
+                  settings={settings}
+                  bill={previewBill}
+                  items={previewItems}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
