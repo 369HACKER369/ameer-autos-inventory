@@ -73,11 +73,13 @@ export default function AutocompleteSettings() {
     toast.success('Entry removed');
   };
 
-  const handleClearAll = async (field: AutocompleteField, label: string) => {
-    await clearAllEntries(field);
+  const handleClearAll = async () => {
+    if (!clearConfirm) return;
+    await clearAllEntries(clearConfirm.field);
     setEditing(null);
+    setClearConfirm(null);
     await loadAll();
-    toast.success(`All ${label.toLowerCase()} cleared`);
+    toast.success(`All ${clearConfirm.label.toLowerCase()} cleared`);
   };
 
   const handleAddCustomerPair = async () => {
