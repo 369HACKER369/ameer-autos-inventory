@@ -197,10 +197,10 @@ export default function BillHistory() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => navigate(`/bills/edit/${bill.id}`)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExportImage(bill)}><ImageIcon className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportImage(bill)}><Camera className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleExportPdf(bill)}><FileText className="h-4 w-4 mr-2" /> Export as PDF</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleShare(bill)}><Share2 className="h-4 w-4 mr-2" /> Share</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-4 w-4 mr-2" /> WhatsApp</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleWhatsApp(bill)}><MessageCircleMore className="h-4 w-4 mr-2" /> WhatsApp</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
