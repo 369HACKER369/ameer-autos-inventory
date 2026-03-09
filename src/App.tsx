@@ -7,6 +7,8 @@ import { AppProvider } from "@/contexts/AppContext";
 import { AdvancedThemeProvider } from "@/contexts/ThemeContext";
 import { TypographyProvider } from "@/contexts/TypographyContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CrashRecoveryPrompt } from "@/components/CrashRecoveryPrompt";
+import { GlobalErrorHandler } from "@/components/GlobalErrorHandler";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import AddEditPart from "./pages/AddEditPart";
