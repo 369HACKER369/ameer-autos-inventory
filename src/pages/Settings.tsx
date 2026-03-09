@@ -26,7 +26,9 @@ import {
   Package,
   Tags,
   AlertTriangle,
-  Store
+  Store,
+  Bug,
+  MessageSquareWarning
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
